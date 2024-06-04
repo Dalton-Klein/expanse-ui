@@ -1,0 +1,46 @@
+//Global Variables
+$colorPrimary: #cc2936;
+$colorPrimaryDarker: #541116;
+$colorSecondary: #0d5678;
+$colorSecondaryDarker: #041b25;
+$colorGreyBg: #1c1c1e;
+$colorGreyPop: #232026;
+$colorGreyPop80: #232026bb;
+$colorGreyHover: #332f37;
+$colorText: #ffffff;
+$colorTextAlt: #9b9b9b;
+$colorButtonHover: #dfdfdf;
+$colorShadowLight: rgba(48, 48, 48, 0.85);
+$colorShadowDark: rgba(0, 0, 0, 0.65);
+$colorDivider: rgb(44, 44, 44);
+$font1: calc(12px + 0.2vw);
+$font2: calc(16px + 0.25vw);
+$font3: calc(17px + 0.4vw);
+$font4: calc(18px + 0.7vw);
+$font5: calc(25px + 1vw);
+$font6: calc(40px + 2vw);
+$transition1: 150ms;
+$borderRadius1: calc(4px + 0.15vw);
+$borderRadius2: calc(8px + 0.25vw);
+$borderRadius3: calc(15px + 0.5vw);
+$screenBreak1: 1200px;
+$screenBreak2: 500px;
+$screenBreak3: 400px;
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-column-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

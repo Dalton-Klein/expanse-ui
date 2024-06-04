@@ -1,0 +1,267 @@
+@import "./styling/config";
+
+.app-container {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 0;
+  margin: 0;
+  max-height: 94vh;
+  overflow: visible;
+  .app-content-scrollbox {
+    display: flex;
+    flex-grow: 1;
+    overflow: scroll;
+    max-height: 95vh;
+    min-height: 95vh;
+    min-width: 100vw;
+  }
+}
+::-webkit-scrollbar {
+  display: none;
+}
+@font-face {
+  font-family: "questial"; /*Can be any text*/
+  src: local("questrial"),
+    url("./fonts/questrial.ttf") format("truetype");
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html {
+  height: auto;
+  width: 100vw;
+}
+
+body {
+  height: auto;
+  width: 100vw;
+  background-color: $colorGreyBg;
+  color: $colorText;
+  font-family: "questial";
+  letter-spacing: 1.5px;
+  position: relative;
+}
+
+a {
+  text-decoration: none;
+  color: $colorText;
+}
+
+h5 {
+  font-weight: 100;
+}
+
+.p-error {
+  font-size: $font2;
+  color: $colorPrimary;
+}
+
+button {
+  cursor: "pointer";
+  border-radius: $borderRadius1;
+  outline: none;
+  border: none;
+  color: $colorText;
+  background-color: $colorPrimary;
+  font-family: "questial";
+  font-weight: 500;
+  transition: $transition1;
+  font-size: $font2;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  min-height: 2.25em;
+  padding-left: 1vw;
+  padding-right: 1vw;
+}
+
+button:hover {
+  cursor: pointer;
+  color: $colorButtonHover;
+  background-color: $colorPrimaryDarker;
+  // box-shadow: 1px 1px 4px 0 rgba(29, 28, 28, 0.55) inset,
+  //   -3px -3px 5px 0 rgba(255, 255, 255, 0.85) inset;
+}
+
+button:disabled {
+  cursor: pointer;
+  color: rgb(128, 128, 128);
+  background-color: rgb(42, 42, 42);
+  // box-shadow: 1px 1px 4px 0 rgba(29, 28, 28, 0.55) inset,
+  //   -3px -3px 5px 0 rgba(255, 255, 255, 0.85) inset;
+}
+
+.alt-button {
+  @extend button;
+  background-color: $colorGreyPop;
+}
+
+.alt-button:hover,
+.text-only-button:hover {
+  color: $colorButtonHover;
+  background-color: $colorGreyHover;
+}
+
+.text-only-button {
+  @extend button;
+  background-color: rgba(205, 92, 92, 0);
+}
+
+select {
+  background-color: $colorGreyPop;
+  color: $colorText;
+  border-radius: 25px;
+  height: 2.5em;
+  font-family: "questial";
+  font-size: calc(10px + 0.4vw);
+  font-weight: 200;
+  outline: none;
+  border: none;
+  padding-left: 0.65vw;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+}
+
+select:hover {
+  cursor: pointer;
+}
+
+.p-selectbutton {
+  .p-button {
+    display: inline-flex;
+    cursor: pointer;
+    user-select: none;
+    align-items: center;
+    vertical-align: bottom;
+    text-align: center;
+    border-radius: $borderRadius1;
+    background: $colorGreyPop;
+    color: white;
+    padding: 1vh 5vh;
+    font-size: $font2;
+  }
+  .p-highlight {
+    background: $colorPrimary;
+    border-color: $colorGreyBg;
+    color: #ffffff;
+  }
+}
+
+.react-select-container {
+  min-width: 30vw;
+  color: $colorGreyBg !important;
+  background-color: transparent;
+  .react-select__control {
+    padding: 0 0.5vw;
+    padding-left: 0.6vw;
+    font-size: $font2;
+    background-color: $colorGreyBg;
+    border-radius: $borderRadius2;
+    border-width: 0;
+    box-shadow: 0 0 0 0;
+    .react-select__value-container {
+      background-color: transparent;
+      .react-select__placeholder {
+        background-color: transparent;
+        color: $colorTextAlt;
+        font-size: $font2;
+      }
+      div {
+        background-color: transparent;
+        color: $colorTextAlt;
+        font-size: $font2;
+      }
+    }
+    .react-select__indicators {
+      opacity: 1;
+    }
+  }
+  .react-select__control--is-focused {
+    box-shadow: 0 0 0 0;
+  }
+  .react-select__control:hover {
+    border-width: 0;
+  }
+  .react-select__menu {
+    background-color: $colorGreyBg;
+    border-radius: $borderRadius2;
+    .react-select__menu-list {
+      background-color: transparent;
+      .react-select__option {
+        border-radius: $borderRadius2;
+        background-color: $colorGreyBg !important;
+        color: $colorText;
+        font-size: $font2;
+        opacity: 1;
+      }
+      .react-select__option:hover {
+        background-color: $colorGreyPop;
+      }
+    }
+  }
+}
+
+input {
+  background-color: $colorGreyPop;
+  color: $colorText;
+  outline: none;
+  padding: 0.5vw 0.5vw;
+  padding-left: 0.6vw;
+  font-family: "questial";
+  font-size: $font2;
+  border: 3px solid transparent;
+  border-radius: $borderRadius1;
+  transition: border 1s;
+}
+
+input:hover {
+  cursor: pointer;
+}
+
+textarea {
+  color: $colorText;
+  background-color: $colorGreyPop;
+  border: none;
+  border-radius: $borderRadius1;
+  outline: none;
+  font-family: "questial";
+  font-size: calc(10px + 0.5vw);
+  font-weight: 100;
+  padding: 1vh 1vw;
+  resize: "none";
+}
+
+.p-toast-top-right {
+  top: 10px !important;
+  right: 10px !important;
+}
+
+.p-toast {
+  background-color: rgb(158, 158, 76);
+  border-radius: $borderRadius1;
+  max-width: 95vw;
+  .p-toast-message-content {
+    margin: 1vh 0.5vw;
+    .p-toast-message-text {
+      margin-left: 0.5vw;
+      .p-toast-summary {
+        font-size: $font2 !important;
+        font-weight: 1000;
+      }
+      .p-toast-detail {
+        font-size: $font2 !important;
+        word-wrap: normal;
+      }
+    }
+    .p-toast-icon-close {
+      padding: 0 0.5vw;
+    }
+  }
+}
+
+.App {
+  position: relative;
+}
