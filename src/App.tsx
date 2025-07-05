@@ -10,7 +10,6 @@ import * as io from "socket.io-client";
 import { Provider } from "react-redux";
 import store, { persistor } from "./store/store";
 import { PersistGate } from "redux-persist/integration/react";
-import ScrollToTop from "./components/nav/scrollToTop";
 import HomePage from "./components/pages/home-page/homePage";
 import GamePage from "./components/pages/game/gamePage";
 
@@ -36,16 +35,13 @@ function App() {
       <PersistGate loading={null} persistor={persistor}>
         <div className="App">
           {/* This scroll component scrolls user to top of each page when navigating */}
-          <ScrollToTop />
+
           <div className="app-container">
             <div className="app-content-scrollbox">
               <Routes>
                 {/* Main Paths */}
                 <Route path="/" element={<HomePage />} />
-                <Route
-                  path="/game"
-                  element={<GamePage />}
-                />
+                <Route path="/game" element={<GamePage />} />
               </Routes>
             </div>
           </div>

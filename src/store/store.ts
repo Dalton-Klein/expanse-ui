@@ -6,7 +6,6 @@ import {
 } from "@reduxjs/toolkit";
 import { createEpicMiddleware } from "redux-observable";
 import UserSlice from "./userSlice";
-import PreferencesSlice from "./userPreferencesSlice";
 import { ThunkAction } from "redux-thunk";
 import { thunk } from "redux-thunk";
 import {
@@ -17,7 +16,6 @@ import storage from "redux-persist/lib/storage"; // defaults to localStorage for
 
 const rootReducer = combineReducers({
   user: UserSlice,
-  preferences: PreferencesSlice,
 });
 
 const persistConfig = {
