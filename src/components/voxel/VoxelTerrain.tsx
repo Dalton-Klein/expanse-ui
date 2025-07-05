@@ -1,109 +1,105 @@
-import React, { useMemo } from "react";
-import {
-  VoxelType,
-  CHUNK_SIZE,
-  CHUNK_HEIGHT,
-} from "./types";
-import Chunk from "./Chunk";
-import ChunkDebug from "./ChunkDebug";
-import ChunkGreedy from "./ChunkGreedy";
+import React, { useEffect, useRef } from "react";
 import ChunkSimpleGreedy from "./ChunkSimpleGreedy";
-import { PerlinNoise } from "./noise";
+import { useChunkManager } from "./ChunkManager";
+import { useDebugData } from "./DebugInfoProvider";
+import { LODConfig } from "./types";
 
 export default function VoxelTerrain() {
-  // Map width in chunks (e.g., 3 = 3x3 grid = 9 chunks total)
-  // Change this value to control map size:
-  // 1 = 1x1 (1 chunk)
-  // 2 = 2x2 (4 chunks)
-  // 3 = 3x3 (9 chunks)
-  // 5 = 5x5 (25 chunks)
-  const MAP_WIDTH_IN_CHUNKS = 4;
+  // Default render distance: minimum 5 chunks in each direction
+  const RENDER_DISTANCE = 25; // Will be enforced to minimum 5 in ChunkManager
 
-  // Generate terrain with Perlin noise
-  const chunks = useMemo(() => {
-    const chunksArray = [];
-    const noise = new PerlinNoise(12345); // Fixed seed for consistent terrain
+  // LOD Configuration based on percentages of render distance
+  const LOD_CONFIG: LODConfig = {
+    level1Distance: Math.floor(RENDER_DISTANCE * 0.6), // Switch to 4x4x4 LOD at 60% (15 chunks)
+    level2Distance: Math.floor(RENDER_DISTANCE * 0.8), // Switch to 8x8x8 LOD at 80% (20 chunks)
+    level1Scale: 4, // 4x4x4 voxel groups for medium LOD
+    level2Scale: 8, // 8x8x8 voxel groups for low LOD
+    hysteresis: 1.5, // Buffer distance to prevent LOD flickering
+  };
 
-    // Calculate chunk range to get exact grid size
-    const startIdx = -Math.floor(MAP_WIDTH_IN_CHUNKS / 2);
-    const endIdx = startIdx + MAP_WIDTH_IN_CHUNKS - 1;
-    
-    console.log(`Generating ${MAP_WIDTH_IN_CHUNKS}x${MAP_WIDTH_IN_CHUNKS} chunks (${MAP_WIDTH_IN_CHUNKS * MAP_WIDTH_IN_CHUNKS} total)`);
-    console.log(`Chunk range: [${startIdx}, ${endIdx}]`);
+  const { debugData } = useDebugData();
+  const {
+    loadedChunks,
+    updateChunks,
+    getStats,
+    getVoxelAt,
+    getVoxelAtWithLODCheck,
+  } = useChunkManager({
+    renderDistance: RENDER_DISTANCE,
+    lodConfig: LOD_CONFIG,
+  });
 
-    for (let cx = startIdx; cx <= endIdx; cx++) {
-      for (let cz = startIdx; cz <= endIdx; cz++) {
-        // Generate chunk data
-        const voxels: any = [];
+  // Track previous camera position to avoid unnecessary updates
+  const lastCameraPos = useRef({ x: 0, z: 0 });
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(
+    null
+  );
 
-        for (let x = 0; x < CHUNK_SIZE; x++) {
-          voxels[x] = [];
-          for (let y = 0; y < CHUNK_HEIGHT; y++) {
-            voxels[x][y] = [];
-            for (let z = 0; z < CHUNK_SIZE; z++) {
-              const worldX = cx * CHUNK_SIZE + x;
-              const worldZ = cz * CHUNK_SIZE + z;
-              const worldY = y;
+  useEffect(() => {
+    const { x: cameraX, z: cameraZ } = debugData.position;
 
-              // Generate terrain height using Perlin noise
-              const scale = 0.03; // Frequency of terrain features
-              const baseHeight = 10; // Base terrain height
-              const heightVariation = 15; // Maximum height variation
-              
-              // Use octave noise for more natural terrain
-              const noiseValue = noise.octaveNoise2D(
-                worldX * scale, 
-                worldZ * scale, 
-                4, // octaves
-                0.5 // persistence
-              );
-              
-              // Convert noise to height (noise returns -1 to 1, we want positive heights)
-              const height = Math.floor(baseHeight + (noiseValue * 0.5 + 0.5) * heightVariation);
+    // Optimized movement threshold (increased from 4 to 12 world units)
+    const deltaX = Math.abs(
+      cameraX - lastCameraPos.current.x
+    );
+    const deltaZ = Math.abs(
+      cameraZ - lastCameraPos.current.z
+    );
+    const movementThreshold = 12; // Reduced update frequency
 
-              let voxelType = VoxelType.AIR;
-              if (worldY < height - 3) {
-                voxelType = VoxelType.STONE;
-              } else if (worldY < height - 1) {
-                voxelType = VoxelType.DIRT;
-              } else if (worldY < height) {
-                voxelType = VoxelType.GRASS;
-              }
-
-              voxels[x][y][z] = { type: voxelType };
-            }
-          }
-        }
-
-        // Count non-air voxels in this chunk
-        let voxelCount = 0;
-        for (let x = 0; x < CHUNK_SIZE; x++) {
-          for (let y = 0; y < CHUNK_HEIGHT; y++) {
-            for (let z = 0; z < CHUNK_SIZE; z++) {
-              if (voxels[x][y][z].type !== VoxelType.AIR) {
-                voxelCount++;
-              }
-            }
-          }
-        }
-        
-        console.log(`Chunk [${cx}, ${cz}]: ${voxelCount} voxels`);
-        
-        chunksArray.push({
-          position: [cx, 0, cz] as [number, number, number],
-          voxels,
-        });
+    if (
+      deltaX > movementThreshold ||
+      deltaZ > movementThreshold
+    ) {
+      // Debounce rapid position changes with 150ms delay
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
       }
-    }
 
-    console.log(`Total chunks generated: ${chunksArray.length}`);
-    return chunksArray;
+      updateTimeoutRef.current = setTimeout(() => {
+        updateChunks(cameraX, cameraZ);
+        lastCameraPos.current = { x: cameraX, z: cameraZ };
+
+        // Log chunk stats for debugging
+        const stats = getStats();
+        console.log(
+          `Dynamic chunks: ${stats.loadedChunks} loaded, ${
+            stats.pendingChunks
+          } pending (render distance: ${
+            stats.renderDistance
+          }, worker: ${
+            stats.workerActive ? "active" : "inactive"
+          })`
+        );
+
+        updateTimeoutRef.current = null;
+      }, 150);
+    }
+  }, [debugData.position, updateChunks]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    };
   }, []);
+
+  // Initial chunk loading
+  useEffect(() => {
+    updateChunks(0, 0); // Start at world origin
+  }, [updateChunks]);
 
   return (
     <group>
-      {chunks.map((chunk, index) => (
-        <ChunkSimpleGreedy key={index} data={chunk} />
+      {loadedChunks.map((chunk) => (
+        <ChunkSimpleGreedy
+          key={`${chunk.position[0]},${chunk.position[2]},LOD${chunk.lodLevel},S${chunk.lodScale}`}
+          data={chunk}
+          getVoxelAt={getVoxelAt}
+          getVoxelAtWithLODCheck={getVoxelAtWithLODCheck}
+        />
       ))}
     </group>
   );

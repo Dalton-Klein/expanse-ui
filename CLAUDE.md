@@ -68,21 +68,31 @@ npm test -- path/to/test.file
 - `/src/components/voxel/VoxelWorld.tsx` - Main Three.js canvas setup with lighting and sky
 - `/src/components/voxel/DebugCamera.tsx` - Flying camera controller (WASD+QE movement, mouse look)
 - `/src/components/voxel/VoxelTerrain.tsx` - Terrain generation and chunk management
-- `/src/components/voxel/ChunkGreedy.tsx` - Optimized greedy mesh rendering (current implementation)
-- `/src/components/voxel/GreedyMesh.tsx` - Greedy meshing algorithm implementation
-- `/src/components/voxel/ChunkDebug.tsx` - Individual mesh rendering (fallback)
-- `/src/components/voxel/Chunk.tsx` - Instanced mesh rendering (needs color fix)
+- `/src/components/voxel/TerrainGenerator.tsx` - Multi-layered noise terrain generation system
+- `/src/components/voxel/ChunkSimpleGreedy.tsx` - Face culling and mesh rendering (current implementation)
+- `/src/components/voxel/DebugInfo.tsx` - Debug panel with position, direction, and performance data
+- `/src/components/voxel/DebugInfoProvider.tsx` - Context provider for debug data
+- `/src/components/voxel/DebugUpdater.tsx` - Updates debug data from within Canvas
 - `/src/components/voxel/noise.ts` - Perlin noise implementation for terrain generation
 - `/src/components/voxel/types.ts` - Type definitions for voxels and chunks
 
 ### Current Features
-- **Procedural Terrain Generation**: Uses Perlin noise with 4 octaves for natural landscapes
-- **Multiple Voxel Types**: Grass (green), Dirt (brown), Stone (gray), Sand, Water
-- **Greedy Meshing**: Optimized mesh generation that combines adjacent faces to reduce triangle count
-- **Configurable World Size**: Adjustable `MAP_WIDTH_IN_CHUNKS` variable (currently 4x4 = 16 chunks)
-- **Chunk-based Organization**: 16x16x64 voxels per chunk
+- **Multi-Layered Terrain Generation**: Advanced system with 3 noise layers:
+  - **Continental Layer**: Very low frequency for large landmasses and oceans
+  - **Regional Layer**: Medium frequency for hills, valleys, and plateaus  
+  - **Local Layer**: High frequency for surface detail and roughness
+  - **Erosion System**: Creates dramatic valleys and cliff formations
+- **Dynamic Biome System**: Height and noise-based biome determination:
+  - **Ocean/Water**: Below sea level with water blocks
+  - **Beach**: Sandy coastlines near sea level
+  - **Grasslands**: Low to medium elevation with grass and dirt
+  - **Highlands**: Elevated terrain with deeper soil layers
+  - **Mountains**: High elevation stone formations
+- **Optimized Face Culling**: Only renders visible faces with correct winding order
+- **Configurable World Size**: Adjustable `MAP_WIDTH_IN_CHUNKS` variable (currently 20x20 = 400 chunks)
+- **Chunk-based Organization**: 16x16x100 voxels per chunk (increased height limit)
 - **Debug Camera**: Flying controls with speed boost
-- **Performance Monitoring**: FPS counter and stats panel
+- **Enhanced Debug Panel**: Position, direction, and performance monitoring
 
 ### Performance Considerations
 - **Greedy Meshing Algorithm**: Reduces triangle count by 60-90% compared to individual voxel meshes
@@ -102,12 +112,27 @@ npm test -- path/to/test.file
 - Redux-persist warning about non-serializable values - can be safely ignored
 
 ### Next Features to Implement
+- **Proper Greedy Meshing**: Implement true greedy meshing algorithm to combine adjacent faces
 - **Frustum Culling**: Only render chunks in camera view
 - **Level of Detail (LOD)**: Lower detail for distant chunks
 - **Chunk Loading/Unloading**: Dynamic world streaming based on player position
 - **Cross-Chunk Face Culling**: Optimize faces between chunk boundaries
-- **Ambient Occlusion**: Add subtle lighting effects for more realistic appearance
+- **Advanced Biomes**: Add more biome types (forests, deserts, snow, etc.)
+- **Cave Generation**: 3D noise for underground cave systems
+- **Ore Generation**: Scattered mineral deposits in stone layers
 - **Texture Atlas**: Support for textured voxels instead of solid colors
+- **Water Physics**: Flowing water and proper water rendering
+- **Ambient Occlusion**: Add subtle lighting effects for more realistic appearance
+
+### Terrain Generation Parameters (Optimized for 100-block height)
+The `TerrainGenerator` can be customized with different parameters:
+- **Continental Scale**: 0.0008 (very large landmasses, amplitude: 55)
+- **Regional Scale**: 0.006 (hills and valleys, amplitude: 30)
+- **Local Scale**: 0.04 (surface detail, amplitude: 8)
+- **Sea Level**: 25 (blocks above Y=0, allows deeper oceans)
+- **Erosion Effects**: More aggressive (threshold: -0.2, intensity: 0.8)
+- **Height Range**: Terrain can reach Y=80+ for dramatic mountains
+- **Biome Variety**: 6 different terrain types based on elevation and noise
 
 ### Controls
 - Click canvas to lock pointer

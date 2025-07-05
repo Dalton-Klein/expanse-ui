@@ -8,14 +8,17 @@ export class PerlinNoise {
     for (let i = 0; i < 256; i++) {
       this.permutation[i] = i;
     }
-    
+
     // Shuffle based on seed
     const random = this.seededRandom(seed);
     for (let i = 255; i > 0; i--) {
       const j = Math.floor(random() * (i + 1));
-      [this.permutation[i], this.permutation[j]] = [this.permutation[j], this.permutation[i]];
+      [this.permutation[i], this.permutation[j]] = [
+        this.permutation[j],
+        this.permutation[i],
+      ];
     }
-    
+
     // Duplicate permutation table
     for (let i = 0; i < 256; i++) {
       this.permutation[256 + i] = this.permutation[i];
@@ -23,7 +26,7 @@ export class PerlinNoise {
   }
 
   private seededRandom(seed: number) {
-    return function() {
+    return function () {
       seed = (seed * 9301 + 49297) % 233280;
       return seed / 233280;
     };
@@ -41,7 +44,9 @@ export class PerlinNoise {
     const h = hash & 3;
     const u = h < 2 ? x : y;
     const v = h < 2 ? y : x;
-    return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
+    return (
+      ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v)
+    );
   }
 
   noise2D(x: number, y: number): number {
@@ -78,14 +83,21 @@ export class PerlinNoise {
   }
 
   // Octave noise for more natural terrain
-  octaveNoise2D(x: number, y: number, octaves: number = 4, persistence: number = 0.5): number {
+  octaveNoise2D(
+    x: number,
+    y: number,
+    octaves: number = 4,
+    persistence: number = 0.5
+  ): number {
     let total = 0;
     let frequency = 1;
     let amplitude = 1;
     let maxValue = 0;
 
     for (let i = 0; i < octaves; i++) {
-      total += this.noise2D(x * frequency, y * frequency) * amplitude;
+      total +=
+        this.noise2D(x * frequency, y * frequency) *
+        amplitude;
       maxValue += amplitude;
       amplitude *= persistence;
       frequency *= 2;

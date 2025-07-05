@@ -9,7 +9,7 @@ import DebugUpdater from "./DebugUpdater";
 export default function VoxelWorld() {
   return (
     <Canvas
-      camera={{ position: [10, 20, 30], fov: 60 }}
+      camera={{ position: [10, 200, 30], fov: 60 }}
       shadows
       gl={{ antialias: true }}
     >
