@@ -10,11 +10,25 @@ interface DebugData {
     drawCalls: number;
     memory: number;
   };
+  terrain?: {
+    renderDistance: number;
+    lod1Distance: number;
+    lod2Distance: number;
+    chunksLoaded: number;
+    chunksInQueue: number;
+    chunksPending: number;
+    workerActive: boolean;
+  };
+  rendering?: {
+    wireframeMode: boolean;
+    flatworldTesterMode: boolean;
+    flatworldPattern: string;
+  };
 }
 
 interface DebugContextType {
   debugData: DebugData;
-  updateDebugData: (data: DebugData) => void;
+  updateDebugData: (data: DebugData | Partial<DebugData>) => void;
 }
 
 const DebugContext = createContext<DebugContextType>({
@@ -22,7 +36,21 @@ const DebugContext = createContext<DebugContextType>({
     position: { x: 0, y: 0, z: 0 },
     direction: "North",
     rotation: { x: 0, y: 0, z: 0 },
-    performance: { fps: 0, triangles: 0, drawCalls: 0, memory: 0 }
+    performance: { fps: 0, triangles: 0, drawCalls: 0, memory: 0 },
+    terrain: {
+      renderDistance: 0,
+      lod1Distance: 0,
+      lod2Distance: 0,
+      chunksLoaded: 0,
+      chunksInQueue: 0,
+      chunksPending: 0,
+      workerActive: false,
+    },
+    rendering: {
+      wireframeMode: false,
+      flatworldTesterMode: false,
+      flatworldPattern: "flat",
+    }
   },
   updateDebugData: () => {}
 });
@@ -34,11 +62,28 @@ export const DebugProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     position: { x: 0, y: 0, z: 0 },
     direction: "North",
     rotation: { x: 0, y: 0, z: 0 },
-    performance: { fps: 0, triangles: 0, drawCalls: 0, memory: 0 }
+    performance: { fps: 0, triangles: 0, drawCalls: 0, memory: 0 },
+    terrain: {
+      renderDistance: 0,
+      lod1Distance: 0,
+      lod2Distance: 0,
+      chunksLoaded: 0,
+      chunksInQueue: 0,
+      chunksPending: 0,
+      workerActive: false,
+    },
+    rendering: {
+      wireframeMode: false,
+      flatworldTesterMode: false,
+      flatworldPattern: "flat",
+    }
   });
 
-  const updateDebugData = useCallback((data: DebugData) => {
-    setDebugData(data);
+  const updateDebugData = useCallback((data: DebugData | Partial<DebugData>) => {
+    setDebugData(prevData => ({
+      ...prevData,
+      ...data
+    }));
   }, []);
 
   return (

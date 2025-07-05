@@ -61,7 +61,7 @@ export class ChunkManager {
   private requestIdCounter = 0;
 
   // Throttling properties
-  private maxChunksPerFrame = 3; // Maximum chunks to generate per frame
+  private maxChunksPerFrame = 8; // Maximum chunks to generate per frame (increased)
   private frameTimeTarget = 16; // Target frame time in ms (60 FPS)
   private chunkQueue: Array<{
     chunkPos: ChunkKey;
@@ -72,16 +72,23 @@ export class ChunkManager {
   private frameGenCount = 0;
   private criticalDistanceLogged = false;
 
+  // Continuous queue processing
+  private queueProcessingInterval: NodeJS.Timeout | null =
+    null;
+  private isProcessingQueue = false;
+  private queueProcessingActive = false;
+
   constructor(config: ChunkManagerConfig) {
     // Ensure minimum render distance of 5
     this.config = {
       ...config,
-      renderDistance: Math.max(5, config.renderDistance)
+      renderDistance: Math.max(5, config.renderDistance),
     };
     this.terrainGenerator = new TerrainGenerator(
       DEFAULT_TERRAIN_CONFIG
     );
     this.initializeWorker();
+    this.startContinuousQueueProcessing();
   }
 
   private initializeWorker() {
@@ -168,8 +175,6 @@ export class ChunkManager {
     } = data;
     const key = getChunkKey(chunkX, chunkZ);
 
-    // Worker generation completed silently
-
     // Remove from pending chunks
     this.pendingChunks.delete(key);
     this.pendingTimestamps.delete(key);
@@ -188,6 +193,16 @@ export class ChunkManager {
 
     // Add to loaded chunks
     this.loadedChunks.set(key, chunkData);
+
+    // Log worker completion for debugging
+    console.log(
+      `Worker completed chunk [${chunkX}, ${chunkZ}] - LOD${lodLevel} (scale ${lodScale}) in ${generationTime.toFixed(
+        1
+      )}ms`
+    );
+
+    // Worker completion doesn't interfere with continuous queue processing
+    // The continuous processor will naturally handle remaining chunks
   }
 
   // Determine LOD level based on distance from center (with optional current LOD for hysteresis)
@@ -306,7 +321,11 @@ export class ChunkManager {
 
             // Check if this is a surface voxel (has air above it)
             const voxelAbove =
-              this.terrainGenerator.getVoxelAt(x, y + 1, z);
+              this.terrainGenerator.getVoxelAt(
+                x,
+                y + 1,
+                z
+              );
             if (
               voxelAbove === VoxelType.AIR ||
               voxelAbove === VoxelType.WATER
@@ -442,7 +461,10 @@ export class ChunkManager {
 
         // Quick terrain height prediction
         const terrainHeight =
-          this.terrainGenerator.getHeightAt(worldX, worldZ);
+          this.terrainGenerator.getHeightAt(
+            worldX,
+            worldZ
+          );
         const key = `${x},${z}`;
         surfaceHeights.set(key, terrainHeight);
 
@@ -549,7 +571,7 @@ export class ChunkManager {
             const worldZ = chunkZ * CHUNK_SIZE + z * scale;
             const worldY = y * scale;
 
-            const voxelType = this.sampleVoxelArea(
+            const voxelType = this.terrainGenerator.sampleVoxelArea(
               worldX,
               worldY,
               worldZ,
@@ -633,10 +655,10 @@ export class ChunkManager {
       // Performance adjustment silently
     } else if (
       frameTimeDelta < this.frameTimeTarget * 0.8 &&
-      this.maxChunksPerFrame < 5
+      this.maxChunksPerFrame < 12
     ) {
       this.maxChunksPerFrame = Math.min(
-        5,
+        12,
         this.maxChunksPerFrame + 1
       );
     }
@@ -656,8 +678,17 @@ export class ChunkManager {
       this.pendingTimestamps.delete(key);
     });
 
-    // Build priority queue for chunk loading/regeneration
-    this.chunkQueue = [];
+    // Update priority queue for chunk loading/regeneration (preserve existing queue)
+    const queuedChunks = new Set(
+      this.chunkQueue.map((item) =>
+        getChunkKey(item.chunkPos.x, item.chunkPos.z)
+      )
+    );
+    const newQueueItems: Array<{
+      chunkPos: ChunkKey;
+      centerChunk: ChunkKey;
+      priority: number;
+    }> = [];
 
     for (const chunkPos of requiredChunks) {
       const key = getChunkKey(chunkPos.x, chunkPos.z);
@@ -685,23 +716,41 @@ export class ChunkManager {
             this.lastLODUpdate.get(key) || 0;
           const minUpdateInterval = 2000; // Increased to 2 seconds for better performance
 
-          if (now - lastUpdate > minUpdateInterval) {
-            this.chunkQueue.push({
+          if (
+            now - lastUpdate > minUpdateInterval &&
+            !queuedChunks.has(key)
+          ) {
+            newQueueItems.push({
               chunkPos,
               centerChunk,
               priority: priority + 100,
             }); // Lower priority for regeneration
           }
         }
-      } else if (!this.pendingChunks.has(key)) {
-        // Queue new chunk for loading
-        this.chunkQueue.push({
+      } else if (
+        !this.pendingChunks.has(key) &&
+        !queuedChunks.has(key)
+      ) {
+        // Queue new chunk for loading (only if not already queued)
+        newQueueItems.push({
           chunkPos,
           centerChunk,
           priority,
         });
       }
     }
+
+    // Add new items to existing queue
+    this.chunkQueue.push(...newQueueItems);
+
+    // Remove chunks from queue that are no longer required
+    this.chunkQueue = this.chunkQueue.filter((item) => {
+      const key = getChunkKey(
+        item.chunkPos.x,
+        item.chunkPos.z
+      );
+      return requiredChunkKeys.has(key);
+    });
 
     // Sort queue by priority (closest chunks first)
     this.chunkQueue.sort((a, b) => a.priority - b.priority);
@@ -726,12 +775,12 @@ export class ChunkManager {
       const frameElapsed =
         performance.now() - frameStartTime;
 
-      // Stop if we're approaching frame time budget
-      if (frameElapsed > this.frameTimeTarget * 0.8) {
-        // Frame time budget reached - deferring chunks silently
+      // Stop if we're approaching frame time budget (more lenient)
+      if (frameElapsed > this.frameTimeTarget * 1.2) {
         break;
       }
 
+      // Process next chunk in queue
       const queueItem = this.chunkQueue.shift()!;
       const { chunkPos, centerChunk } = queueItem;
       const key = getChunkKey(chunkPos.x, chunkPos.z);
@@ -759,18 +808,19 @@ export class ChunkManager {
         // Update LOD timestamp for regenerated chunks
         this.lastLODUpdate.set(key, Date.now());
 
-        const distance = chunkDistance(chunkPos, centerChunk);
-        console.log(
-          `Generated chunk [${chunkPos.x}, ${chunkPos.z}] at distance ${distance.toFixed(1)} - LOD${chunkData.lodLevel} (scale ${chunkData.lodScale}) - queue remaining: ${this.chunkQueue.length}`
-        );
-      } else {
-        // If generateChunk returned null (chunk pending), re-queue it for later
-        this.chunkQueue.push({
+        const distance = chunkDistance(
           chunkPos,
-          centerChunk,
-          priority: queueItem.priority + 1000,
-        }); // Lower priority
+          centerChunk
+        );
+        console.log(
+          `Generated chunk [${chunkPos.x}, ${
+            chunkPos.z
+          }] at distance ${distance.toFixed(1)} - LOD${
+            chunkData.lodLevel
+          } (scale ${chunkData.lodScale})`
+        );
       }
+      // Note: Don't re-queue worker chunks - continuous processing will handle them
     }
 
     // Process deferred chunks if we have time budget left
@@ -816,16 +866,144 @@ export class ChunkManager {
     }
   }
 
+
+  private startContinuousQueueProcessing(): void {
+    if (this.queueProcessingInterval) {
+      clearInterval(this.queueProcessingInterval);
+    }
+
+    // Process queue every 100ms (10 times per second)
+    this.queueProcessingInterval = setInterval(() => {
+      this.processContinuousQueue();
+    }, 100);
+
+    this.queueProcessingActive = true;
+    console.log("Started continuous queue processing");
+  }
+
+  // Stop continuous queue processing (for cleanup)
+  private stopContinuousQueueProcessing(): void {
+    if (this.queueProcessingInterval) {
+      clearInterval(this.queueProcessingInterval);
+      this.queueProcessingInterval = null;
+    }
+    this.queueProcessingActive = false;
+  }
+
+  // Continuous queue processing that runs independent of player movement
+  private processContinuousQueue(): void {
+    // Prevent re-entrant processing
+    if (this.isProcessingQueue) {
+      return;
+    }
+
+    // Only process if we have chunks in queue
+    if (this.chunkQueue.length === 0) {
+      return;
+    }
+
+    this.isProcessingQueue = true;
+
+    try {
+      // Process up to 4 chunks per continuous processing cycle
+      const maxChunksPerCycle = 4;
+      let processedCount = 0;
+
+      while (
+        this.chunkQueue.length > 0 &&
+        processedCount < maxChunksPerCycle
+      ) {
+        const queueItem = this.chunkQueue.shift()!;
+        const { chunkPos, centerChunk } = queueItem;
+        const key = getChunkKey(chunkPos.x, chunkPos.z);
+
+        // Skip if chunk was loaded while in queue
+        if (
+          this.loadedChunks.has(key) &&
+          !this.shouldRegenerateChunk(chunkPos, centerChunk)
+        ) {
+          continue;
+        }
+
+        // Skip if chunk is already pending (being processed by worker)
+        if (this.pendingChunks.has(key)) {
+          continue;
+        }
+
+        // Clean up stale pending chunks periodically
+        if (processedCount === 0) {
+          this.cleanupStalePendingChunks();
+        }
+
+        const chunkData = this.generateChunk(
+          chunkPos.x,
+          chunkPos.z,
+          centerChunk
+        );
+
+        if (chunkData) {
+          this.loadedChunks.set(key, chunkData);
+          this.lastLODUpdate.set(key, Date.now());
+
+          const distance = chunkDistance(
+            chunkPos,
+            centerChunk
+          );
+          console.log(
+            `Continuously generated chunk [${chunkPos.x}, ${
+              chunkPos.z
+            }] at distance ${distance.toFixed(1)} - LOD${
+              chunkData.lodLevel
+            } (scale ${chunkData.lodScale})`
+          );
+          processedCount++;
+        }
+        // Note: No re-queuing with penalty - let worker chunks process naturally
+      }
+
+      // Log queue progression for debugging
+      if (
+        this.chunkQueue.length > 0 &&
+        processedCount > 0
+      ) {
+        const remainingDistances = this.chunkQueue
+          .slice(0, 5)
+          .map((item) =>
+            chunkDistance(
+              item.chunkPos,
+              item.centerChunk
+            ).toFixed(1)
+          );
+        console.log(
+          `Continuous processing: ${processedCount} chunks generated, ${
+            this.chunkQueue.length
+          } remaining. Next distances: [${remainingDistances.join(
+            ", "
+          )}]`
+        );
+      }
+    } finally {
+      this.isProcessingQueue = false;
+    }
+  }
+
   // Ensure critical chunks (within 25% of render distance) are always loaded
   private ensureCriticalChunksLoaded(
     centerChunk: ChunkKey
   ): void {
-    const criticalDistance = Math.max(5, Math.floor(this.config.renderDistance * 0.25)); // 25% of render distance, minimum 5
-    
+    const criticalDistance = Math.max(
+      3,
+      Math.floor(this.config.renderDistance * 0.12)
+    ); // 12% of render distance, minimum 3 (much smaller)
+
     // Log critical distance calculation on first call
     if (!this.criticalDistanceLogged) {
-      console.log(`Critical chunk distance: ${criticalDistance} (25% of render distance ${this.config.renderDistance}, min 5)`);
-      console.log(`LOD Thresholds: Level 1 at ${this.config.lodConfig.level1Distance}, Level 2 at ${this.config.lodConfig.level2Distance}`);
+      console.log(
+        `Critical chunk distance: ${criticalDistance} (12% of render distance ${this.config.renderDistance}, min 3)`
+      );
+      console.log(
+        `LOD Thresholds: Level 1 at ${this.config.lodConfig.level1Distance}, Level 2 at ${this.config.lodConfig.level2Distance}`
+      );
       this.criticalDistanceLogged = true;
     }
 
@@ -846,10 +1024,13 @@ export class ChunkManager {
           !this.loadedChunks.has(key) &&
           !this.pendingChunks.has(key)
         ) {
-          const distance = chunkDistance({ x, z }, centerChunk);
-          const { level, scale } = this.getLODLevel({ x, z }, centerChunk);
-          console.log(
-            `Critical chunk missing: [${x}, ${z}] at distance ${distance.toFixed(1)}, generating LOD${level} (scale ${scale})`
+          const distance = chunkDistance(
+            { x, z },
+            centerChunk
+          );
+          const { level, scale } = this.getLODLevel(
+            { x, z },
+            centerChunk
           );
           const chunkData = this.generateChunk(
             x,
@@ -976,16 +1157,24 @@ export class ChunkManager {
       renderDistance: this.config.renderDistance,
       pendingChunks: this.pendingChunks.size,
       workerActive: this.worker !== null,
+      queuedChunks: this.chunkQueue.length,
+      lod1Distance: this.config.lodConfig.level1Distance,
+      lod2Distance: this.config.lodConfig.level2Distance,
     };
   }
 
-  // Cleanup worker when component unmounts
+  // Cleanup worker and continuous processing when component unmounts
   cleanup() {
+    // Stop continuous queue processing
+    this.stopContinuousQueueProcessing();
+
     if (this.worker) {
       this.worker.terminate();
       this.worker = null;
       console.log("Terrain worker terminated");
     }
+
+    console.log("ChunkManager cleanup complete");
   }
 }
 

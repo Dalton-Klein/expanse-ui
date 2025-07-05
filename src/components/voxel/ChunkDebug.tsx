@@ -54,11 +54,5 @@ export default function ChunkDebug({ data }: ChunkProps) {
     }
   }
 
-  console.log(
-    `Chunk [${data.position.join(", ")}]: Rendering ${
-      voxels.length
-    } individual voxels`
-  );
-
   return <group>{voxels}</group>;
 }

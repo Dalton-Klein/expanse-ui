@@ -1,6 +1,12 @@
 import React, { useMemo, useRef, useEffect } from "react";
 import * as THREE from "three";
-import { ChunkData, VoxelType, CHUNK_SIZE, CHUNK_HEIGHT, VOXEL_SIZE } from "./types";
+import {
+  ChunkData,
+  VoxelType,
+  CHUNK_SIZE,
+  CHUNK_HEIGHT,
+  VOXEL_SIZE,
+} from "./types";
 
 const voxelColors: { [key in VoxelType]: number } = {
   [VoxelType.AIR]: 0x000000,
@@ -18,34 +24,35 @@ interface ChunkProps {
 export default function Chunk({ data }: ChunkProps) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
 
-  const { instanceCount, positions, colors } = useMemo(() => {
-    let count = 0;
-    const tempPositions: [number, number, number][] = [];
-    const tempColors: number[] = [];
-    
-    for (let x = 0; x < CHUNK_SIZE; x++) {
-      for (let y = 0; y < CHUNK_HEIGHT; y++) {
-        for (let z = 0; z < CHUNK_SIZE; z++) {
-          const voxel = data.voxels[x][y][z];
-          if (voxel.type !== VoxelType.AIR) {
-            tempPositions.push([
-              data.position[0] * CHUNK_SIZE + x,
-              data.position[1] * CHUNK_SIZE + y,
-              data.position[2] * CHUNK_SIZE + z
-            ]);
-            tempColors.push(voxelColors[voxel.type]);
-            count++;
+  const { instanceCount, positions, colors } =
+    useMemo(() => {
+      let count = 0;
+      const tempPositions: [number, number, number][] = [];
+      const tempColors: number[] = [];
+
+      for (let x = 0; x < CHUNK_SIZE; x++) {
+        for (let y = 0; y < CHUNK_HEIGHT; y++) {
+          for (let z = 0; z < CHUNK_SIZE; z++) {
+            const voxel = data.voxels[x][y][z];
+            if (voxel.type !== VoxelType.AIR) {
+              tempPositions.push([
+                data.position[0] * CHUNK_SIZE + x,
+                data.position[1] * CHUNK_SIZE + y,
+                data.position[2] * CHUNK_SIZE + z,
+              ]);
+              tempColors.push(voxelColors[voxel.type]);
+              count++;
+            }
           }
         }
       }
-    }
 
-    return { 
-      instanceCount: count, 
-      positions: tempPositions,
-      colors: tempColors
-    };
-  }, [data]);
+      return {
+        instanceCount: count,
+        positions: tempPositions,
+        colors: tempColors,
+      };
+    }, [data]);
 
   // Set up instance matrices and colors
   useEffect(() => {
@@ -54,8 +61,6 @@ export default function Chunk({ data }: ChunkProps) {
     const mesh = meshRef.current;
     const matrix = new THREE.Matrix4();
     const color = new THREE.Color();
-
-    console.log(`Chunk at [${data.position.join(', ')}] - Setting up ${instanceCount} instances`);
 
     positions.forEach((pos, i) => {
       // Set position
@@ -68,12 +73,17 @@ export default function Chunk({ data }: ChunkProps) {
     });
 
     mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    if (mesh.instanceColor)
+      mesh.instanceColor.needsUpdate = true;
   }, [data, instanceCount, positions, colors]);
 
   // Don't render if no voxels
   if (instanceCount === 0) {
-    console.warn(`Chunk at [${data.position.join(', ')}] has no voxels to render`);
+    console.warn(
+      `Chunk at [${data.position.join(
+        ", "
+      )}] has no voxels to render`
+    );
     return null;
   }
 
@@ -84,7 +94,9 @@ export default function Chunk({ data }: ChunkProps) {
       castShadow
       receiveShadow
     >
-      <boxGeometry args={[VOXEL_SIZE, VOXEL_SIZE, VOXEL_SIZE]} />
+      <boxGeometry
+        args={[VOXEL_SIZE, VOXEL_SIZE, VOXEL_SIZE]}
+      />
       <meshLambertMaterial vertexColors />
     </instancedMesh>
   );

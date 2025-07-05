@@ -407,6 +407,7 @@ class WorkerTerrainGenerator {
   }
 }
 
+
 // Global terrain generator instance
 let terrainGenerator: WorkerTerrainGenerator | null = null;
 

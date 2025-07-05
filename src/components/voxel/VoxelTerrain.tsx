@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import ChunkSimpleGreedy from "./ChunkSimpleGreedy";
+import ChunkGreedyMesher from "./ChunkGreedyMesher";
 import { useChunkManager } from "./ChunkManager";
 import { useDebugData } from "./DebugInfoProvider";
 import { LODConfig } from "./types";
@@ -17,7 +17,7 @@ export default function VoxelTerrain() {
     hysteresis: 1.5, // Buffer distance to prevent LOD flickering
   };
 
-  const { debugData } = useDebugData();
+  const { debugData, updateDebugData } = useDebugData();
   const {
     loadedChunks,
     updateChunks,
@@ -91,14 +91,38 @@ export default function VoxelTerrain() {
     updateChunks(0, 0); // Start at world origin
   }, [updateChunks]);
 
+
+  // Update terrain debug data periodically
+  useEffect(() => {
+    const terrainDebugInterval = setInterval(() => {
+      const stats = getStats();
+
+      // Send only terrain data - will be merged with existing debug data
+      updateDebugData({
+        terrain: {
+          renderDistance: stats.renderDistance,
+          lod1Distance: stats.lod1Distance,
+          lod2Distance: stats.lod2Distance,
+          chunksLoaded: stats.loadedChunks,
+          chunksInQueue: stats.queuedChunks,
+          chunksPending: stats.pendingChunks,
+          workerActive: stats.workerActive,
+        },
+      });
+    }, 500); // Update every 500ms
+
+    return () => clearInterval(terrainDebugInterval);
+  }, [getStats, updateDebugData]);
+
   return (
     <group>
       {loadedChunks.map((chunk) => (
-        <ChunkSimpleGreedy
+        <ChunkGreedyMesher
           key={`${chunk.position[0]},${chunk.position[2]},LOD${chunk.lodLevel},S${chunk.lodScale}`}
           data={chunk}
           getVoxelAt={getVoxelAt}
           getVoxelAtWithLODCheck={getVoxelAtWithLODCheck}
+          wireframeMode={debugData.rendering?.wireframeMode || false}
         />
       ))}
     </group>

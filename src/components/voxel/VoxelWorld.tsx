@@ -5,8 +5,12 @@ import DebugCamera from "./DebugCamera";
 import VoxelTerrain from "./VoxelTerrain";
 import TestVoxel from "./TestVoxel";
 import DebugUpdater from "./DebugUpdater";
+import FlatworldTester from "./FlatworldTester";
+import { useDebugData } from "./DebugInfoProvider";
 
 export default function VoxelWorld() {
+  const { debugData } = useDebugData();
+
   return (
     <Canvas
       camera={{ position: [10, 200, 30], fov: 60 }}
@@ -42,14 +46,17 @@ export default function VoxelWorld() {
         {/* Debug Data Updater */}
         <DebugUpdater />
         
-        {/* Ground plane for reference */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
-          <planeGeometry args={[200, 200]} />
-          <meshStandardMaterial color="#404040" />
-        </mesh>
-        
-        {/* Voxel Terrain */}
-        <VoxelTerrain />
+        {/* Conditional Rendering: Either main terrain OR flatworld tester */}
+        {debugData.rendering?.flatworldTesterMode ? (
+          /* Flatworld Tester for Greedy Meshing Debug */
+          <FlatworldTester 
+            wireframeMode={debugData.rendering?.wireframeMode || false}
+            pattern={debugData.rendering?.flatworldPattern || "flat"}
+          />
+        ) : (
+          /* Main Voxel Terrain */
+          <VoxelTerrain />
+        )}
       </Suspense>
     </Canvas>
   );
