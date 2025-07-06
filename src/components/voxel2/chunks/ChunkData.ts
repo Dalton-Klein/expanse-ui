@@ -1,4 +1,5 @@
-import { ChunkData, ChunkPosition, Voxel, VoxelType, CHUNK_SIZE, CHUNK_HEIGHT } from "../types";
+import { ChunkData, ChunkPosition, Voxel, VoxelType } from "../types";
+import { CHUNK_SIZE, CHUNK_HEIGHT } from "../terrain/TerrainConfig";
 
 // Chunk data management for voxel2 system  
 // TODO: Implement chunk data utilities and management

@@ -6,7 +6,9 @@
       "Bash(npx tsc:*)",
       "Bash(grep:*)",
       "Bash(rm:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "deny": []
   }

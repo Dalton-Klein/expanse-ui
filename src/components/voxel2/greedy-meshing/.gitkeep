@@ -1,8 +1,0 @@
-# Greedy Meshing System (Future Implementation)
-
-This folder will contain the greedy meshing optimization system:
-- GreedyMesher.tsx - Optimized greedy meshing renderer
-- FaceCuller.ts - Face culling logic
-- QuadMerger.ts - Quad merging algorithms
-
-TODO: Implement after basic rendering is working perfectly.

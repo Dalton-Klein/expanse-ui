@@ -2,12 +2,18 @@ import {
   TerrainConfig,
   GenerationAlgorithm,
   DebugPattern,
+  MeshingAlgorithm,
 } from "../types";
 
 // Default terrain configuration with sensible values for development and production
 export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
   // Core render distance - start conservative for debugging
-  renderDistance: 8, // chunks
+  renderDistance: 1, // chunks
+
+  // Fundamental chunk configuration
+  chunkSize: 32, // voxels per chunk side
+  chunkHeight: 64, // voxels per chunk height (max 64 for binary greedy meshing)
+  voxelSize: 1, // world units per voxel
 
   // LOD system configuration
   lod: {
@@ -19,6 +25,7 @@ export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
   // Greedy meshing configuration
   greedyMeshing: {
     enabled: true, // start with greedy meshing enabled
+    algorithm: MeshingAlgorithm.NAIVE, // start with naive for comparison
     crossChunkCulling: true, // enable cross-chunk face culling
   },
 
@@ -46,6 +53,9 @@ export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
 // Production-optimized terrain configuration
 export const PRODUCTION_TERRAIN_CONFIG: TerrainConfig = {
   renderDistance: 16,
+  chunkSize: 32,
+  chunkHeight: 64,
+  voxelSize: 1,
 
   lod: {
     enabled: true,
@@ -55,6 +65,7 @@ export const PRODUCTION_TERRAIN_CONFIG: TerrainConfig = {
 
   greedyMeshing: {
     enabled: true,
+    algorithm: MeshingAlgorithm.BINARY_GREEDY,
     crossChunkCulling: true,
   },
 
@@ -135,6 +146,9 @@ export function cloneTerrainConfig(
 ): TerrainConfig {
   return {
     renderDistance: config.renderDistance,
+    chunkSize: config.chunkSize,
+    chunkHeight: config.chunkHeight,
+    voxelSize: config.voxelSize,
     lod: { ...config.lod },
     greedyMeshing: { ...config.greedyMeshing },
     generation: { ...config.generation },
@@ -206,3 +220,10 @@ export function getTerrainConfigSummary(
 
   return parts.join(", ");
 }
+
+// Export performance constants for optimized access
+// These are derived from the default config for compile-time optimization
+export const CHUNK_SIZE = DEFAULT_TERRAIN_CONFIG.chunkSize;
+export const CHUNK_HEIGHT =
+  DEFAULT_TERRAIN_CONFIG.chunkHeight;
+export const VOXEL_SIZE = DEFAULT_TERRAIN_CONFIG.voxelSize;

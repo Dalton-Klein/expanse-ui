@@ -4,9 +4,8 @@ import {
   VoxelType,
   DebugPattern,
   TerrainConfig,
-  CHUNK_SIZE,
-  CHUNK_HEIGHT,
 } from "../types";
+import { CHUNK_SIZE, CHUNK_HEIGHT } from "../terrain/TerrainConfig";
 import { ChunkDataUtils } from "../chunks/ChunkData";
 
 /**

@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { Sky } from "@react-three/drei";
 import DebugPanel from "./debug/DebugPanel";
 import NaiveRenderer from "./rendering/NaiveRenderer";
+import GreedyMeshRenderer from "./rendering/GreedyMeshRenderer";
 import {
   RenderConfig,
   PerformanceMetrics,
@@ -11,10 +12,10 @@ import {
   DebugPattern,
   TerrainConfig,
   GenerationAlgorithm,
-  CHUNK_SIZE,
-  CHUNK_HEIGHT,
   VoxelType,
+  MeshingAlgorithm,
 } from "./types";
+import { CHUNK_SIZE, CHUNK_HEIGHT } from "./terrain/TerrainConfig";
 import { ChunkDataUtils } from "./chunks/ChunkData";
 import { DEFAULT_TERRAIN_CONFIG } from "./terrain/TerrainConfig";
 import { DebugTerrainGenerator } from "./debug/DebugTerrainGenerator";
@@ -145,12 +146,27 @@ export default function VoxelWorld2() {
 
         {/* Voxel Rendering */}
         <group>
-          {/* TODO: Replace with proper chunk management */}
-          <NaiveRenderer
-            chunks={chunks}
-            renderingConfig={renderConfig}
-            terrainConfig={terrainConfig}
-          />
+          {/* Conditional renderer based on terrain configuration */}
+          {terrainConfig.greedyMeshing.enabled && 
+           terrainConfig.greedyMeshing.algorithm === MeshingAlgorithm.BINARY_GREEDY ? (
+            <GreedyMeshRenderer
+              chunks={chunks}
+              renderingConfig={renderConfig}
+              terrainConfig={terrainConfig}
+              onMeshGenerated={(stats) => {
+                setPerformanceMetrics(prev => ({
+                  ...prev,
+                  triangles: stats.totalTriangles,
+                }));
+              }}
+            />
+          ) : (
+            <NaiveRenderer
+              chunks={chunks}
+              renderingConfig={renderConfig}
+              terrainConfig={terrainConfig}
+            />
+          )}
         </group>
       </Canvas>
     </div>

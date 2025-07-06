@@ -5,9 +5,8 @@ import {
   RenderConfig,
   TerrainConfig,
   VoxelType,
-  CHUNK_SIZE,
-  CHUNK_HEIGHT,
 } from "../types";
+import { CHUNK_SIZE, CHUNK_HEIGHT } from "../terrain/TerrainConfig";
 import { ChunkDataUtils } from "../chunks/ChunkData";
 
 // Naive cube-per-voxel renderer for voxel2
@@ -119,8 +118,8 @@ function generateVoxelFaces(
     { 
       check: () => isAir(chunk, localX + 1, localY, localZ),
       vertices: [
-        worldX + 1, worldY, worldZ,     worldX + 1, worldY + 1, worldZ,     worldX + 1, worldY + 1, worldZ + 1,
-        worldX + 1, worldY, worldZ,     worldX + 1, worldY + 1, worldZ + 1, worldX + 1, worldY, worldZ + 1
+        worldX + 1, worldY, worldZ + 1, worldX + 1, worldY + 1, worldZ + 1, worldX + 1, worldY + 1, worldZ,
+        worldX + 1, worldY, worldZ + 1, worldX + 1, worldY + 1, worldZ,     worldX + 1, worldY, worldZ
       ],
       normal: [1, 0, 0]
     },
@@ -128,8 +127,8 @@ function generateVoxelFaces(
     { 
       check: () => isAir(chunk, localX - 1, localY, localZ),
       vertices: [
-        worldX, worldY, worldZ + 1,     worldX, worldY + 1, worldZ + 1,     worldX, worldY + 1, worldZ,
-        worldX, worldY, worldZ + 1,     worldX, worldY + 1, worldZ,         worldX, worldY, worldZ
+        worldX, worldY, worldZ,         worldX, worldY + 1, worldZ,         worldX, worldY + 1, worldZ + 1,
+        worldX, worldY, worldZ,         worldX, worldY + 1, worldZ + 1,     worldX, worldY, worldZ + 1
       ],
       normal: [-1, 0, 0]
     },
@@ -137,8 +136,8 @@ function generateVoxelFaces(
     { 
       check: () => isAir(chunk, localX, localY + 1, localZ),
       vertices: [
-        worldX, worldY + 1, worldZ,     worldX + 1, worldY + 1, worldZ,     worldX + 1, worldY + 1, worldZ + 1,
-        worldX, worldY + 1, worldZ,     worldX + 1, worldY + 1, worldZ + 1, worldX, worldY + 1, worldZ + 1
+        worldX, worldY + 1, worldZ + 1, worldX + 1, worldY + 1, worldZ + 1, worldX + 1, worldY + 1, worldZ,
+        worldX, worldY + 1, worldZ + 1, worldX + 1, worldY + 1, worldZ,     worldX, worldY + 1, worldZ
       ],
       normal: [0, 1, 0]
     },
@@ -155,8 +154,8 @@ function generateVoxelFaces(
     { 
       check: () => isAir(chunk, localX, localY, localZ + 1),
       vertices: [
-        worldX, worldY, worldZ + 1,     worldX, worldY + 1, worldZ + 1,     worldX + 1, worldY + 1, worldZ + 1,
-        worldX, worldY, worldZ + 1,     worldX + 1, worldY + 1, worldZ + 1, worldX + 1, worldY, worldZ + 1
+        worldX, worldY, worldZ + 1,     worldX + 1, worldY, worldZ + 1,     worldX + 1, worldY + 1, worldZ + 1,
+        worldX, worldY, worldZ + 1,     worldX + 1, worldY + 1, worldZ + 1, worldX, worldY + 1, worldZ + 1
       ],
       normal: [0, 0, 1]
     },
@@ -164,8 +163,8 @@ function generateVoxelFaces(
     { 
       check: () => isAir(chunk, localX, localY, localZ - 1),
       vertices: [
-        worldX + 1, worldY, worldZ,     worldX + 1, worldY + 1, worldZ,     worldX, worldY + 1, worldZ,
-        worldX + 1, worldY, worldZ,     worldX, worldY + 1, worldZ,         worldX, worldY, worldZ
+        worldX + 1, worldY, worldZ,     worldX, worldY, worldZ,             worldX, worldY + 1, worldZ,
+        worldX + 1, worldY, worldZ,     worldX, worldY + 1, worldZ,         worldX + 1, worldY + 1, worldZ
       ],
       normal: [0, 0, -1]
     }

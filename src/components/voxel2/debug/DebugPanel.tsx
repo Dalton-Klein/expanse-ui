@@ -6,6 +6,7 @@ import {
   DebugPattern,
   TerrainConfig,
   GenerationAlgorithm,
+  MeshingAlgorithm,
 } from "../types";
 import { updateTerrainConfig } from "../terrain/TerrainConfig";
 import "./DebugPanel.scss";
@@ -310,33 +311,58 @@ export default function DebugPanel({
                 : "OFF"}
             </button>
           </div>
-          <div className="debug-item">
-            <span className="label">
-              Cross-Chunk Culling:
-            </span>
-            <button
-              className={`wireframe-toggle ${
-                terrainConfig.greedyMeshing
-                  .crossChunkCulling
-                  ? "active"
-                  : ""
-              }`}
-              onClick={() =>
-                handleTerrainConfigUpdate({
-                  greedyMeshing: {
-                    ...terrainConfig.greedyMeshing,
-                    crossChunkCulling:
-                      !terrainConfig.greedyMeshing
-                        .crossChunkCulling,
-                  },
-                })
-              }
-            >
-              {terrainConfig.greedyMeshing.crossChunkCulling
-                ? "ON"
-                : "OFF"}
-            </button>
-          </div>
+          {terrainConfig.greedyMeshing.enabled && (
+            <>
+              <div className="debug-item">
+                <span className="label">Algorithm:</span>
+                <select
+                  value={terrainConfig.greedyMeshing.algorithm}
+                  onChange={(e) =>
+                    handleTerrainConfigUpdate({
+                      greedyMeshing: {
+                        ...terrainConfig.greedyMeshing,
+                        algorithm: e.target.value as MeshingAlgorithm,
+                      },
+                    })
+                  }
+                >
+                  <option value={MeshingAlgorithm.NAIVE}>
+                    Naive
+                  </option>
+                  <option value={MeshingAlgorithm.BINARY_GREEDY}>
+                    Binary Greedy
+                  </option>
+                </select>
+              </div>
+              <div className="debug-item">
+                <span className="label">
+                  Cross-Chunk Culling:
+                </span>
+                <button
+                  className={`wireframe-toggle ${
+                    terrainConfig.greedyMeshing
+                      .crossChunkCulling
+                      ? "active"
+                      : ""
+                  }`}
+                  onClick={() =>
+                    handleTerrainConfigUpdate({
+                      greedyMeshing: {
+                        ...terrainConfig.greedyMeshing,
+                        crossChunkCulling:
+                          !terrainConfig.greedyMeshing
+                            .crossChunkCulling,
+                      },
+                    })
+                  }
+                >
+                  {terrainConfig.greedyMeshing.crossChunkCulling
+                    ? "ON"
+                    : "OFF"}
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="debug-section">

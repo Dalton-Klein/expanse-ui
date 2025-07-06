@@ -11,10 +11,8 @@ export enum VoxelType {
   WATER = 5,
 }
 
-// World configuration constants
-export const CHUNK_SIZE = 32; // Voxels per chunk side
-export const CHUNK_HEIGHT = 64; // Voxels per chunk height
-export const VOXEL_SIZE = 1; // World units per voxel
+// World configuration constants moved to TerrainConfig.ts
+// Import CHUNK_SIZE, CHUNK_HEIGHT, VOXEL_SIZE from "../terrain/TerrainConfig"
 
 // Basic 3D position
 export interface Position3D {
@@ -79,9 +77,16 @@ export interface LODConfig {
   level2Distance: number; // chunks - distance for LOD level 2
 }
 
+// Greedy meshing algorithms
+export enum MeshingAlgorithm {
+  NAIVE = "naive",
+  BINARY_GREEDY = "binary-greedy",
+}
+
 // Greedy meshing configuration
 export interface GreedyMeshingConfig {
   enabled: boolean;
+  algorithm: MeshingAlgorithm; // which meshing algorithm to use
   crossChunkCulling: boolean; // enable face culling across chunk boundaries
 }
 
@@ -109,6 +114,9 @@ export interface DebugConfig {
 // Master terrain configuration - single source of truth for all terrain settings
 export interface TerrainConfig {
   renderDistance: number; // render distance in chunks
+  chunkSize: number; // voxels per chunk side
+  chunkHeight: number; // voxels per chunk height
+  voxelSize: number; // world units per voxel
   lod: LODConfig;
   greedyMeshing: GreedyMeshingConfig;
   generation: GenerationConfig;
