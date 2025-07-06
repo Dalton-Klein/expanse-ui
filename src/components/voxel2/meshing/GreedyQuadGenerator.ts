@@ -279,45 +279,74 @@ export class GreedyQuadGenerator {
       case 0: // X face
         {
           const x = facePositive ? CHUNK_SIZE : 0;
-          vertices.push(
-            new THREE.Vector3(worldX + x, v, worldZ + u),
-            new THREE.Vector3(worldX + x, v, worldZ + u + width),
-            new THREE.Vector3(worldX + x, v + height, worldZ + u + width),
-            new THREE.Vector3(worldX + x, v + height, worldZ + u)
-          );
+          if (facePositive) {
+            // +X face: vertices should be ordered counter-clockwise when viewed from outside
+            vertices.push(
+              new THREE.Vector3(worldX + x, v, worldZ + u),
+              new THREE.Vector3(worldX + x, v + height, worldZ + u),
+              new THREE.Vector3(worldX + x, v + height, worldZ + u + width),
+              new THREE.Vector3(worldX + x, v, worldZ + u + width)
+            );
+          } else {
+            // -X face: vertices should be ordered counter-clockwise when viewed from outside
+            vertices.push(
+              new THREE.Vector3(worldX + x, v, worldZ + u + width),
+              new THREE.Vector3(worldX + x, v + height, worldZ + u + width),
+              new THREE.Vector3(worldX + x, v + height, worldZ + u),
+              new THREE.Vector3(worldX + x, v, worldZ + u)
+            );
+          }
         }
         break;
         
       case 1: // Y face
         {
           const y = facePositive ? CHUNK_HEIGHT : 0;
-          vertices.push(
-            new THREE.Vector3(worldX + u, y, worldZ + v),
-            new THREE.Vector3(worldX + u + width, y, worldZ + v),
-            new THREE.Vector3(worldX + u + width, y, worldZ + v + height),
-            new THREE.Vector3(worldX + u, y, worldZ + v + height)
-          );
+          if (facePositive) {
+            // +Y face: vertices should be ordered counter-clockwise when viewed from above
+            vertices.push(
+              new THREE.Vector3(worldX + u, y, worldZ + v),
+              new THREE.Vector3(worldX + u + width, y, worldZ + v),
+              new THREE.Vector3(worldX + u + width, y, worldZ + v + height),
+              new THREE.Vector3(worldX + u, y, worldZ + v + height)
+            );
+          } else {
+            // -Y face: vertices should be ordered counter-clockwise when viewed from below
+            vertices.push(
+              new THREE.Vector3(worldX + u, y, worldZ + v + height),
+              new THREE.Vector3(worldX + u + width, y, worldZ + v + height),
+              new THREE.Vector3(worldX + u + width, y, worldZ + v),
+              new THREE.Vector3(worldX + u, y, worldZ + v)
+            );
+          }
         }
         break;
         
       case 2: // Z face
         {
           const z = facePositive ? CHUNK_SIZE : 0;
-          vertices.push(
-            new THREE.Vector3(worldX + u, v, worldZ + z),
-            new THREE.Vector3(worldX + u + width, v, worldZ + z),
-            new THREE.Vector3(worldX + u + width, v + height, worldZ + z),
-            new THREE.Vector3(worldX + u, v + height, worldZ + z)
-          );
+          if (facePositive) {
+            // +Z face: vertices should be ordered counter-clockwise when viewed from outside
+            vertices.push(
+              new THREE.Vector3(worldX + u, v, worldZ + z),
+              new THREE.Vector3(worldX + u, v + height, worldZ + z),
+              new THREE.Vector3(worldX + u + width, v + height, worldZ + z),
+              new THREE.Vector3(worldX + u + width, v, worldZ + z)
+            );
+          } else {
+            // -Z face: vertices should be ordered counter-clockwise when viewed from outside
+            vertices.push(
+              new THREE.Vector3(worldX + u + width, v, worldZ + z),
+              new THREE.Vector3(worldX + u + width, v + height, worldZ + z),
+              new THREE.Vector3(worldX + u, v + height, worldZ + z),
+              new THREE.Vector3(worldX + u, v, worldZ + z)
+            );
+          }
         }
         break;
     }
     
-    // Ensure counter-clockwise winding when viewed from outside
-    if (!facePositive) {
-      // Reverse winding for negative faces
-      vertices.reverse();
-    }
+    // Winding order is now handled individually for each face type above
     
     return vertices;
   }
