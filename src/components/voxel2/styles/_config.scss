@@ -1,0 +1,37 @@
+// Voxel2 Global SCSS Configuration
+// Centralized font sizes and colors for consistent UI across voxel2 components
+
+// Font Sizes - Fixed sizes for consistent debug UI
+$font-small: 10px;       // Small elements: select options, toggle buttons
+$font-medium: 11px;      // Medium elements: debug items, input fields, labels
+$font-large: 12px;       // Large elements: section headers, main panel text
+$font-extraLarge: 14px;  // Extra large: panel titles, primary headings
+
+// UI Component Colors - Dark theme optimized for voxel debugging
+$primaryColor: #10b981;      // Green accent - focus states, active elements
+$secondaryColor: #059669;    // Darker green - hover states, secondary accent
+$lightGrey: #94a3b8;        // Light grey - labels, secondary text
+$backgroundColor: #374151;   // Dark background - inputs, buttons, controls
+
+// Extended Color Palette for comprehensive UI support
+$borderColor: #6b7280;           // Default border color
+$borderColorHover: #9ca3af;      // Border color on hover
+$textColor: #e2e8f0;            // Primary text color
+$textColorPrimary: white;        // High contrast text
+$backgroundColorHover: #4b5563;  // Background on hover
+$panelBackground: rgba(0, 0, 0, 0.6);  // Semi-transparent panel background
+$sectionHeaderColor: #fbbf24;    // Yellow accent for section headers
+
+// Spacing and Layout
+$spacing-small: 2px;
+$spacing-medium: 8px;
+$spacing-large: 15px;
+
+// Border Radius
+$borderRadius-small: 2px;
+$borderRadius-medium: 4px;
+$borderRadius-large: 8px;
+
+// Transitions
+$transition-fast: 0.2s;
+$transition-medium: 0.3s;

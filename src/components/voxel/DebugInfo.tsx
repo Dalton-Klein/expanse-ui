@@ -9,29 +9,57 @@ export default function DebugInfo() {
     updateDebugData({
       rendering: {
         wireframeMode: !debugData.rendering?.wireframeMode,
-        flatworldTesterMode: debugData.rendering?.flatworldTesterMode || false,
-        flatworldPattern: debugData.rendering?.flatworldPattern || "flat",
-      }
+        flatworldTesterMode:
+          debugData.rendering?.flatworldTesterMode || false,
+        flatworldPattern:
+          debugData.rendering?.flatworldPattern || "flat",
+        naiveRenderingMode:
+          debugData.rendering?.naiveRenderingMode || false,
+      },
     });
   };
 
   const toggleFlatworldTester = () => {
     updateDebugData({
       rendering: {
-        wireframeMode: debugData.rendering?.wireframeMode || false,
-        flatworldTesterMode: !debugData.rendering?.flatworldTesterMode,
-        flatworldPattern: debugData.rendering?.flatworldPattern || "flat",
-      }
+        wireframeMode:
+          debugData.rendering?.wireframeMode || false,
+        flatworldTesterMode:
+          !debugData.rendering?.flatworldTesterMode,
+        flatworldPattern:
+          debugData.rendering?.flatworldPattern || "flat",
+        naiveRenderingMode:
+          debugData.rendering?.naiveRenderingMode || false,
+      },
     });
   };
 
   const changeFlatworldPattern = (pattern: string) => {
     updateDebugData({
       rendering: {
-        wireframeMode: debugData.rendering?.wireframeMode || false,
-        flatworldTesterMode: debugData.rendering?.flatworldTesterMode || false,
+        wireframeMode:
+          debugData.rendering?.wireframeMode || false,
+        flatworldTesterMode:
+          debugData.rendering?.flatworldTesterMode || false,
         flatworldPattern: pattern,
-      }
+        naiveRenderingMode:
+          debugData.rendering?.naiveRenderingMode || false,
+      },
+    });
+  };
+
+  const toggleNaiveRendering = () => {
+    updateDebugData({
+      rendering: {
+        wireframeMode:
+          debugData.rendering?.wireframeMode || false,
+        flatworldTesterMode:
+          debugData.rendering?.flatworldTesterMode || false,
+        flatworldPattern:
+          debugData.rendering?.flatworldPattern || "flat",
+        naiveRenderingMode:
+          !debugData.rendering?.naiveRenderingMode,
+      },
     });
   };
 
@@ -39,20 +67,26 @@ export default function DebugInfo() {
     <div className="debug-info-container">
       <div className="debug-panel">
         <h3>Debug Info</h3>
-        
+
         <div className="debug-section">
           <h4>Position</h4>
           <div className="debug-item">
             <span className="label">X:</span>
-            <span className="value">{debugData.position.x}</span>
+            <span className="value">
+              {debugData.position.x}
+            </span>
           </div>
           <div className="debug-item">
             <span className="label">Y:</span>
-            <span className="value">{debugData.position.y}</span>
+            <span className="value">
+              {debugData.position.y}
+            </span>
           </div>
           <div className="debug-item">
             <span className="label">Z:</span>
-            <span className="value">{debugData.position.z}</span>
+            <span className="value">
+              {debugData.position.z}
+            </span>
           </div>
         </div>
 
@@ -60,7 +94,9 @@ export default function DebugInfo() {
           <h4>Direction</h4>
           <div className="debug-item">
             <span className="label">Facing:</span>
-            <span className="value">{debugData.direction}</span>
+            <span className="value">
+              {debugData.direction}
+            </span>
           </div>
         </div>
 
@@ -68,11 +104,15 @@ export default function DebugInfo() {
           <h4>Rotation (degrees)</h4>
           <div className="debug-item">
             <span className="label">Pitch:</span>
-            <span className="value">{debugData.rotation.x}°</span>
+            <span className="value">
+              {debugData.rotation.x}°
+            </span>
           </div>
           <div className="debug-item">
             <span className="label">Yaw:</span>
-            <span className="value">{debugData.rotation.y}°</span>
+            <span className="value">
+              {debugData.rotation.y}°
+            </span>
           </div>
         </div>
 
@@ -80,19 +120,27 @@ export default function DebugInfo() {
           <h4>Performance</h4>
           <div className="debug-item">
             <span className="label">FPS:</span>
-            <span className="value">{debugData.performance.fps}</span>
+            <span className="value">
+              {debugData.performance.fps}
+            </span>
           </div>
           <div className="debug-item">
             <span className="label">Triangles:</span>
-            <span className="value">{debugData.performance.triangles.toLocaleString()}</span>
+            <span className="value">
+              {debugData.performance.triangles.toLocaleString()}
+            </span>
           </div>
           <div className="debug-item">
             <span className="label">Draw Calls:</span>
-            <span className="value">{debugData.performance.drawCalls}</span>
+            <span className="value">
+              {debugData.performance.drawCalls}
+            </span>
           </div>
           <div className="debug-item">
             <span className="label">Memory:</span>
-            <span className="value">{debugData.performance.memory} MB</span>
+            <span className="value">
+              {debugData.performance.memory} MB
+            </span>
           </div>
         </div>
 
@@ -100,32 +148,52 @@ export default function DebugInfo() {
           <div className="debug-section">
             <h4>Voxel Terrain</h4>
             <div className="debug-item">
-              <span className="label">Render Distance:</span>
-              <span className="value">{debugData.terrain.renderDistance} chunks</span>
+              <span className="label">
+                Render Distance:
+              </span>
+              <span className="value">
+                {debugData.terrain.renderDistance} chunks
+              </span>
             </div>
             <div className="debug-item">
               <span className="label">LOD 1 Distance:</span>
-              <span className="value">{debugData.terrain.lod1Distance} chunks</span>
+              <span className="value">
+                {debugData.terrain.lod1Distance} chunks
+              </span>
             </div>
             <div className="debug-item">
               <span className="label">LOD 2 Distance:</span>
-              <span className="value">{debugData.terrain.lod2Distance} chunks</span>
+              <span className="value">
+                {debugData.terrain.lod2Distance} chunks
+              </span>
             </div>
             <div className="debug-item">
               <span className="label">Chunks Loaded:</span>
-              <span className="value">{debugData.terrain.chunksLoaded}</span>
+              <span className="value">
+                {debugData.terrain.chunksLoaded}
+              </span>
             </div>
             <div className="debug-item">
-              <span className="label">Chunks in Queue:</span>
-              <span className="value">{debugData.terrain.chunksInQueue}</span>
+              <span className="label">
+                Chunks in Queue:
+              </span>
+              <span className="value">
+                {debugData.terrain.chunksInQueue}
+              </span>
             </div>
             <div className="debug-item">
               <span className="label">Chunks Pending:</span>
-              <span className="value">{debugData.terrain.chunksPending}</span>
+              <span className="value">
+                {debugData.terrain.chunksPending}
+              </span>
             </div>
             <div className="debug-item">
               <span className="label">Worker:</span>
-              <span className="value">{debugData.terrain.workerActive ? "Active" : "Inactive"}</span>
+              <span className="value">
+                {debugData.terrain.workerActive
+                  ? "Active"
+                  : "Inactive"}
+              </span>
             </div>
           </div>
         )}
@@ -134,33 +202,69 @@ export default function DebugInfo() {
           <h4>Rendering</h4>
           <div className="debug-item">
             <span className="label">Wireframe Mode:</span>
-            <button 
-              className={`wireframe-toggle ${debugData.rendering?.wireframeMode ? 'active' : ''}`}
+            <button
+              className={`wireframe-toggle ${
+                debugData.rendering?.wireframeMode
+                  ? "active"
+                  : ""
+              }`}
               onClick={toggleWireframe}
             >
-              {debugData.rendering?.wireframeMode ? 'ON' : 'OFF'}
+              {debugData.rendering?.wireframeMode
+                ? "ON"
+                : "OFF"}
+            </button>
+          </div>
+          <div className="debug-item">
+            <span className="label">Naive Rendering:</span>
+            <button
+              className={`wireframe-toggle ${
+                debugData.rendering?.naiveRenderingMode
+                  ? "active"
+                  : ""
+              }`}
+              onClick={toggleNaiveRendering}
+            >
+              {debugData.rendering?.naiveRenderingMode
+                ? "ON"
+                : "OFF"}
             </button>
           </div>
           <div className="debug-item">
             <span className="label">Flatworld Tester:</span>
-            <button 
-              className={`wireframe-toggle ${debugData.rendering?.flatworldTesterMode ? 'active' : ''}`}
+            <button
+              className={`wireframe-toggle ${
+                debugData.rendering?.flatworldTesterMode
+                  ? "active"
+                  : ""
+              }`}
               onClick={toggleFlatworldTester}
             >
-              {debugData.rendering?.flatworldTesterMode ? 'ON' : 'OFF'}
+              {debugData.rendering?.flatworldTesterMode
+                ? "ON"
+                : "OFF"}
             </button>
           </div>
           {debugData.rendering?.flatworldTesterMode && (
             <div className="debug-item">
               <span className="label">Pattern:</span>
-              <select 
-                value={debugData.rendering?.flatworldPattern || "flat"}
-                onChange={(e) => changeFlatworldPattern(e.target.value)}
+              <select
+                value={
+                  debugData.rendering?.flatworldPattern ||
+                  "flat"
+                }
+                onChange={(e) =>
+                  changeFlatworldPattern(e.target.value)
+                }
               >
                 <option value="flat">Flat</option>
-                <option value="checkerboard">Checkerboard</option>
+                <option value="checkerboard">
+                  Checkerboard
+                </option>
                 <option value="stepped">Stepped</option>
-                <option value="mixed">Mixed Materials</option>
+                <option value="mixed">
+                  Mixed Materials
+                </option>
               </select>
             </div>
           )}

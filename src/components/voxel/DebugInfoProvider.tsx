@@ -23,6 +23,7 @@ interface DebugData {
     wireframeMode: boolean;
     flatworldTesterMode: boolean;
     flatworldPattern: string;
+    naiveRenderingMode: boolean;
   };
 }
 
@@ -50,6 +51,7 @@ const DebugContext = createContext<DebugContextType>({
       wireframeMode: false,
       flatworldTesterMode: false,
       flatworldPattern: "flat",
+      naiveRenderingMode: false,
     }
   },
   updateDebugData: () => {}
@@ -76,6 +78,7 @@ export const DebugProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       wireframeMode: false,
       flatworldTesterMode: false,
       flatworldPattern: "flat",
+      naiveRenderingMode: false,
     }
   });
 

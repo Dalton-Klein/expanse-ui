@@ -1,0 +1,157 @@
+// Voxel2 SCSS Mixins
+// Reusable styling patterns for consistent UI components
+
+@import "config";
+
+// Base input styling - foundation for all interactive elements
+@mixin input-base {
+  pointer-events: auto;
+  background: $backgroundColor;
+  border: 1px solid $borderColor;
+  color: $textColor;
+  border-radius: $borderRadius-medium;
+  font-size: $font-medium;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $backgroundColorHover;
+    border-color: $borderColorHover;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $primaryColor;
+    box-shadow: 0 0 0 1px $primaryColor;
+  }
+}
+
+// Toggle button styling - for ON/OFF switches
+@mixin button-toggle {
+  @include input-base;
+  padding: $spacing-small 8px;
+  font-size: $font-small;
+  cursor: pointer;
+
+  &.active {
+    background: $secondaryColor;
+    border-color: $primaryColor;
+    color: $textColorPrimary;
+  }
+}
+
+// Select dropdown styling
+@mixin select-dropdown {
+  @include input-base;
+  padding: $spacing-small 6px;
+  font-size: $font-small;
+  cursor: pointer;
+
+  option {
+    background: $backgroundColor;
+    color: $textColor;
+  }
+}
+
+// Number input styling
+@mixin input-number {
+  @include input-base;
+  padding: $spacing-small 6px;
+  width: 60px;
+  text-align: center;
+
+  // Remove default number input spinners
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+// Range slider styling
+@mixin input-range {
+  pointer-events: auto;
+  width: 80px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: $backgroundColor;
+  border-radius: $borderRadius-small;
+  outline: none;
+  margin: 0 8px;
+
+  // WebKit thumb styling
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: $primaryColor;
+    cursor: pointer;
+    border: none;
+    transition: background $transition-fast;
+  }
+
+  // Firefox thumb styling
+  &::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: $primaryColor;
+    cursor: pointer;
+    border: none;
+    transition: background $transition-fast;
+  }
+
+  // Hover states
+  &:hover::-webkit-slider-thumb {
+    background: $secondaryColor;
+  }
+
+  &:hover::-moz-range-thumb {
+    background: $secondaryColor;
+  }
+}
+
+// Debug panel layout mixins
+
+@mixin debug-section {
+  margin-bottom: $spacing-medium;
+}
+
+@mixin debug-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: $spacing-small 0;
+  font-size: $font-medium;
+}
+
+@mixin debug-label {
+  color: $lightGrey;
+  min-width: 60px;
+}
+
+@mixin debug-value {
+  color: $textColor;
+  font-weight: bold;
+  text-align: right;
+}
+
+@mixin debug-section-header {
+  margin: $spacing-medium 0 5px 0;
+  font-size: $font-large;
+  color: $sectionHeaderColor;
+}
+
+@mixin debug-panel-title {
+  margin: 0 0 10px 0;
+  font-size: $font-extraLarge;
+  color: $textColorPrimary;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  padding-bottom: 5px;
+}

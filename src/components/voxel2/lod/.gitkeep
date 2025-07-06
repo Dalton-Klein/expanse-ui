@@ -1,0 +1,8 @@
+# Level of Detail (LOD) System (Future Implementation)
+
+This folder will contain the LOD system:
+- LODManager.ts - LOD level assignment
+- LODRenderer.tsx - LOD-aware rendering  
+- ChunkScaler.ts - Voxel sampling for different LOD levels
+
+TODO: Implement after multi-chunk system is working perfectly.

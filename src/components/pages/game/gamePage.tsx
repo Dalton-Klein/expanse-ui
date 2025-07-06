@@ -1,7 +1,5 @@
 import React from "react";
-import VoxelWorld from "../../voxel/VoxelWorld";
-import HUD from "../../voxel/HUD";
-import DebugInfo from "../../voxel/DebugInfo";
+import VoxelWorld2 from "../../voxel2/VoxelWorld2";
 import { DebugProvider } from "../../voxel/DebugInfoProvider";
 import "./gamePage.scss";
 
@@ -9,9 +7,7 @@ export default function GamePage() {
   return (
     <DebugProvider>
       <div className="game-page">
-        <VoxelWorld />
-        <HUD />
-        <DebugInfo />
+        <VoxelWorld2 />
       </div>
     </DebugProvider>
   );

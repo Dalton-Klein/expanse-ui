@@ -114,10 +114,12 @@ const generateSteppedChunkData = (
       for (let z = 0; z < CHUNK_SIZE; z++) {
         let voxelType = VoxelType.AIR;
 
-        // Create stepped pattern - height varies by X position only
+        // Create stepped pattern - height varies diagonally per voxel
         const worldX = chunkX * CHUNK_SIZE + x;
-        const stepHeight =
-          baseHeight + (Math.floor(worldX / 8) % 4); // Steps of 0-3 blocks
+        const worldZ = chunkZ * CHUNK_SIZE + z;
+        // Step up by 1 block every diagonal voxel
+        const diagonalIndex = worldX + worldZ;
+        const stepHeight = baseHeight + (diagonalIndex % 10); // Step up immediately, mod 10 to limit height
 
         if (y < stepHeight - 3) {
           voxelType = VoxelType.STONE;
@@ -149,7 +151,7 @@ const generateSteppedChunkData = (
   };
 };
 
-// Mixed materials generator - complex patterns
+// Mixed materials generator - stepped heights with different materials
 const generateMixedMaterialChunkData = (
   chunkX: number,
   chunkZ: number
@@ -164,39 +166,27 @@ const generateMixedMaterialChunkData = (
       for (let z = 0; z < CHUNK_SIZE; z++) {
         let voxelType = VoxelType.AIR;
 
+        // Use same stepped height logic as stepped pattern - per voxel
         const worldX = chunkX * CHUNK_SIZE + x;
         const worldZ = chunkZ * CHUNK_SIZE + z;
+        const diagonalIndex = worldX + worldZ;
+        const stepHeight = baseHeight + (diagonalIndex % 10);
 
-        // Create irregular height variation
-        const heightNoise =
-          (Math.sin(worldX * 0.3) +
-            Math.cos(worldZ * 0.3)) *
-          1.5;
-        const terrainHeight = Math.floor(
-          baseHeight + heightNoise
-        );
-
-        if (y < terrainHeight - 3) {
-          voxelType = VoxelType.STONE;
-        } else if (y < terrainHeight) {
-          voxelType = VoxelType.DIRT;
-        } else if (y === terrainHeight) {
-          // Complex material distribution
-          const materialNoise =
-            Math.sin(worldX * 0.2) * Math.cos(worldZ * 0.2);
-          if (materialNoise > 0.3) {
-            voxelType = VoxelType.STONE; // Stone outcroppings
-          } else if (materialNoise < -0.3) {
-            voxelType = VoxelType.SAND; // Sand patches
-          } else {
-            voxelType = VoxelType.GRASS; // Default grass
-          }
-        } else if (
-          y === terrainHeight + 1 &&
-          Math.random() > 0.9
-        ) {
-          // Occasional blocks on top for extra complexity
-          voxelType = VoxelType.STONE;
+        if (y < stepHeight - 3) {
+          voxelType = VoxelType.STONE; // Deep layers always stone
+        } else if (y < stepHeight) {
+          voxelType = VoxelType.DIRT; // Subsurface always dirt
+        } else if (y === stepHeight) {
+          // Different surface material based on height step
+          const materials = [
+            VoxelType.GRASS,  // Height 16
+            VoxelType.DIRT,   // Height 17
+            VoxelType.SAND,   // Height 18
+            VoxelType.STONE,  // Height 19
+            VoxelType.GRASS,  // Height 20 (cycle back)
+          ];
+          const materialIndex = (stepHeight - baseHeight) % materials.length;
+          voxelType = materials[materialIndex];
         }
 
         voxels[x][y][z] = { type: voxelType };
@@ -220,7 +210,7 @@ export default function FlatworldTester({
   wireframeMode = false,
   pattern = "flat",
 }: FlatworldTesterProps) {
-  // Generate a 5x5 grid of chunks for testing greedy meshing
+  // Generate a 3x3 grid of chunks for testing greedy meshing
   const flatChunks = useMemo(() => {
     const chunks = [];
 
@@ -242,32 +232,23 @@ export default function FlatworldTester({
     }
 
     // Create chunks at origin since main terrain is unloaded when flatworld is active
-    for (let x = -1; x <= 1; x++) {
-      for (let z = -1; z <= 1; z++) {
+    const gridSize = 2; // Half-size: -2 to +2 = 5x5 grid
+    for (let x = -gridSize; x <= gridSize; x++) {
+      for (let z = -gridSize; z <= gridSize; z++) {
         chunks.push(generateChunkData(x, z));
       }
     }
 
-    console.log(
-      `FlatworldTester: Generated ${chunks.length} chunks with pattern: ${pattern}`
-    );
-
     // Debug the stepped pattern generation
     if (pattern === "stepped") {
-      console.log("=== STEPPED PATTERN DEBUG ===");
       const baseHeight = 16;
-      for (let chunkX = -1; chunkX <= 1; chunkX++) {
-        for (let chunkZ = -1; chunkZ <= 1; chunkZ++) {
-          console.log(`Chunk [${chunkX}, ${chunkZ}]:`);
-          // Check a few positions in this chunk
-          for (let localX = 0; localX < 4; localX++) {
-            const worldX = chunkX * CHUNK_SIZE + localX;
-            const stepHeight =
-              baseHeight + (Math.floor(worldX / 8) % 4);
-            console.log(
-              `  localX=${localX}, worldX=${worldX}, stepHeight=${stepHeight}`
-            );
-          }
+      console.log(`=== IMMEDIATE DIAGONAL STEPPED PATTERN DEBUG ===`);
+      // Show sample heights at adjacent positions to demonstrate immediate stepping
+      for (let sampleX = -2; sampleX <= 2; sampleX += 1) {
+        for (let sampleZ = -2; sampleZ <= 2; sampleZ += 1) {
+          const diagonalIndex = sampleX + sampleZ;
+          const stepHeight = baseHeight + (diagonalIndex % 10);
+          console.log(`  World pos (${sampleX}, ${sampleZ}) -> diagonalIndex=${diagonalIndex} height=${stepHeight}`);
         }
       }
     }
@@ -312,14 +293,16 @@ export default function FlatworldTester({
         }
 
         case "stepped": {
-          const stepHeight =
-            baseHeight + (Math.floor(worldX / 8) % 4);
+          // Step up by 1 block every diagonal voxel
+          const diagonalIndex = worldX + worldZ;
+          const stepHeight = baseHeight + (diagonalIndex % 10);
+          
           if (worldY < stepHeight - 3) {
             return VoxelType.STONE;
           } else if (worldY < stepHeight) {
             return VoxelType.DIRT;
           } else if (worldY === stepHeight) {
-            return stepHeight >= baseHeight + 2
+            return stepHeight >= baseHeight + 5
               ? VoxelType.STONE
               : VoxelType.GRASS;
           }
@@ -327,29 +310,25 @@ export default function FlatworldTester({
         }
 
         case "mixed": {
-          const heightNoise =
-            (Math.sin(worldX * 0.3) +
-              Math.cos(worldZ * 0.3)) *
-            1.5;
-          const terrainHeight = Math.floor(
-            baseHeight + heightNoise
-          );
+          // Use same logic as stepped pattern for heights - per voxel
+          const diagonalIndex = worldX + worldZ;
+          const stepHeight = baseHeight + (diagonalIndex % 10);
 
-          if (worldY < terrainHeight - 3) {
+          if (worldY < stepHeight - 3) {
             return VoxelType.STONE;
-          } else if (worldY < terrainHeight) {
+          } else if (worldY < stepHeight) {
             return VoxelType.DIRT;
-          } else if (worldY === terrainHeight) {
-            const materialNoise =
-              Math.sin(worldX * 0.2) *
-              Math.cos(worldZ * 0.2);
-            if (materialNoise > 0.3) {
-              return VoxelType.STONE;
-            } else if (materialNoise < -0.3) {
-              return VoxelType.SAND;
-            } else {
-              return VoxelType.GRASS;
-            }
+          } else if (worldY === stepHeight) {
+            // Same material assignment as in generation
+            const materials = [
+              VoxelType.GRASS,  // Height 16
+              VoxelType.DIRT,   // Height 17
+              VoxelType.SAND,   // Height 18
+              VoxelType.STONE,  // Height 19
+              VoxelType.GRASS,  // Height 20 (cycle back)
+            ];
+            const materialIndex = (stepHeight - baseHeight) % materials.length;
+            return materials[materialIndex];
           }
           return VoxelType.AIR;
         }
@@ -382,7 +361,7 @@ export default function FlatworldTester({
             key={`flatworld-${chunkData.position[0]}-${chunkData.position[2]}`}
             data={chunkData}
             getVoxelAt={getVoxelAt}
-            getVoxelAtWithLODCheck={undefined} // TEMPORARILY DISABLE cross-chunk face culling for testing
+            getVoxelAtWithLODCheck={getVoxelAt} // Re-enable cross-chunk face culling
             wireframeMode={wireframeMode}
           />
         );

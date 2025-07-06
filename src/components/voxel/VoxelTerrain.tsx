@@ -1,12 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import ChunkGreedyMesher from "./ChunkGreedyMesher";
+import ChunkNaive from "./ChunkNaive";
 import { useChunkManager } from "./ChunkManager";
 import { useDebugData } from "./DebugInfoProvider";
 import { LODConfig } from "./types";
 
 export default function VoxelTerrain() {
   // Default render distance: minimum 5 chunks in each direction
-  const RENDER_DISTANCE = 25; // Will be enforced to minimum 5 in ChunkManager
+  const RENDER_DISTANCE = 5; // Will be enforced to minimum 5 in ChunkManager
 
   // LOD Configuration based on percentages of render distance
   const LOD_CONFIG: LODConfig = {
@@ -91,7 +92,6 @@ export default function VoxelTerrain() {
     updateChunks(0, 0); // Start at world origin
   }, [updateChunks]);
 
-
   // Update terrain debug data periodically
   useEffect(() => {
     const terrainDebugInterval = setInterval(() => {
@@ -116,15 +116,25 @@ export default function VoxelTerrain() {
 
   return (
     <group>
-      {loadedChunks.map((chunk) => (
-        <ChunkGreedyMesher
-          key={`${chunk.position[0]},${chunk.position[2]},LOD${chunk.lodLevel},S${chunk.lodScale}`}
-          data={chunk}
-          getVoxelAt={getVoxelAt}
-          getVoxelAtWithLODCheck={getVoxelAtWithLODCheck}
-          wireframeMode={debugData.rendering?.wireframeMode || false}
-        />
-      ))}
+      {loadedChunks.map((chunk) => {
+        // Choose renderer based on debug setting
+        const ChunkRenderer = debugData.rendering
+          ?.naiveRenderingMode
+          ? ChunkNaive
+          : ChunkGreedyMesher;
+
+        return (
+          <ChunkRenderer
+            key={`${chunk.position[0]},${chunk.position[2]},LOD${chunk.lodLevel},S${chunk.lodScale}`}
+            data={chunk}
+            getVoxelAt={getVoxelAt}
+            getVoxelAtWithLODCheck={getVoxelAtWithLODCheck}
+            wireframeMode={
+              debugData.rendering?.wireframeMode || false
+            }
+          />
+        );
+      })}
     </group>
   );
 }

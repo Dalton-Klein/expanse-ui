@@ -112,28 +112,14 @@ export default function ChunkGreedyMesher({
           return VoxelType.AIR;
         }
 
-        // Outside chunk bounds - checking neighboring chunks
-        const isAtHorizontalChunkBoundary =
-          x < 0 ||
-          x >= chunkWidth ||
-          z < 0 ||
-          z >= chunkWidth;
-
-        // For horizontal chunk boundaries (X/Z), be conservative for LOD transitions
-        if (isAtHorizontalChunkBoundary) {
-          // At horizontal chunk boundaries, always return AIR to force face rendering
-          // This ensures visual continuity at LOD transitions
-          return VoxelType.AIR;
-        }
-
-        // For Y-axis (vertical) checks, always do cross-chunk lookup
+        // Outside chunk bounds - check neighboring chunks for all directions
         if (getVoxelAtWithLODCheck) {
           const worldX =
-            data.position[0] * CHUNK_SIZE + x * lodScale;
+            data.position[0] * CHUNK_SIZE + x;
           const worldY =
-            data.position[1] * CHUNK_SIZE + y * lodScale;
+            data.position[1] * CHUNK_SIZE + y;
           const worldZ =
-            data.position[2] * CHUNK_SIZE + z * lodScale;
+            data.position[2] * CHUNK_SIZE + z;
 
           return getVoxelAtWithLODCheck(
             worldX,
