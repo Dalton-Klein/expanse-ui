@@ -40,15 +40,6 @@ export default function GreedyMeshRenderer({
       totalTime += result.generationTimeMs;
     }
     
-    // Report statistics
-    if (onMeshGenerated) {
-      onMeshGenerated({
-        chunkCount: chunks.length,
-        totalTriangles,
-        avgGenerationTime: chunks.length > 0 ? totalTime / chunks.length : 0,
-      });
-    }
-    
     // Log performance for debugging
     console.log(`[GreedyMeshRenderer] Generated ${chunks.length} chunks:`, {
       totalTriangles,
@@ -56,12 +47,23 @@ export default function GreedyMeshRenderer({
       totalTime: totalTime.toFixed(3),
     });
     
-    return results;
-  }, [chunks, onMeshGenerated]);
+    return { results, totalTriangles, avgGenerationTime: chunks.length > 0 ? totalTime / chunks.length : 0 };
+  }, [chunks]);
+
+  // Report statistics when mesh results change
+  React.useEffect(() => {
+    if (onMeshGenerated) {
+      onMeshGenerated({
+        chunkCount: chunks.length,
+        totalTriangles: meshResults.totalTriangles,
+        avgGenerationTime: meshResults.avgGenerationTime,
+      });
+    }
+  }, [meshResults, onMeshGenerated, chunks.length]);
 
   return (
     <group name="greedy-mesh-terrain">
-      {meshResults.map((result, index) => (
+      {meshResults.results.map((result, index) => (
         <mesh
           key={`chunk-${chunks[index].position.x}-${chunks[index].position.z}`}
           geometry={result.geometry}

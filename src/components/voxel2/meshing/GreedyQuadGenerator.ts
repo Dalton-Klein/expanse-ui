@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { ChunkData, VoxelType } from "../types";
 import { CHUNK_SIZE, CHUNK_HEIGHT } from "../terrain/TerrainConfig";
-import { FaceMask } from "./BinaryGreedyMesher";
+import { FaceMask, BinaryGreedyMesher } from "./BinaryGreedyMesher";
 import { BitMaskUtils } from "./BitMaskUtils";
 import { ChunkDataUtils } from "../chunks/ChunkData";
 
@@ -34,12 +34,30 @@ export class GreedyQuadGenerator {
     new THREE.Vector3(0, 0, -1),  // -Z
   ];
 
+  // Debug logging control - sync with BinaryGreedyMesher
+  private static get DEBUG_ENABLED() {
+    return (BinaryGreedyMesher as any).DEBUG_ENABLED;
+  }
+  
+  private static get Y_FACE_DEBUG() {
+    return (BinaryGreedyMesher as any).Y_FACE_DEBUG;
+  }
+
   // Generate quads for a single face direction
   static generateQuadsForFace(
     faceMask: FaceMask,
     chunk: ChunkData,
     direction: number
   ): QuadData[] {
+    const faceNames = ['+X', '-X', '+Y', '-Y', '+Z', '-Z'];
+    const isYFace = direction === 2 || direction === 3;
+    
+    if (this.Y_FACE_DEBUG && isYFace) {
+      console.log(`${faceNames[direction]} Quad Generation:`);
+    } else if (this.DEBUG_ENABLED && !this.Y_FACE_DEBUG) {
+      console.log(`[generateQuadsForFace] Processing ${faceNames[direction]} faces`);
+    }
+    
     const quads: QuadData[] = [];
     const processedMask = this.createProcessedMaskCopy(faceMask);
     
@@ -52,6 +70,12 @@ export class GreedyQuadGenerator {
     const [uAxis, vAxis] = this.getAxisMapping(faceAxis);
     const [uSize, vSize] = this.getFaceDimensions(faceAxis);
     
+    if (this.Y_FACE_DEBUG && isYFace) {
+      console.log(`  Face config: axis=${faceAxis}, positive=${facePositive}, dimensions=${uSize}x${vSize}`);
+    } else if (this.DEBUG_ENABLED && !this.Y_FACE_DEBUG) {
+      console.log(`[generateQuadsForFace] ${faceNames[direction]} - axis=${faceAxis}, positive=${facePositive}, uSize=${uSize}, vSize=${vSize}`);
+    }
+    
     // Process the face mask to find and merge quads
     for (let u = 0; u < uSize; u++) {
       for (let vBase = 0; vBase < vSize; vBase += 64) {
@@ -59,6 +83,12 @@ export class GreedyQuadGenerator {
         let currentMask = processedMask[u][maskIndex];
         
         if (currentMask === 0n) continue;
+        
+        if (this.Y_FACE_DEBUG && isYFace && currentMask !== 0n) {
+          console.log(`  Processing u=${u}, vBase=${vBase}: mask=${currentMask.toString(2).padStart(8, '0')}`);
+        } else if (this.DEBUG_ENABLED && !this.Y_FACE_DEBUG && isYFace) {
+          console.log(`[generateQuadsForFace] ${faceNames[direction]} - u=${u}, vBase=${vBase}, mask=${currentMask.toString(2)}`);
+        }
         
         // Find runs of set bits
         while (currentMask !== 0n) {
@@ -81,6 +111,12 @@ export class GreedyQuadGenerator {
           if (quad) {
             quads.push(quad);
             
+            if (this.Y_FACE_DEBUG && isYFace) {
+              console.log(`  Created quad at u=${u}, v=${v}, size=${quad.width}x${quad.height}`);
+            } else if (this.DEBUG_ENABLED && !this.Y_FACE_DEBUG && isYFace) {
+              console.log(`[generateQuadsForFace] ${faceNames[direction]} - Created quad at u=${u}, v=${v}, size=${quad.width}x${quad.height}`);
+            }
+            
             // Clear the processed area from the mask
             this.clearProcessedArea(
               processedMask,
@@ -100,6 +136,11 @@ export class GreedyQuadGenerator {
       }
     }
     
+    if (this.Y_FACE_DEBUG && isYFace) {
+      console.log(`  Generated ${quads.length} quads`);
+    } else if (this.DEBUG_ENABLED && !this.Y_FACE_DEBUG) {
+      console.log(`[generateQuadsForFace] ${faceNames[direction]} - Generated ${quads.length} quads`);
+    }
     return quads;
   }
 
@@ -246,16 +287,29 @@ export class GreedyQuadGenerator {
   ): [number, number, number] {
     const offset = facePositive ? 0 : -1;
     
+    let result: [number, number, number];
     switch (faceAxis) {
       case 0: // X face
-        return [facePositive ? CHUNK_SIZE - 1 : 0, v, u];
+        result = [facePositive ? CHUNK_SIZE - 1 : 0, v, u];
+        break;
       case 1: // Y face
-        return [u, facePositive ? CHUNK_HEIGHT - 1 : 0, v];
+        result = [u, v, Math.floor(u / CHUNK_SIZE)]; // u maps to X, v maps to Y, derive Z from iteration
+        break;
       case 2: // Z face
-        return [u, v, facePositive ? CHUNK_SIZE - 1 : 0];
+        result = [u, v, facePositive ? CHUNK_SIZE - 1 : 0];
+        break;
       default:
-        return [0, 0, 0];
+        result = [0, 0, 0];
     }
+    
+    // Debug Y-face coordinate mapping
+    if (this.Y_FACE_DEBUG && faceAxis === 1) {
+      console.log(`  Coord mapping: u=${u}, v=${v} -> voxel[${result[0]}, ${result[1]}, ${result[2]}]`);
+    } else if (this.DEBUG_ENABLED && faceAxis === 1) {
+      console.log(`[getFacePosition] Y-face: u=${u}, v=${v}, positive=${facePositive} -> [${result[0]}, ${result[1]}, ${result[2]}]`);
+    }
+    
+    return result;
   }
 
   // Create quad vertices in world space

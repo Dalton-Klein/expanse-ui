@@ -11,6 +11,24 @@ This is a clean reimplementation of the voxel system with a debug-first, increme
 - **Clean separation**: Rendering, terrain, optimization as separate concerns
 - **A/B testable**: Always compare new features against known-good baseline
 
+## Reference Implementation
+
+This binary greedy meshing implementation is based on **TanTanDev's optimized approach**:
+- **Repository**: https://github.com/TanTanDev/binary_greedy_mesher_demo
+- **Key File**: `src/greedy_mesher_optimized.rs`
+- **Approach**: Ultra-fast bitwise operations for face culling using column masks
+- **Performance Target**: 100-500μs per chunk generation time
+
+### Critical Bitwise Face Culling Logic:
+```rust
+// Reference implementation from TanTanDev
+axis_cols[0][z][x] |= 1u64 << y as u64;  // Mark voxels in Y-axis columns
+col_face_masks[2 * axis + 0][z][x] = col & !(col << 1);  // descending axis (bottom faces)
+col_face_masks[2 * axis + 1][z][x] = col & !(col >> 1);  // ascending axis (top faces)
+```
+
+**Important**: All face culling must maintain this bitwise efficiency approach.
+
 ## Folder Structure
 
 ```

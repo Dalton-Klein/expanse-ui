@@ -67,14 +67,29 @@ export default function VoxelWorld2() {
     }
   }, [terrainConfig]);
 
-  // Update performance metrics
-  React.useEffect(() => {
-    setPerformanceMetrics((prev) => ({
+  // Stable callback for mesh generation stats
+  const handleMeshGenerated = React.useCallback((stats: {
+    chunkCount: number;
+    totalTriangles: number;
+    avgGenerationTime: number;
+  }) => {
+    setPerformanceMetrics(prev => ({
       ...prev,
-      chunks: chunks.length,
-      triangles: calculateTriangleCount(chunks),
+      chunks: stats.chunkCount,
+      triangles: stats.totalTriangles,
     }));
-  }, [chunks]);
+  }, []);
+
+  // Update performance metrics for naive renderer
+  React.useEffect(() => {
+    if (!terrainConfig.greedyMeshing.enabled) {
+      setPerformanceMetrics((prev) => ({
+        ...prev,
+        chunks: chunks.length,
+        triangles: calculateTriangleCount(chunks),
+      }));
+    }
+  }, [chunks, terrainConfig.greedyMeshing.enabled]);
 
   return (
     <div
@@ -153,12 +168,7 @@ export default function VoxelWorld2() {
               chunks={chunks}
               renderingConfig={renderConfig}
               terrainConfig={terrainConfig}
-              onMeshGenerated={(stats) => {
-                setPerformanceMetrics(prev => ({
-                  ...prev,
-                  triangles: stats.totalTriangles,
-                }));
-              }}
+              onMeshGenerated={handleMeshGenerated}
             />
           ) : (
             <NaiveRenderer
