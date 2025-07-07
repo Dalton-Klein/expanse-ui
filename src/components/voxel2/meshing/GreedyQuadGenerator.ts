@@ -55,7 +55,6 @@ export class GreedyQuadGenerator {
     chunk: ChunkData,
     direction: number
   ): QuadData[] {
-    const faceNames = ["+X", "-X", "+Y", "-Y", "+Z", "-Z"];
     const isYFace = direction === 2 || direction === 3;
 
     const quads: QuadData[] = [];
@@ -128,27 +127,15 @@ export class GreedyQuadGenerator {
   private static createProcessedMaskCopy(
     faceMask: FaceMask
   ): bigint[][] {
+    console.log("createProcessedMaskCopy", faceMask);
     const copy: bigint[][] = [];
     for (let i = 0; i < faceMask.mask.length; i++) {
-      copy[i] = [...faceMask.mask[i]];
+      //copy[i] = [...faceMask.mask[i]];
+      const row = faceMask.mask[i];
+      copy[i] = row.map((cell) => BigInt(cell)); // Ensures deep copy of BigInts
     }
+    console.log("Processed mask copy created:", copy);
     return copy;
-  }
-
-  // Get axis mapping for face orientation
-  private static getAxisMapping(
-    faceAxis: number
-  ): [number, number] {
-    switch (faceAxis) {
-      case 0:
-        return [2, 1]; // X face: iterate Z,Y
-      case 1:
-        return [2, 1]; // Y face: iterate Z,Y (matching face mask storage order)
-      case 2:
-        return [0, 1]; // Z face: iterate X,Y
-      default:
-        return [0, 1];
-    }
   }
 
   // Get face dimensions based on axis
@@ -179,6 +166,12 @@ export class GreedyQuadGenerator {
     facePositive: boolean,
     normal: THREE.Vector3
   ): (QuadData & { width: number; height: number }) | null {
+    // if (this.Y_FACE_DEBUG && faceAxis === 1) {
+    //   const faceType = facePositive ? "+Y" : "-Y";
+    //   console.log(
+    //     `[Y-Face 1st Debug] ${faceType} quad started - startU: ${startU}x${maxU}, startV: ${startV}x${maxV}`
+    //   );
+    // }
     // Get the voxel type at this position
     const [x, y, z] = this.getFacePosition(
       startU,
@@ -283,11 +276,18 @@ export class GreedyQuadGenerator {
     );
 
     // Debug logging for Y-face quads only
-    if (this.Y_FACE_DEBUG && (faceAxis === 1)) {
-      const faceType = facePositive ? "+Y" : "-Y";
-      console.log(`[Y-Face Debug] ${faceType} quad complete - Size: ${width}x${height}, Position: u=${startU}, v=${startV}`);
-      console.log(`  Vertices:`, vertices.map(v => `(${v.x}, ${v.y}, ${v.z})`).join(", "));
-    }
+    // if (this.Y_FACE_DEBUG && faceAxis === 1) {
+    //   const faceType = facePositive ? "+Y" : "-Y";
+    //   console.log(
+    //     `[Y-Face Debug] ${faceType} quad complete - Size: ${width}x${height}, Position: u=${startU}, v=${startV}`
+    //   );
+    //   console.log(
+    //     `  Vertices:`,
+    //     vertices
+    //       .map((v) => `(${v.x}, ${v.y}, ${v.z})`)
+    //       .join(", ")
+    //   );
+    // }
 
     return {
       vertices,

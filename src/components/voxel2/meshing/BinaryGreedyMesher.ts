@@ -169,7 +169,9 @@ export class BinaryGreedyMesher {
         this.cullZFaces(occupancyMask, faceMask, positive);
         break;
     }
-
+    if (axis == 1) {
+      console.log("faceMask", faceMask);
+    }
     return { mask: faceMask, width, height };
   }
 
@@ -215,8 +217,6 @@ export class BinaryGreedyMesher {
     faceMask: bigint[][],
     positive: boolean
   ): void {
-    const faceType = positive ? "+Y (top)" : "-Y (bottom)";
-
     // Y-axis faces iterate over Z,X coordinates (matching reference implementation)
     for (let z = 0; z < CHUNK_SIZE; z++) {
       faceMask[z] = [];
@@ -229,13 +229,11 @@ export class BinaryGreedyMesher {
 
         let faces = 0n;
         if (positive) {
-          // +Y faces (top): col & !(col << 1) - find where solid has air above
-          // This matches: col_face_masks[2 * axis + 1][z][x] = col & !(col >> 1);
-          faces = currentColumn & ~(currentColumn << 1n);
-        } else {
-          // -Y faces (bottom): col & !(col >> 1) - find where solid has air below
-          // This matches: col_face_masks[2 * axis + 0][z][x] = col & !(col << 1);
+          // +Y faces (top): find where solid has air above (should detect Y=7)
           faces = currentColumn & ~(currentColumn >> 1n);
+        } else {
+          // -Y faces (bottom): find where solid has air below (should detect Y=0)
+          faces = currentColumn & ~(currentColumn << 1n);
         }
 
         faceMask[z][0] |= faces;
