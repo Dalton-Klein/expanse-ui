@@ -114,21 +114,21 @@ function generateVoxelFaces(
   
   // Face checks: only render face if neighbor is air
   const faces = [
-    // Right face (+X)
+    // Right face (+X) - Counter-clockwise when viewed from +X direction
     { 
       check: () => isAir(chunk, localX + 1, localY, localZ),
       vertices: [
-        worldX + 1, worldY, worldZ + 1, worldX + 1, worldY + 1, worldZ + 1, worldX + 1, worldY + 1, worldZ,
-        worldX + 1, worldY, worldZ + 1, worldX + 1, worldY + 1, worldZ,     worldX + 1, worldY, worldZ
+        worldX + 1, worldY, worldZ,     worldX + 1, worldY + 1, worldZ,     worldX + 1, worldY + 1, worldZ + 1,
+        worldX + 1, worldY, worldZ,     worldX + 1, worldY + 1, worldZ + 1, worldX + 1, worldY, worldZ + 1
       ],
       normal: [1, 0, 0]
     },
-    // Left face (-X)
+    // Left face (-X) - Counter-clockwise when viewed from -X direction
     { 
       check: () => isAir(chunk, localX - 1, localY, localZ),
       vertices: [
-        worldX, worldY, worldZ,         worldX, worldY + 1, worldZ,         worldX, worldY + 1, worldZ + 1,
-        worldX, worldY, worldZ,         worldX, worldY + 1, worldZ + 1,     worldX, worldY, worldZ + 1
+        worldX, worldY, worldZ + 1,     worldX, worldY + 1, worldZ + 1,     worldX, worldY + 1, worldZ,
+        worldX, worldY, worldZ + 1,     worldX, worldY + 1, worldZ,         worldX, worldY, worldZ
       ],
       normal: [-1, 0, 0]
     },
