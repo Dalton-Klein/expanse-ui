@@ -100,7 +100,6 @@ export class GreedyQuadGenerator {
 
           if (quad) {
             quads.push(quad);
-
             // Clear the processed area from the mask
             this.clearProcessedArea(
               processedMask,
@@ -127,14 +126,11 @@ export class GreedyQuadGenerator {
   private static createProcessedMaskCopy(
     faceMask: FaceMask
   ): bigint[][] {
-    console.log("createProcessedMaskCopy", faceMask);
     const copy: bigint[][] = [];
     for (let i = 0; i < faceMask.mask.length; i++) {
-      //copy[i] = [...faceMask.mask[i]];
       const row = faceMask.mask[i];
-      copy[i] = row.map((cell) => BigInt(cell)); // Ensures deep copy of BigInts
+      copy[i] = row.map((cell) => BigInt(cell));
     }
-    console.log("Processed mask copy created:", copy);
     return copy;
   }
 
@@ -192,6 +188,12 @@ export class GreedyQuadGenerator {
     const startMaskIndex = Math.floor(startV / 64);
     const startBitIndex = startV % 64;
 
+    // Debug for Y-faces only
+    const isYFace = faceAxis === 1;
+    if (isYFace) {
+      console.log(`Expand start: u${startU}, v${startV}, type:${voxelType}`);
+    }
+
     // Check how far we can extend horizontally with same voxel type
     for (let u = startU + 1; u < maxU; u++) {
       // Check if this position has the same voxel type
@@ -208,19 +210,26 @@ export class GreedyQuadGenerator {
         checkZ
       );
 
-      if (!checkVoxel || checkVoxel.type !== voxelType)
+      if (!checkVoxel || checkVoxel.type !== voxelType) {
+        if (isYFace) console.log(`Stop u${u}: diff type`);
         break;
+      }
 
       // Check if the bit is set in the mask
       const checkMask = mask[u][startMaskIndex];
       if (
         (checkMask & (1n << BigInt(startBitIndex))) ===
         0n
-      )
+      ) {
+        if (isYFace) console.log(`Stop u${u}: no mask`);
         break;
+      }
 
       width++;
+      if (isYFace && width <= 5) console.log(`Expand u${u}: ✓`);
     }
+    
+    if (isYFace) console.log(`Final width: ${width}`);
 
     // Then, try to expand vertically
     for (let v = startV + 1; v < maxV; v++) {
