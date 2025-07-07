@@ -151,7 +151,7 @@ export class BinaryGreedyMesher {
       axis === 0
         ? [CHUNK_SIZE, CHUNK_HEIGHT]
         : axis === 1
-        ? [CHUNK_SIZE, CHUNK_SIZE]
+        ? [CHUNK_SIZE, CHUNK_SIZE] // Y-faces: Z x X (preserving both dimensions)
         : [CHUNK_SIZE, CHUNK_HEIGHT];
 
     // Initialize 2D mask for this face
@@ -217,15 +217,17 @@ export class BinaryGreedyMesher {
     faceMask: bigint[][],
     positive: boolean
   ): void {
-    // Y-axis faces iterate over Z,X coordinates (matching reference implementation)
+    // Y-axis faces iterate over Z,X coordinates (matching TanTanDev's col_face_masks[direction][z][x])
     for (let z = 0; z < CHUNK_SIZE; z++) {
       faceMask[z] = [];
-      faceMask[z][0] = 0n;
 
       for (let x = 0; x < CHUNK_SIZE; x++) {
         const currentColumn = occupancyMask[x][z];
 
-        if (currentColumn === 0n) continue; // Skip empty columns
+        if (currentColumn === 0n) {
+          faceMask[z][x] = 0n; // Initialize empty positions
+          continue;
+        }
 
         let faces = 0n;
         if (positive) {
@@ -236,15 +238,16 @@ export class BinaryGreedyMesher {
           faces = currentColumn & ~(currentColumn << 1n);
         }
 
-        faceMask[z][0] |= faces;
+        faceMask[z][x] = faces; // Store faces at [z][x] like TanTanDev
       }
     }
 
     // Count total faces found
     let totalFaces = 0;
     for (let z = 0; z < CHUNK_SIZE; z++) {
-      const mask = faceMask[z][0];
-      totalFaces += this.countSetBits(mask);
+      for (let x = 0; x < CHUNK_SIZE; x++) {
+        totalFaces += this.countSetBits(faceMask[z][x]);
+      }
     }
   }
 
