@@ -122,6 +122,11 @@ export class GreedyQuadGenerator {
       }
     } else {
       // X and Z faces: use original logic
+      // Debug: Log face processing for X/Z faces (interior positions)
+      if (!isYFace && (direction === 0 || direction === 1)) {
+        console.log(`Dir${direction}: mask7=${Number(processedMask[7][0])}, mask8=${Number(processedMask[8][0])}, mask9=${Number(processedMask[9][0])}`);
+      }
+      
       for (let u = 0; u < uSize; u++) {
         for (let vBase = 0; vBase < vSize; vBase += 64) {
           const maskIndex = Math.floor(vBase / 64);
@@ -150,6 +155,12 @@ export class GreedyQuadGenerator {
               normal
             );
 
+            // Debug: Log quad attempts for X faces (interior positions)
+            if (!isYFace && (direction === 0 || direction === 1) && u >= 7 && u <= 9 && v < 5) {
+              const result = quad ? `${quad.width}x${quad.height}` : 'failed';
+              console.log(`Dir${direction} u${u}v${v}: ${result}`);
+            }
+
             if (quad) {
               quads.push(quad);
               // Clear the processed area from the mask
@@ -172,6 +183,12 @@ export class GreedyQuadGenerator {
         }
       }
     }
+    
+    // Debug: Log final quad count for X faces
+    if (!isYFace && (direction === 0 || direction === 1)) {
+      console.log(`Dir${direction} final: ${quads.length} quads`);
+    }
+    
     return quads;
   }
 

@@ -204,6 +204,11 @@ export class BinaryGreedyMesher {
         // Faces are exposed where current slice has voxels but neighbor doesn't
         const exposedFaces = currentSlice & ~neighborSlice;
         faceMask[z][0] |= exposedFaces;
+        
+        // Debug: Log interior X-face detections
+        if (z === 8 && x >= 7 && x <= 10) {
+          console.log(`X-face x${x}z${z}: cur=${Number(currentSlice)}, nei=${Number(neighborSlice)}, exp=${Number(exposedFaces)}`);
+        }
       }
     }
   }
