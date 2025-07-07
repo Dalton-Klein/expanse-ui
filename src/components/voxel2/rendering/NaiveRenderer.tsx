@@ -141,12 +141,12 @@ function generateVoxelFaces(
       ],
       normal: [0, 1, 0]
     },
-    // Bottom face (-Y)
+    // Bottom face (-Y) - Counter-clockwise when viewed from below
     { 
       check: () => isAir(chunk, localX, localY - 1, localZ),
       vertices: [
-        worldX, worldY, worldZ + 1,     worldX + 1, worldY, worldZ + 1,     worldX + 1, worldY, worldZ,
-        worldX, worldY, worldZ + 1,     worldX + 1, worldY, worldZ,         worldX, worldY, worldZ
+        worldX, worldY, worldZ,         worldX + 1, worldY, worldZ,         worldX + 1, worldY, worldZ + 1,
+        worldX, worldY, worldZ,         worldX + 1, worldY, worldZ + 1,     worldX, worldY, worldZ + 1
       ],
       normal: [0, -1, 0]
     },
