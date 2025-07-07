@@ -63,15 +63,6 @@ export default function VoxelTerrain() {
 
         // Log chunk stats for debugging
         const stats = getStats();
-        console.log(
-          `Dynamic chunks: ${stats.loadedChunks} loaded, ${
-            stats.pendingChunks
-          } pending (render distance: ${
-            stats.renderDistance
-          }, worker: ${
-            stats.workerActive ? "active" : "inactive"
-          })`
-        );
 
         updateTimeoutRef.current = null;
       }, 150);

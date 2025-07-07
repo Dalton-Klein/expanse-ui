@@ -79,7 +79,8 @@ export class GreedyQuadGenerator {
 
           // Find runs of set bits (Y positions)
           while (currentMask !== 0n) {
-            const firstBit = BitMaskUtils.firstSetBit(currentMask);
+            const firstBit =
+              BitMaskUtils.firstSetBit(currentMask);
             if (firstBit === -1) break;
 
             const y = firstBit;
@@ -98,7 +99,7 @@ export class GreedyQuadGenerator {
 
             if (quad) {
               quads.push(quad);
-              
+
               // Clear the processed area from the mask
               this.clearProcessedAreaYFace(
                 processedMask,
@@ -214,12 +215,6 @@ export class GreedyQuadGenerator {
     facePositive: boolean,
     normal: THREE.Vector3
   ): (QuadData & { width: number; height: number }) | null {
-    // if (this.Y_FACE_DEBUG && faceAxis === 1) {
-    //   const faceType = facePositive ? "+Y" : "-Y";
-    //   console.log(
-    //     `[Y-Face 1st Debug] ${faceType} quad started - startU: ${startU}x${maxU}, startV: ${startV}x${maxV}`
-    //   );
-    // }
     // Get the voxel type at this position
     const [x, y, z] = this.getFacePosition(
       startU,
@@ -242,9 +237,6 @@ export class GreedyQuadGenerator {
 
     // Debug for Y-faces only
     const isYFace = faceAxis === 1;
-    if (isYFace) {
-      console.log(`Expand start: u${startU}, v${startV}, type:${voxelType}`);
-    }
 
     // Check how far we can extend horizontally with same voxel type
     for (let u = startU + 1; u < maxU; u++) {
@@ -261,27 +253,8 @@ export class GreedyQuadGenerator {
         checkY,
         checkZ
       );
-
-      if (!checkVoxel || checkVoxel.type !== voxelType) {
-        if (isYFace) console.log(`Stop u${u}: diff type`);
-        break;
-      }
-
-      // Check if the bit is set in the mask
-      const checkMask = mask[u][startMaskIndex];
-      if (
-        (checkMask & (1n << BigInt(startBitIndex))) ===
-        0n
-      ) {
-        if (isYFace) console.log(`Stop u${u}: no mask`);
-        break;
-      }
-
       width++;
-      if (isYFace && width <= 5) console.log(`Expand u${u}: ✓`);
     }
-    
-    if (isYFace) console.log(`Final width: ${width}`);
 
     // Then, try to expand vertically
     for (let v = startV + 1; v < maxV; v++) {
@@ -335,21 +308,6 @@ export class GreedyQuadGenerator {
       facePositive,
       chunk.position
     );
-
-    // Debug logging for Y-face quads only
-    // if (this.Y_FACE_DEBUG && faceAxis === 1) {
-    //   const faceType = facePositive ? "+Y" : "-Y";
-    //   console.log(
-    //     `[Y-Face Debug] ${faceType} quad complete - Size: ${width}x${height}, Position: u=${startU}, v=${startV}`
-    //   );
-    //   console.log(
-    //     `  Vertices:`,
-    //     vertices
-    //       .map((v) => `(${v.x}, ${v.y}, ${v.z})`)
-    //       .join(", ")
-    //   );
-    // }
-
     return {
       vertices,
       normal: normal.clone(),
@@ -372,7 +330,12 @@ export class GreedyQuadGenerator {
     normal: THREE.Vector3
   ): (QuadData & { width: number; height: number }) | null {
     // Get the voxel type at this position
-    const voxel = ChunkDataUtils.getVoxel(chunk, startX, startY, startZ);
+    const voxel = ChunkDataUtils.getVoxel(
+      chunk,
+      startX,
+      startY,
+      startZ
+    );
     if (!voxel || voxel.type === VoxelType.AIR) return null;
 
     const voxelType = voxel.type;
@@ -384,12 +347,19 @@ export class GreedyQuadGenerator {
     // First, expand in Z direction as far as possible
     for (let z = startZ + 1; z < CHUNK_SIZE; z++) {
       // Check if this position has the same voxel type
-      const checkVoxel = ChunkDataUtils.getVoxel(chunk, startX, startY, z);
-      if (!checkVoxel || checkVoxel.type !== voxelType) break;
+      const checkVoxel = ChunkDataUtils.getVoxel(
+        chunk,
+        startX,
+        startY,
+        z
+      );
+      if (!checkVoxel || checkVoxel.type !== voxelType)
+        break;
 
       // Check if the bit is set in the mask
       const checkMask = mask[z][startX];
-      if ((checkMask & (1n << BigInt(startY))) === 0n) break;
+      if ((checkMask & (1n << BigInt(startY))) === 0n)
+        break;
 
       widthZ++;
     }
@@ -400,7 +370,12 @@ export class GreedyQuadGenerator {
       let canExpand = true;
 
       for (let z = startZ; z < startZ + widthZ; z++) {
-        const checkVoxel = ChunkDataUtils.getVoxel(chunk, x, startY, z);
+        const checkVoxel = ChunkDataUtils.getVoxel(
+          chunk,
+          x,
+          startY,
+          z
+        );
         if (!checkVoxel || checkVoxel.type !== voxelType) {
           canExpand = false;
           break;
@@ -483,7 +458,7 @@ export class GreedyQuadGenerator {
   ): THREE.Vector3[] {
     const worldX = chunkPosition.x * CHUNK_SIZE;
     const worldZ = chunkPosition.z * CHUNK_SIZE;
-    
+
     // Y-face vertices in the X-Z plane
     const y = startY + (facePositive ? 1 : 0);
     const vertices: THREE.Vector3[] = [];
@@ -491,18 +466,50 @@ export class GreedyQuadGenerator {
     if (facePositive) {
       // +Y face: vertices should be ordered counter-clockwise when viewed from above
       vertices.push(
-        new THREE.Vector3(worldX + startX, y, worldZ + startZ + widthZ),
-        new THREE.Vector3(worldX + startX + heightX, y, worldZ + startZ + widthZ),
-        new THREE.Vector3(worldX + startX + heightX, y, worldZ + startZ),
-        new THREE.Vector3(worldX + startX, y, worldZ + startZ)
+        new THREE.Vector3(
+          worldX + startX,
+          y,
+          worldZ + startZ + widthZ
+        ),
+        new THREE.Vector3(
+          worldX + startX + heightX,
+          y,
+          worldZ + startZ + widthZ
+        ),
+        new THREE.Vector3(
+          worldX + startX + heightX,
+          y,
+          worldZ + startZ
+        ),
+        new THREE.Vector3(
+          worldX + startX,
+          y,
+          worldZ + startZ
+        )
       );
     } else {
       // -Y face: vertices should be ordered counter-clockwise when viewed from below
       vertices.push(
-        new THREE.Vector3(worldX + startX, y, worldZ + startZ),
-        new THREE.Vector3(worldX + startX + heightX, y, worldZ + startZ),
-        new THREE.Vector3(worldX + startX + heightX, y, worldZ + startZ + widthZ),
-        new THREE.Vector3(worldX + startX, y, worldZ + startZ + widthZ)
+        new THREE.Vector3(
+          worldX + startX,
+          y,
+          worldZ + startZ
+        ),
+        new THREE.Vector3(
+          worldX + startX + heightX,
+          y,
+          worldZ + startZ
+        ),
+        new THREE.Vector3(
+          worldX + startX + heightX,
+          y,
+          worldZ + startZ + widthZ
+        ),
+        new THREE.Vector3(
+          worldX + startX,
+          y,
+          worldZ + startZ + widthZ
+        )
       );
     }
 

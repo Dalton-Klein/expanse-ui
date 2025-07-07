@@ -169,9 +169,6 @@ export class BinaryGreedyMesher {
         this.cullZFaces(occupancyMask, faceMask, positive);
         break;
     }
-    if (axis == 1) {
-      console.log("faceMask", faceMask);
-    }
     return { mask: faceMask, width, height };
   }
 
