@@ -5,7 +5,10 @@ import {
   RenderConfig,
   TerrainConfig,
 } from "../types";
-import { BinaryGreedyMesher, BinaryMeshResult } from "../meshing/BinaryGreedyMesher";
+import {
+  BinaryGreedyMesher,
+  BinaryMeshResult,
+} from "../meshing/BinaryGreedyMesher";
 
 // React component for rendering chunks using binary greedy meshing
 
@@ -31,7 +34,7 @@ export default function GreedyMeshRenderer({
     const results: BinaryMeshResult[] = [];
     let totalTriangles = 0;
     let totalTime = 0;
-    
+
     // Process each chunk
     for (const chunk of chunks) {
       const result = BinaryGreedyMesher.generateMesh(chunk);
@@ -39,15 +42,26 @@ export default function GreedyMeshRenderer({
       totalTriangles += result.triangleCount;
       totalTime += result.generationTimeMs;
     }
-    
+
     // Log performance for debugging
-    console.log(`[GreedyMeshRenderer] Generated ${chunks.length} chunks:`, {
+    console.log(
+      `[GreedyMeshRenderer] Generated ${chunks.length} chunks:`,
+      {
+        totalTriangles,
+        avgTimePerChunk:
+          chunks.length > 0
+            ? (totalTime / chunks.length).toFixed(3)
+            : 0,
+        totalTime: totalTime.toFixed(3),
+      }
+    );
+
+    return {
+      results,
       totalTriangles,
-      avgTimePerChunk: chunks.length > 0 ? (totalTime / chunks.length).toFixed(3) : 0,
-      totalTime: totalTime.toFixed(3),
-    });
-    
-    return { results, totalTriangles, avgGenerationTime: chunks.length > 0 ? totalTime / chunks.length : 0 };
+      avgGenerationTime:
+        chunks.length > 0 ? totalTime / chunks.length : 0,
+    };
   }, [chunks]);
 
   // Report statistics when mesh results change
@@ -97,9 +111,16 @@ export function PerformanceComparison({
   naiveStats,
   greedyStats,
 }: PerformanceComparisonProps) {
-  const triangleReduction = ((1 - greedyStats.triangleCount / naiveStats.triangleCount) * 100).toFixed(1);
-  const speedup = (naiveStats.renderTime / greedyStats.renderTime).toFixed(2);
-  
+  const triangleReduction = (
+    (1 -
+      greedyStats.triangleCount /
+        naiveStats.triangleCount) *
+    100
+  ).toFixed(1);
+  const speedup = (
+    naiveStats.renderTime / greedyStats.renderTime
+  ).toFixed(2);
+
   return (
     <div className="performance-comparison">
       <h4>Performance Comparison</h4>
@@ -108,16 +129,22 @@ export function PerformanceComparison({
         <span className="value">{triangleReduction}%</span>
       </div>
       <div className="comparison-item">
-        <span className="label">Mesh Generation Speedup:</span>
+        <span className="label">
+          Mesh Generation Speedup:
+        </span>
         <span className="value">{speedup}x</span>
       </div>
       <div className="comparison-item">
         <span className="label">Naive Triangles:</span>
-        <span className="value">{naiveStats.triangleCount.toLocaleString()}</span>
+        <span className="value">
+          {naiveStats.triangleCount.toLocaleString()}
+        </span>
       </div>
       <div className="comparison-item">
         <span className="label">Greedy Triangles:</span>
-        <span className="value">{greedyStats.triangleCount.toLocaleString()}</span>
+        <span className="value">
+          {greedyStats.triangleCount.toLocaleString()}
+        </span>
       </div>
     </div>
   );

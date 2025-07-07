@@ -53,36 +53,14 @@ export class BinaryGreedyMesher {
   static generateMesh(chunk: ChunkData): BinaryMeshResult {
     const startTime = performance.now();
 
-    if (this.Y_FACE_DEBUG) {
-      console.log("=== Y-FACE DEBUG SUMMARY ===");
-    } else if (this.DEBUG_ENABLED) {
-      console.log(
-        `[BinaryGreedyMesher] Starting mesh generation for chunk (${chunk.position.x}, ${chunk.position.z})`
-      );
-    }
-
     // Step 1: Create binary occupancy mask
     const occupancyMask = this.createOccupancyMask(chunk);
-    if (this.Y_FACE_DEBUG) {
-      this.debugYFaceOccupancy(occupancyMask, chunk);
-    } else if (this.DEBUG_ENABLED) {
-      this.debugOccupancyMask(occupancyMask, chunk);
-    }
 
     // Step 2: Cull faces using bitwise operations
     const faceMasks = this.cullFaces(occupancyMask, chunk);
-    if (this.DEBUG_ENABLED && !this.Y_FACE_DEBUG) {
-      this.debugFaceMasks(faceMasks, chunk);
-    }
 
     // Step 3: Generate greedy quads from face masks
     const quads = this.generateQuads(faceMasks, chunk);
-    if (this.Y_FACE_DEBUG) {
-      this.debugYFaceQuads(quads, faceMasks);
-      console.log("=== END Y-FACE DEBUG ===");
-    } else if (this.DEBUG_ENABLED) {
-      this.debugQuads(quads, chunk);
-    }
 
     // Step 4: Build Three.js geometry from quads
     const geometry = this.buildGeometry(quads);
@@ -126,11 +104,9 @@ export class BinaryGreedyMesher {
             columnMask |= 1n << BigInt(y);
           }
         }
-
         mask[x][z] = columnMask;
       }
     }
-
     return mask;
   }
 
@@ -272,17 +248,6 @@ export class BinaryGreedyMesher {
       const mask = faceMask[z][0];
       totalFaces += this.countSetBits(mask);
     }
-    if (this.Y_FACE_DEBUG) {
-      console.log(
-        `  Total ${faceType} faces: ${totalFaces}`
-      );
-    } else if (this.DEBUG_ENABLED) {
-      console.log(
-        `[cullYFaces] Found ${totalFaces} ${
-          positive ? "top" : "bottom"
-        } faces`
-      );
-    }
   }
 
   // Cull Z-axis faces using bitwise operations
@@ -408,192 +373,6 @@ export class BinaryGreedyMesher {
     );
 
     return geometry;
-  }
-  // Y-Face specific debug methods
-  private static debugYFaceOccupancy(
-    occupancyMask: bigint[][],
-    chunk: ChunkData
-  ): void {
-    console.log("Occupancy (columns with voxels):");
-
-    let totalVoxels = 0;
-    let columnsWithVoxels = 0;
-
-    for (let x = 0; x < CHUNK_SIZE; x++) {
-      for (let z = 0; z < CHUNK_SIZE; z++) {
-        const columnMask = occupancyMask[x][z];
-        if (columnMask !== 0n) {
-          columnsWithVoxels++;
-          const voxelCount = this.countSetBits(columnMask);
-          totalVoxels += voxelCount;
-          console.log(
-            `  (${x},${z}): ${columnMask
-              .toString(2)
-              .padStart(8, "0")} [${voxelCount} voxels]`
-          );
-        }
-      }
-    }
-
-    console.log(
-      `Total: ${totalVoxels} voxels in ${columnsWithVoxels} columns`
-    );
-  }
-
-  private static debugYFaceQuads(
-    quads: QuadData[],
-    faceMasks: FaceMask[]
-  ): void {
-    const yFaceMasks = faceMasks.filter(
-      (mask) => mask.direction === 2 || mask.direction === 3
-    );
-    const yQuads = quads.filter(
-      (quad) => Math.abs(quad.normal.y) === 1
-    );
-
-    console.log("Y-Face Results:");
-    console.log(
-      `  +Y faces detected: ${this.countTotalFaces(
-        faceMasks[2]
-      )}`
-    );
-    console.log(
-      `  -Y faces detected: ${this.countTotalFaces(
-        faceMasks[3]
-      )}`
-    );
-    console.log(
-      `  +Y quads generated: ${
-        yQuads.filter((q) => q.normal.y === 1).length
-      }`
-    );
-    console.log(
-      `  -Y quads generated: ${
-        yQuads.filter((q) => q.normal.y === -1).length
-      }`
-    );
-
-    if (yQuads.length > 0) {
-      console.log("Y-Quad Details:");
-      yQuads.forEach((quad, i) => {
-        const dir = quad.normal.y === 1 ? "+Y" : "-Y";
-        console.log(
-          `  ${dir} quad ${i}: vertices at Y=${quad.vertices[0].y}`
-        );
-      });
-    }
-  }
-
-  private static countTotalFaces(
-    faceMask: FaceMask
-  ): number {
-    let total = 0;
-    for (let u = 0; u < faceMask.mask.length; u++) {
-      for (let v = 0; v < faceMask.mask[u].length; v++) {
-        total += this.countSetBits(faceMask.mask[u][v]);
-      }
-    }
-    return total;
-  }
-
-  // Debug helper methods
-  private static debugOccupancyMask(
-    occupancyMask: bigint[][],
-    chunk: ChunkData
-  ): void {
-    console.log(
-      `[debugOccupancyMask] Analyzing occupancy mask for chunk (${chunk.position.x}, ${chunk.position.z})`
-    );
-
-    let totalSolidVoxels = 0;
-    let columnsWithVoxels = 0;
-
-    for (let x = 0; x < CHUNK_SIZE; x++) {
-      for (let z = 0; z < CHUNK_SIZE; z++) {
-        const columnMask = occupancyMask[x][z];
-        if (columnMask !== 0n) {
-          columnsWithVoxels++;
-          const voxelCount = this.countSetBits(columnMask);
-          totalSolidVoxels += voxelCount;
-
-          if (x < 3 && z < 3) {
-            // Only log first few for brevity
-            console.log(
-              `[debugOccupancyMask] Column (${x},${z}): mask=${columnMask.toString(
-                2
-              )}, voxels=${voxelCount}`
-            );
-          }
-        }
-      }
-    }
-
-    console.log(
-      `[debugOccupancyMask] Total solid voxels: ${totalSolidVoxels}, columns with voxels: ${columnsWithVoxels}`
-    );
-  }
-
-  private static debugFaceMasks(
-    faceMasks: FaceMask[],
-    chunk: ChunkData
-  ): void {
-    console.log(
-      `[debugFaceMasks] Analyzing face masks for chunk (${chunk.position.x}, ${chunk.position.z})`
-    );
-
-    const faceNames = ["+X", "-X", "+Y", "-Y", "+Z", "-Z"];
-
-    for (let i = 0; i < faceMasks.length; i++) {
-      const faceMask = faceMasks[i];
-      let totalFaces = 0;
-
-      for (let u = 0; u < faceMask.mask.length; u++) {
-        for (let v = 0; v < faceMask.mask[u].length; v++) {
-          totalFaces += this.countSetBits(
-            faceMask.mask[u][v]
-          );
-        }
-      }
-
-      console.log(
-        `[debugFaceMasks] ${faceNames[i]} faces: ${totalFaces} (width=${faceMask.width}, height=${faceMask.height})`
-      );
-    }
-  }
-
-  private static debugQuads(
-    quads: QuadData[],
-    chunk: ChunkData
-  ): void {
-    console.log(
-      `[debugQuads] Generated ${quads.length} quads for chunk (${chunk.position.x}, ${chunk.position.z})`
-    );
-
-    const quadsByDirection = [0, 0, 0, 0, 0, 0]; // Count by face direction
-    const faceNames = ["+X", "-X", "+Y", "-Y", "+Z", "-Z"];
-
-    for (const quad of quads) {
-      // Determine face direction from normal
-      const normal = quad.normal;
-      let direction = -1;
-
-      if (normal.x === 1) direction = 0; // +X
-      else if (normal.x === -1) direction = 1; // -X
-      else if (normal.y === 1) direction = 2; // +Y
-      else if (normal.y === -1) direction = 3; // -Y
-      else if (normal.z === 1) direction = 4; // +Z
-      else if (normal.z === -1) direction = 5; // -Z
-
-      if (direction >= 0) {
-        quadsByDirection[direction]++;
-      }
-    }
-
-    for (let i = 0; i < 6; i++) {
-      console.log(
-        `[debugQuads] ${faceNames[i]} quads: ${quadsByDirection[i]}`
-      );
-    }
   }
 
   private static countSetBits(mask: bigint): number {
