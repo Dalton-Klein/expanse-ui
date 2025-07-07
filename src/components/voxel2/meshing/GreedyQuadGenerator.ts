@@ -157,7 +157,7 @@ export class GreedyQuadGenerator {
   private static getAxisMapping(faceAxis: number): [number, number] {
     switch (faceAxis) {
       case 0: return [2, 1]; // X face: iterate Z,Y
-      case 1: return [0, 2]; // Y face: iterate X,Z
+      case 1: return [2, 1]; // Y face: iterate Z,Y (matching face mask storage order)
       case 2: return [0, 1]; // Z face: iterate X,Y
       default: return [0, 1];
     }
@@ -167,7 +167,7 @@ export class GreedyQuadGenerator {
   private static getFaceDimensions(faceAxis: number): [number, number] {
     switch (faceAxis) {
       case 0: return [CHUNK_SIZE, CHUNK_HEIGHT];     // X face: Z x Y
-      case 1: return [CHUNK_SIZE, CHUNK_SIZE];       // Y face: X x Z
+      case 1: return [CHUNK_SIZE, CHUNK_HEIGHT];     // Y face: Z x Y (matching face mask storage)
       case 2: return [CHUNK_SIZE, CHUNK_HEIGHT];     // Z face: X x Y
       default: return [CHUNK_SIZE, CHUNK_HEIGHT];
     }
@@ -293,7 +293,11 @@ export class GreedyQuadGenerator {
         result = [facePositive ? CHUNK_SIZE - 1 : 0, v, u];
         break;
       case 1: // Y face
-        result = [u, v, Math.floor(u / CHUNK_SIZE)]; // u maps to X, v maps to Y, derive Z from iteration
+        // Face mask storage: faceMask[z][0] contains Y-bits for all X at that Z  
+        // NEW iteration order: u=Z, v=Y (matching storage order)
+        // This means u directly corresponds to the Z slice
+        // We need to derive X coordinate - for now use X=0 (will need proper X derivation)
+        result = [0, v, u]; // X=TBD, v=Y, u=Z
         break;
       case 2: // Z face
         result = [u, v, facePositive ? CHUNK_SIZE - 1 : 0];
@@ -355,22 +359,24 @@ export class GreedyQuadGenerator {
         
       case 1: // Y face
         {
-          const y = facePositive ? CHUNK_HEIGHT : 0;
+          // For Y-faces, v represents the Y coordinate (from bit position)
+          // Add offset for face positioning: +Y faces are on top of voxel, -Y faces on bottom
+          const y = v + (facePositive ? 1 : 0);
           if (facePositive) {
             // +Y face: vertices should be ordered counter-clockwise when viewed from above
             vertices.push(
-              new THREE.Vector3(worldX + u, y, worldZ + v),
-              new THREE.Vector3(worldX + u + width, y, worldZ + v),
-              new THREE.Vector3(worldX + u + width, y, worldZ + v + height),
-              new THREE.Vector3(worldX + u, y, worldZ + v + height)
+              new THREE.Vector3(worldX + u, y, worldZ + 0),
+              new THREE.Vector3(worldX + u + width, y, worldZ + 0),
+              new THREE.Vector3(worldX + u + width, y, worldZ + height),
+              new THREE.Vector3(worldX + u, y, worldZ + height)
             );
           } else {
             // -Y face: vertices should be ordered counter-clockwise when viewed from below
             vertices.push(
-              new THREE.Vector3(worldX + u, y, worldZ + v + height),
-              new THREE.Vector3(worldX + u + width, y, worldZ + v + height),
-              new THREE.Vector3(worldX + u + width, y, worldZ + v),
-              new THREE.Vector3(worldX + u, y, worldZ + v)
+              new THREE.Vector3(worldX + u, y, worldZ + height),
+              new THREE.Vector3(worldX + u + width, y, worldZ + height),
+              new THREE.Vector3(worldX + u + width, y, worldZ + 0),
+              new THREE.Vector3(worldX + u, y, worldZ + 0)
             );
           }
         }
@@ -382,18 +388,18 @@ export class GreedyQuadGenerator {
           if (facePositive) {
             // +Z face: vertices should be ordered counter-clockwise when viewed from outside
             vertices.push(
-              new THREE.Vector3(worldX + u, v, worldZ + z),
-              new THREE.Vector3(worldX + u, v + height, worldZ + z),
-              new THREE.Vector3(worldX + u + width, v + height, worldZ + z),
-              new THREE.Vector3(worldX + u + width, v, worldZ + z)
-            );
-          } else {
-            // -Z face: vertices should be ordered counter-clockwise when viewed from outside
-            vertices.push(
               new THREE.Vector3(worldX + u + width, v, worldZ + z),
               new THREE.Vector3(worldX + u + width, v + height, worldZ + z),
               new THREE.Vector3(worldX + u, v + height, worldZ + z),
               new THREE.Vector3(worldX + u, v, worldZ + z)
+            );
+          } else {
+            // -Z face: vertices should be ordered counter-clockwise when viewed from outside
+            vertices.push(
+              new THREE.Vector3(worldX + u, v, worldZ + z),
+              new THREE.Vector3(worldX + u, v + height, worldZ + z),
+              new THREE.Vector3(worldX + u + width, v + height, worldZ + z),
+              new THREE.Vector3(worldX + u + width, v, worldZ + z)
             );
           }
         }

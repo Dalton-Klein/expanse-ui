@@ -241,14 +241,6 @@ export class BinaryGreedyMesher {
   ): void {
     const faceType = positive ? "+Y (top)" : "-Y (bottom)";
 
-    if (this.Y_FACE_DEBUG) {
-      console.log(`${faceType} Face Culling:`);
-    } else if (this.DEBUG_ENABLED) {
-      console.log(
-        `[cullYFaces] Processing ${faceType} faces`
-      );
-    }
-
     // Y-axis faces iterate over Z,X coordinates (matching reference implementation)
     for (let z = 0; z < CHUNK_SIZE; z++) {
       faceMask[z] = [];
@@ -264,44 +256,10 @@ export class BinaryGreedyMesher {
           // +Y faces (top): col & !(col << 1) - find where solid has air above
           // This matches: col_face_masks[2 * axis + 1][z][x] = col & !(col >> 1);
           faces = currentColumn & ~(currentColumn << 1n);
-          if (this.Y_FACE_DEBUG && currentColumn !== 0n) {
-            console.log(
-              `  (${x},${z}): col=${currentColumn
-                .toString(2)
-                .padStart(8, "0")} -> top=${faces
-                .toString(2)
-                .padStart(8, "0")} [${this.countSetBits(
-                faces
-              )} faces]`
-            );
-          } else if (this.DEBUG_ENABLED && faces !== 0n) {
-            console.log(
-              `[cullYFaces] +Y face at x=${x}, z=${z}: column=${currentColumn.toString(
-                2
-              )}, faces=${faces.toString(2)}`
-            );
-          }
         } else {
           // -Y faces (bottom): col & !(col >> 1) - find where solid has air below
           // This matches: col_face_masks[2 * axis + 0][z][x] = col & !(col << 1);
           faces = currentColumn & ~(currentColumn >> 1n);
-          if (this.Y_FACE_DEBUG && currentColumn !== 0n) {
-            console.log(
-              `  (${x},${z}): col=${currentColumn
-                .toString(2)
-                .padStart(8, "0")} -> bot=${faces
-                .toString(2)
-                .padStart(8, "0")} [${this.countSetBits(
-                faces
-              )} faces]`
-            );
-          } else if (this.DEBUG_ENABLED && faces !== 0n) {
-            console.log(
-              `[cullYFaces] -Y face at x=${x}, z=${z}: column=${currentColumn.toString(
-                2
-              )}, faces=${faces.toString(2)}`
-            );
-          }
         }
 
         faceMask[z][0] |= faces;
