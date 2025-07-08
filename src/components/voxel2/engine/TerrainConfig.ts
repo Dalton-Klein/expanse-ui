@@ -9,7 +9,7 @@ import {
 export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
   // Core render distance - start conservative for debugging
   renderDistance: 1, // chunks
-
+  worldHeight: 30, // Ideally a multiple of chunk size for simplicity
   // Fundamental chunk configuration
   chunkSize: 30, // voxels per chunk side
   voxelSize: 1, // world units per voxel
@@ -53,6 +53,7 @@ export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
 export const PRODUCTION_TERRAIN_CONFIG: TerrainConfig = {
   renderDistance: 16,
   chunkSize: 30,
+  worldHeight: 240, // should be a multiple of chunk size for simplicity
   voxelSize: 1,
 
   lod: {
@@ -144,6 +145,7 @@ export function cloneTerrainConfig(
 ): TerrainConfig {
   return {
     renderDistance: config.renderDistance,
+    worldHeight: config.worldHeight,
     chunkSize: config.chunkSize,
     voxelSize: config.voxelSize,
     lod: { ...config.lod },

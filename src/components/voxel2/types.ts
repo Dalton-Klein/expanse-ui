@@ -123,6 +123,7 @@ export interface DebugConfig {
 // Master terrain configuration - single source of truth for all terrain settings
 export interface TerrainConfig {
   renderDistance: number; // render distance in chunks
+  worldHeight: number; // height of the world in voxels, ideally a multiple of chunk size
   chunkSize: number; // voxels per chunk side
   voxelSize: number; // world units per voxel
   lod: LODConfig;
