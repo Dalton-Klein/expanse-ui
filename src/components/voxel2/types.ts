@@ -1,3 +1,5 @@
+import * as THREE from "three";
+
 // Voxel2 Core Type Definitions
 // Clean, well-documented types for the new voxel system
 
@@ -26,11 +28,27 @@ export interface Position3D {
   z: number;
 }
 
-// Chunk data structure (simplified for now)
+// ChunkData is a structure that is used to capture the structure of a chunk from noise
+// It is later converted into binary before greedy methods and culling are applied
 export interface ChunkData {
   position: Position3D;
   voxels: Voxel[][][]; // [x][y][z]
   // TODO: Add metadata, generation status, etc.
+}
+
+// ChunkMeshResult is the result of meshing a chunk, it contains the generated geometry
+// and performance metrics for that chunk
+export interface ChunkMeshResult {
+  geometry: THREE.BufferGeometry;
+  triangleCount: number;
+  generationTime: number; // in milliseconds
+}
+
+export interface TerrainResult {
+  generationTime: number;
+  triangles: number;
+  chunks: ChunkData[];
+  // TODO: Add more performance tracking
 }
 
 // Rendering configuration
@@ -43,6 +61,7 @@ export interface RenderConfig {
 
 // Debug pattern types for testing
 export enum DebugPattern {
+  TINY = "tiny",
   FLAT = "flat",
   CHECKERBOARD = "checkerboard",
   STEPPED = "stepped",

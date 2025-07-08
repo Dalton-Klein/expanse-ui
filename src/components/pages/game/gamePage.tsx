@@ -1,5 +1,5 @@
 import React from "react";
-import VoxelWorld2 from "../../voxel2/VoxelWorld2";
+import VoxelWorld2 from "../../voxel2/engine/rendering/VoxelWorld2";
 import { DebugProvider } from "../../voxel/DebugInfoProvider";
 import "./gamePage.scss";
 

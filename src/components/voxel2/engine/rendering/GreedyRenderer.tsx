@@ -5,10 +5,11 @@ import {
   RenderConfig,
   TerrainConfig,
 } from "../../types";
+import { GreedyMesher } from "../../engine/greedy-meshing/GreedyMesher";
 
 // React component for rendering chunks using binary greedy meshing
 
-interface GreedyMeshRendererProps {
+interface GreedyRendererProps {
   chunks: ChunkData[];
   renderingConfig: RenderConfig;
   terrainConfig: TerrainConfig;
@@ -19,28 +20,30 @@ interface GreedyMeshRendererProps {
   }) => void;
 }
 
-export default function GreedyMeshRenderer({
+export default function GreedyRenderer({
   chunks,
   renderingConfig,
   terrainConfig,
   onMeshGenerated,
-}: GreedyMeshRendererProps) {
+}: GreedyRendererProps) {
   // Generate meshes for all chunks
   const meshResults = React.useMemo(() => {
-    const results: any = [];
+    // Results should be an array of generated meshes which represent a single chunk
+    // Each element in results should be a buffer geometry
+    // containing the vertices, normals, and colors for that chunk
+    const results = [];
+    // Total triangles and generation time for performance metrics
+    // These are sums from all individual chunks and are divided by the number of chunks for UI debugging
     let totalTriangles = 0;
     let totalTime = 0;
 
     // Process each chunk
     for (const chunk of chunks) {
-      let result = {
-        triangleCount: 0,
-        generationTimeMs: 0,
-      };
-      // const result = BinaryGreedyMesher.generateMesh(chunk);
-      // results.push(result);
+      const result =
+        GreedyMesher.generateMeshForChunk(chunk);
       totalTriangles += result.triangleCount;
-      totalTime += result.generationTimeMs;
+      totalTime += result.generationTime;
+      results.push(result);
     }
 
     // Log performance for debugging

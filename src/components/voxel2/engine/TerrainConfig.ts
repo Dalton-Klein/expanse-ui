@@ -12,7 +12,7 @@ export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
 
   // Fundamental chunk configuration
   chunkSize: 32, // voxels per chunk side
-  chunkHeight: 64, // voxels per chunk height (max 64 for binary greedy meshing)
+  chunkHeight: 32, // voxels per chunk height (max 64 for binary greedy meshing)
   voxelSize: 1, // world units per voxel
 
   // LOD system configuration
@@ -32,7 +32,7 @@ export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
   // Terrain generation configuration
   generation: {
     algorithm: GenerationAlgorithm.DEBUG_PATTERN, // start with debug patterns
-    debugPattern: DebugPattern.FLAT, // default to flat pattern
+    debugPattern: DebugPattern.TINY, // default to flat pattern
     seed: 12345, // consistent seed for testing
   },
 

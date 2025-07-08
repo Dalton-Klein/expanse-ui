@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { Sky } from "@react-three/drei";
-import DebugPanel from "./debug/DebugPanel";
-import NaiveRenderer from "./engine/rendering/NaiveRenderer";
-import GreedyMeshRenderer from "./engine/rendering/GreedyMeshRenderer";
+import DebugPanel from "../../debug/DebugPanel";
+import NaiveRenderer from "./NaiveRenderer";
+import GreedyRenderer from "./GreedyRenderer";
 import {
   RenderConfig,
   PerformanceMetrics,
@@ -14,16 +14,13 @@ import {
   GenerationAlgorithm,
   VoxelType,
   MeshingAlgorithm,
-} from "./types";
-import {
-  CHUNK_SIZE,
-  CHUNK_HEIGHT,
-} from "./engine/TerrainConfig";
-import { ChunkHelpers } from "./engine/chunk-generation/ChunkHelpers";
-import { DEFAULT_TERRAIN_CONFIG } from "./engine/TerrainConfig";
-import { TerrainGenerator } from "./engine/chunk-generation/TerrainGenerator";
-import CameraControls from "./debug/CameraControls";
-import CameraTracker from "./debug/CameraTracker";
+} from "../../types";
+import { CHUNK_SIZE, CHUNK_HEIGHT } from "../TerrainConfig";
+import { ChunkHelpers } from "../chunk-generation/ChunkHelpers";
+import { DEFAULT_TERRAIN_CONFIG } from "../TerrainConfig";
+import { TerrainGenerator } from "../chunk-generation/TerrainGenerator";
+import CameraControls from "../../debug/CameraControls";
+import CameraTracker from "../../debug/CameraTracker";
 
 // Main voxel2 world component - clean, debug-first implementation
 // TODO: Implement incremental functionality with comprehensive debugging
@@ -171,7 +168,7 @@ export default function VoxelWorld2() {
           {terrainConfig.greedyMeshing.enabled &&
           terrainConfig.greedyMeshing.algorithm ===
             MeshingAlgorithm.BINARY_GREEDY ? (
-            <GreedyMeshRenderer
+            <GreedyRenderer
               chunks={chunks}
               renderingConfig={renderConfig}
               terrainConfig={terrainConfig}

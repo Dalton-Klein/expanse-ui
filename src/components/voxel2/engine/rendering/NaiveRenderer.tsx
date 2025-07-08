@@ -42,7 +42,6 @@ export default function NaiveRenderer({
     const vertices: number[] = [];
     const normals: number[] = [];
     const colors: number[] = [];
-
     // Render each chunk
     chunks.forEach((chunk) => {
       renderChunk(chunk, vertices, normals, colors);

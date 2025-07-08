@@ -217,6 +217,9 @@ export default function DebugPanel({
                   )
                 }
               >
+                <option value={DebugPattern.TINY}>
+                  Tiny
+                </option>
                 <option value={DebugPattern.FLAT}>
                   Flat
                 </option>
