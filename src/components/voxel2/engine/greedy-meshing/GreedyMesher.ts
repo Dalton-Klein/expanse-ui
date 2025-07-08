@@ -38,41 +38,6 @@ export class GreedyMesher {
     const faceMasks =
       this.generateFaceCullingMasks(axisCols);
 
-    // Debug: Enable face counting
-    if (true) {
-      // Temporarily enabled for testing
-      const faceNames = [
-        "+Y",
-        "-Y",
-        "+X",
-        "-X",
-        "+Z",
-        "-Z",
-      ];
-      console.log(
-        `[GreedyMesher] Face culling for chunk at (${chunk.position.x}, ${chunk.position.y}, ${chunk.position.z})`
-      );
-      for (let faceIdx = 0; faceIdx < 6; faceIdx++) {
-        let faceCount = 0;
-        const axis = Math.floor(faceIdx / 2);
-
-        for (let a = 0; a < CHUNK_SIZE + 2; a++) {
-          for (let b = 0; b < CHUNK_SIZE + 2; b++) {
-            const mask = faceMasks[faceIdx][axis][a][b];
-            // Count number of set bits (visible faces)
-            let bits = mask;
-            while (bits) {
-              faceCount += bits & 1;
-              bits >>>= 1;
-            }
-          }
-        }
-        console.log(
-          `  ${faceNames[faceIdx]} faces: ${faceCount}`
-        );
-      }
-    }
-
     // 3. Group Faces By Block Type (And Later Ambient Occlusion)- Create 2D binary planes for each unique combination
     //    - Store as data[axis][block_hash][y_level] = 32x32 binary plane
     // 4. Greedy algorithm- For each 2D binary plane, apply the greedy algorithm
