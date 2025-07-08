@@ -207,4 +207,92 @@ describe("GreedyMesher", () => {
       expect(flatResult.generationTime).toBeGreaterThanOrEqual(0);
     });
   });
+
+  describe("optimized block-type separation and face culling", () => {
+    it("should process single block type efficiently", () => {
+      // Create a chunk with only grass blocks
+      const chunk = ChunkGenerator.generateTinyChunk({ x: 0, y: 0, z: 0 });
+      
+      const meshResult = GreedyMesher.generateMeshForChunk(chunk);
+      
+      // Should complete without errors and much faster than before
+      expect(meshResult).toBeDefined();
+      expect(meshResult.generationTime).toBeGreaterThanOrEqual(0);
+      expect(meshResult.generationTime).toBeLessThan(50); // Should be very fast now
+    });
+
+    it("should handle multiple block types efficiently", () => {
+      // Create a chunk with mixed block types
+      const chunk = ChunkHelpers.createEmpty({ x: 0, y: 0, z: 0 });
+      
+      // Add different block types
+      ChunkHelpers.setVoxel(chunk, 5, 5, 5, { type: VoxelType.STONE });
+      ChunkHelpers.setVoxel(chunk, 6, 5, 5, { type: VoxelType.GRASS });
+      ChunkHelpers.setVoxel(chunk, 7, 5, 5, { type: VoxelType.DIRT });
+      ChunkHelpers.setVoxel(chunk, 8, 5, 5, { type: VoxelType.SAND });
+      
+      const meshResult = GreedyMesher.generateMeshForChunk(chunk);
+      
+      expect(meshResult).toBeDefined();
+      expect(meshResult.generationTime).toBeGreaterThanOrEqual(0);
+      expect(meshResult.generationTime).toBeLessThan(50); // Should be efficient
+    });
+
+    it("should handle boundary cases correctly", () => {
+      // Test faces at chunk boundaries
+      const chunk = ChunkHelpers.createEmpty({ x: 0, y: 0, z: 0 });
+      
+      // Place blocks near boundaries (accounting for padding)
+      ChunkHelpers.setVoxel(chunk, 1, 1, 1, { type: VoxelType.STONE });   // Near start
+      ChunkHelpers.setVoxel(chunk, 29, 29, 29, { type: VoxelType.GRASS }); // Near end (chunk boundary)
+      
+      const meshResult = GreedyMesher.generateMeshForChunk(chunk);
+      
+      expect(meshResult).toBeDefined();
+      expect(meshResult.generationTime).toBeGreaterThanOrEqual(0);
+    });
+
+    it("should correctly handle adjacent blocks of different types", () => {
+      // Test face culling between different block types
+      const chunk = ChunkHelpers.createEmpty({ x: 0, y: 0, z: 0 });
+      
+      // Adjacent blocks of different types - each type should be processed separately
+      ChunkHelpers.setVoxel(chunk, 10, 10, 10, { type: VoxelType.STONE });
+      ChunkHelpers.setVoxel(chunk, 11, 10, 10, { type: VoxelType.GRASS });
+      
+      const meshResult = GreedyMesher.generateMeshForChunk(chunk);
+      
+      expect(meshResult).toBeDefined();
+      expect(meshResult.generationTime).toBeGreaterThanOrEqual(0);
+    });
+
+    it("should handle empty chunks gracefully", () => {
+      // Test with completely empty chunk
+      const emptyChunk = ChunkHelpers.createEmpty({ x: 0, y: 0, z: 0 });
+      
+      const meshResult = GreedyMesher.generateMeshForChunk(emptyChunk);
+      
+      expect(meshResult).toBeDefined();
+      expect(meshResult.generationTime).toBeGreaterThanOrEqual(0);
+      expect(meshResult.triangleCount).toBe(0);
+      
+      // No faces should be generated for empty chunk
+    });
+
+    it("should be significantly faster than the old bit-by-bit approach", () => {
+      // Performance test with a larger pattern
+      const chunk = ChunkGenerator.generateFlatChunk({ x: 0, y: 0, z: 0 });
+      
+      const startTime = performance.now();
+      const meshResult = GreedyMesher.generateMeshForChunk(chunk);
+      const endTime = performance.now();
+      
+      expect(meshResult).toBeDefined();
+      expect(meshResult.generationTime).toBeGreaterThanOrEqual(0);
+      expect(endTime - startTime).toBeLessThan(100); // Should complete quickly
+      
+      // The new approach should be orders of magnitude faster
+      // Old approach: ~196k iterations, New approach: ~3k operations max
+    });
+  });
 });

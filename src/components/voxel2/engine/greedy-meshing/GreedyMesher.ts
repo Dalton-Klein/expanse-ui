@@ -17,6 +17,10 @@ import { ChunkGenerator } from "../chunk-generation/ChunkGenerator";
 // axisCols[2] (Z-axis): [y][x] - column along Z at position (x,y)
 type AxisColumns = number[][][];
 
+// Type for block-type-separated columns for efficient processing
+// blockTypeCols[blockType][axis][z][x] - binary columns for each block type
+type BlockTypeColumns = Map<VoxelType, AxisColumns>;
+
 // GreedyMesher is a class that implements the greedy meshing algorithm and face culling
 // It is based on TanTanDevs binary greedy meshing algorithm found here: https://github.com/TanTanDev/binary_greedy_mesher_demo
 export class GreedyMesher {
@@ -31,19 +35,20 @@ export class GreedyMesher {
       generationTime: 0,
     };
 
-    // 1. Binary Encoding- Convert 3d array chunk data into binary columns
-    const axisCols = this.encodeToBinary(chunk);
+    // 1. Binary Encoding- Convert 3d array chunk data into binary columns separated by block type
+    const blockTypeCols =
+      this.encodeToBinaryByBlockType(chunk);
 
     // 2. Face Culling- Cull voxel faces based on adjacency to air, use bitwise operations to find face transitions
-    const faceMasks =
-      this.generateFaceCullingMasks(axisCols);
+    const faceMasksByBlockType =
+      this.generateFaceCullingMasksByBlockType(
+        blockTypeCols
+      );
 
-    // 3. Group Faces By Block Type (And Later Ambient Occlusion)- Create 2D binary planes for each unique combination
-    //    - Store as data[axis][block_hash][y_level] = 32x32 binary plane
-    // 4. Greedy algorithm- For each 2D binary plane, apply the greedy algorithm
+    // 3. Greedy algorithm- For each 2D binary plane, apply the greedy algorithm
     //    - Expand rectangles first vertically (height), then horizontally (width)
     //    - Clear bits as they're merged to avoid duplicate processing
-    // 5. Generate Geometry (And Later Ambient Occlusion)- Convert greedy quads to vertices with proper winding order
+    // 4. Generate Geometry (And Later Ambient Occlusion)- Convert greedy quads to vertices with proper winding order
 
     const endTime = performance.now();
     result.generationTime = endTime - startTime;
@@ -52,21 +57,20 @@ export class GreedyMesher {
   }
 
   /**
-   * 1. Convert 3D voxel data into binary columns for efficient face culling
+   * 1. Convert 3D voxel data into binary columns separated by block type
+   * This eliminates the need for expensive grouping later
    * Based on TanTanDev's binary greedy meshing algorithm
    */
-  private static encodeToBinary(
+  private static encodeToBinaryByBlockType(
     chunk: ChunkData
-  ): AxisColumns {
+  ): BlockTypeColumns {
     // With padding for neighbors: 30 + 2 = 32 (perfect for 32-bit integer operations native to JS)
     const CHUNK_SIZE_P = CHUNK_SIZE + 2; // 32
 
-    // Initialize 3 axes of binary columns
-    // Each axis stores columns in different arrangements (same as TanTanDev):
-    // axisCols[0] (Y-axis): [z][x] - column along Y at position (x,z)
-    // axisCols[1] (X-axis): [y][z] - column along X at position (y,z)
-    // axisCols[2] (Z-axis): [y][x] - column along Z at position (x,y)
-    const axisCols: AxisColumns = [
+    const blockTypeCols = new Map<VoxelType, AxisColumns>();
+
+    // Helper function to create empty axis columns
+    const createEmptyAxisColumns = (): AxisColumns => [
       Array(CHUNK_SIZE_P)
         .fill(null)
         .map(() => new Array(CHUNK_SIZE_P).fill(0)),
@@ -89,6 +93,16 @@ export class GreedyMesher {
             z
           );
           if (voxel && voxel.type !== VoxelType.AIR) {
+            // Ensure we have columns for this block type
+            if (!blockTypeCols.has(voxel.type)) {
+              blockTypeCols.set(
+                voxel.type,
+                createEmptyAxisColumns()
+              );
+            }
+
+            const axisCols = blockTypeCols.get(voxel.type)!;
+
             // Set bit in all 3 axis representations following TanTanDev's pattern
             // Y-axis column at (x,z) - set bit at position y
             axisCols[0][z][x] |= 1 << y;
@@ -102,96 +116,91 @@ export class GreedyMesher {
         }
       }
     }
-    // Debug: Show sample binary data for verification
-    let nonZeroCount = 0;
-    let sampleCount = 0;
-    for (let axis = 0; axis < 3; axis++) {
-      for (let z = 0; z < CHUNK_SIZE_P; z++) {
-        for (let x = 0; x < CHUNK_SIZE_P; x++) {
-          if (axisCols[axis][z][x] !== 0) {
-            nonZeroCount++;
-            if (sampleCount < 3) {
-              // Only log first 3 for brevity
-              sampleCount++;
-            }
-          }
-        }
-      }
-    }
 
-    return axisCols;
+    return blockTypeCols;
   }
 
   /**
-   * 2. Generate face culling masks for all 6 face directions
+   * 2. Generate face culling masks for all 6 face directions for each block type
    * A face is visible if there's a solid voxel with air on the adjacent side
    *
-   * @param axisCols Binary encoded voxel columns
-   * @returns Array of 6 face masks: [+Y, -Y, +X, -X, +Z, -Z]
+   * @param blockTypeCols Binary encoded voxel columns separated by block type
+   * @returns Map of block types to their face masks: [+Y, -Y, +X, -X, +Z, -Z]
    */
-  private static generateFaceCullingMasks(
-    axisCols: AxisColumns
-  ): AxisColumns[] {
+  private static generateFaceCullingMasksByBlockType(
+    blockTypeCols: BlockTypeColumns
+  ): Map<VoxelType, AxisColumns[]> {
     const CHUNK_SIZE_P = CHUNK_SIZE + 2; // 32
+    const faceMasksByBlockType = new Map<
+      VoxelType,
+      AxisColumns[]
+    >();
 
-    // Initialize 6 face masks (one for each direction)
-    const faceMasks: AxisColumns[] = [];
-    for (let i = 0; i < 6; i++) {
-      faceMasks.push([
-        Array(CHUNK_SIZE_P)
-          .fill(null)
-          .map(() => new Array(CHUNK_SIZE_P).fill(0)),
-        Array(CHUNK_SIZE_P)
-          .fill(null)
-          .map(() => new Array(CHUNK_SIZE_P).fill(0)),
-        Array(CHUNK_SIZE_P)
-          .fill(null)
-          .map(() => new Array(CHUNK_SIZE_P).fill(0)),
-      ]);
-    }
-
-    // Process each axis for face culling
-    // Y-axis faces (+Y and -Y)
-    for (let z = 0; z < CHUNK_SIZE_P; z++) {
-      for (let x = 0; x < CHUNK_SIZE_P; x++) {
-        const col = axisCols[0][z][x];
-
-        // +Y faces: solid voxel with air above
-        // Shift right to check voxel above (Y+1)
-        faceMasks[0][0][z][x] = col & ~(col >> 1);
-
-        // -Y faces: solid voxel with air below
-        // Shift left to check voxel below (Y-1)
-        faceMasks[1][0][z][x] = col & ~(col << 1);
+    // Helper function to create empty face masks
+    const createEmptyFaceMasks = (): AxisColumns[] => {
+      const faceMasks: AxisColumns[] = [];
+      for (let i = 0; i < 6; i++) {
+        faceMasks.push([
+          Array(CHUNK_SIZE_P)
+            .fill(null)
+            .map(() => new Array(CHUNK_SIZE_P).fill(0)),
+          Array(CHUNK_SIZE_P)
+            .fill(null)
+            .map(() => new Array(CHUNK_SIZE_P).fill(0)),
+          Array(CHUNK_SIZE_P)
+            .fill(null)
+            .map(() => new Array(CHUNK_SIZE_P).fill(0)),
+        ]);
       }
-    }
+      return faceMasks;
+    };
 
-    // X-axis faces (+X and -X)
-    for (let y = 0; y < CHUNK_SIZE_P; y++) {
+    // Process each block type
+    for (const [blockType, axisCols] of blockTypeCols) {
+      const faceMasks = createEmptyFaceMasks();
+
+      // Y-axis faces (+Y and -Y)
       for (let z = 0; z < CHUNK_SIZE_P; z++) {
-        const col = axisCols[1][y][z];
+        for (let x = 0; x < CHUNK_SIZE_P; x++) {
+          const col = axisCols[0][z][x];
 
-        // +X faces: solid voxel with air to the right
-        faceMasks[2][1][y][z] = col & ~(col >> 1);
+          // +Y faces: solid voxel with air above
+          faceMasks[0][0][z][x] = col & ~(col >> 1);
 
-        // -X faces: solid voxel with air to the left
-        faceMasks[3][1][y][z] = col & ~(col << 1);
+          // -Y faces: solid voxel with air below
+          faceMasks[1][0][z][x] = col & ~(col << 1);
+        }
       }
+
+      // X-axis faces (+X and -X)
+      for (let y = 0; y < CHUNK_SIZE_P; y++) {
+        for (let z = 0; z < CHUNK_SIZE_P; z++) {
+          const col = axisCols[1][y][z];
+
+          // +X faces: solid voxel with air to the right
+          faceMasks[2][1][y][z] = col & ~(col >> 1);
+
+          // -X faces: solid voxel with air to the left
+          faceMasks[3][1][y][z] = col & ~(col << 1);
+        }
+      }
+
+      // Z-axis faces (+Z and -Z)
+      for (let y = 0; y < CHUNK_SIZE_P; y++) {
+        for (let x = 0; x < CHUNK_SIZE_P; x++) {
+          const col = axisCols[2][y][x];
+
+          // +Z faces: solid voxel with air in front
+          faceMasks[4][2][y][x] = col & ~(col >> 1);
+
+          // -Z faces: solid voxel with air behind
+          faceMasks[5][2][y][x] = col & ~(col << 1);
+        }
+      }
+
+      faceMasksByBlockType.set(blockType, faceMasks);
     }
 
-    // Z-axis faces (+Z and -Z)
-    for (let y = 0; y < CHUNK_SIZE_P; y++) {
-      for (let x = 0; x < CHUNK_SIZE_P; x++) {
-        const col = axisCols[2][y][x];
-
-        // +Z faces: solid voxel with air in front
-        faceMasks[4][2][y][x] = col & ~(col >> 1);
-
-        // -Z faces: solid voxel with air behind
-        faceMasks[5][2][y][x] = col & ~(col << 1);
-      }
-    }
-
-    return faceMasks;
+    return faceMasksByBlockType;
   }
 }
