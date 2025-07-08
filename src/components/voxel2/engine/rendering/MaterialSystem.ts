@@ -1,16 +1,16 @@
-import { VoxelType } from "../types";
+import { VoxelType } from "../../types";
 
 // Material system for voxel2 - colors, textures, properties
 // TODO: Implement comprehensive material system
 
 // Voxel color definitions
 export const VoxelColors: { [key in VoxelType]: string } = {
-  [VoxelType.AIR]: "#87CEEB",      // Sky blue (shouldn't be visible)
-  [VoxelType.STONE]: "#696969",    // Dark gray
-  [VoxelType.GRASS]: "#228B22",    // Forest green
-  [VoxelType.DIRT]: "#8B4513",     // Saddle brown
-  [VoxelType.SAND]: "#F4A460",     // Sandy brown
-  [VoxelType.WATER]: "#4682B4",    // Steel blue
+  [VoxelType.AIR]: "#87CEEB", // Sky blue (shouldn't be visible)
+  [VoxelType.STONE]: "#696969", // Dark gray
+  [VoxelType.GRASS]: "#228B22", // Forest green
+  [VoxelType.DIRT]: "#8B4513", // Saddle brown
+  [VoxelType.SAND]: "#F4A460", // Sandy brown
+  [VoxelType.WATER]: "#4682B4", // Steel blue
 };
 
 // TODO: Add material properties
@@ -26,7 +26,6 @@ export interface MaterialProperties {
 // - Debug material overrides
 
 export class MaterialSystem {
-  
   // Get color for voxel type
   static getColor(voxelType: VoxelType): string {
     return VoxelColors[voxelType];

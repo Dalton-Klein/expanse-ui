@@ -8,7 +8,7 @@ import {
   GenerationAlgorithm,
   MeshingAlgorithm,
 } from "../types";
-import { updateTerrainConfig } from "../terrain/TerrainConfig";
+import { updateTerrainConfig } from "../engine/TerrainConfig";
 import "./DebugPanel.scss";
 
 interface DebugPanelProps {
@@ -20,7 +20,11 @@ interface DebugPanelProps {
   onMetricsUpdate: (metrics: PerformanceMetrics) => void;
   cameraData: {
     position: { x: number; y: number; z: number };
-    direction: { compass: string; face: string; angle: number };
+    direction: {
+      compass: string;
+      face: string;
+      angle: number;
+    };
   };
 }
 
@@ -36,31 +40,35 @@ export default function DebugPanel({
   // FPS tracking
   const [fps, setFps] = useState(0);
   const [frameCount, setFrameCount] = useState(0);
-  const [lastTime, setLastTime] = useState(performance.now());
+  const [lastTime, setLastTime] = useState(
+    performance.now()
+  );
 
   useEffect(() => {
     const updateFPS = () => {
       const currentTime = performance.now();
-      setFrameCount(prev => prev + 1);
-      
+      setFrameCount((prev) => prev + 1);
+
       // Update FPS every second
       if (currentTime - lastTime >= 1000) {
-        const newFps = Math.round((frameCount * 1000) / (currentTime - lastTime));
+        const newFps = Math.round(
+          (frameCount * 1000) / (currentTime - lastTime)
+        );
         setFps(newFps);
-        
+
         // Update metrics
         onMetricsUpdate({
           ...metrics,
           fps: newFps,
         });
-        
+
         setFrameCount(0);
         setLastTime(currentTime);
       }
-      
+
       requestAnimationFrame(updateFPS);
     };
-    
+
     const animationId = requestAnimationFrame(updateFPS);
     return () => cancelAnimationFrame(animationId);
   }, [frameCount, lastTime, metrics, onMetricsUpdate]);
@@ -99,23 +107,34 @@ export default function DebugPanel({
           <h4>Location</h4>
           <div className="debug-item">
             <span className="label">X:</span>
-            <span className="value">{cameraData.position.x}</span>
+            <span className="value">
+              {cameraData.position.x}
+            </span>
           </div>
           <div className="debug-item">
             <span className="label">Y:</span>
-            <span className="value">{cameraData.position.y}</span>
+            <span className="value">
+              {cameraData.position.y}
+            </span>
           </div>
           <div className="debug-item">
             <span className="label">Z:</span>
-            <span className="value">{cameraData.position.z}</span>
+            <span className="value">
+              {cameraData.position.z}
+            </span>
           </div>
           <div className="debug-item">
             <span className="label">Facing:</span>
-            <span className="value">{cameraData.direction.compass} ({cameraData.direction.face})</span>
+            <span className="value">
+              {cameraData.direction.compass} (
+              {cameraData.direction.face})
+            </span>
           </div>
           <div className="debug-item">
             <span className="label">Angle:</span>
-            <span className="value">{cameraData.direction.angle}°</span>
+            <span className="value">
+              {cameraData.direction.angle}°
+            </span>
           </div>
         </div>
 
@@ -316,12 +335,15 @@ export default function DebugPanel({
               <div className="debug-item">
                 <span className="label">Algorithm:</span>
                 <select
-                  value={terrainConfig.greedyMeshing.algorithm}
+                  value={
+                    terrainConfig.greedyMeshing.algorithm
+                  }
                   onChange={(e) =>
                     handleTerrainConfigUpdate({
                       greedyMeshing: {
                         ...terrainConfig.greedyMeshing,
-                        algorithm: e.target.value as MeshingAlgorithm,
+                        algorithm: e.target
+                          .value as MeshingAlgorithm,
                       },
                     })
                   }
@@ -329,7 +351,9 @@ export default function DebugPanel({
                   <option value={MeshingAlgorithm.NAIVE}>
                     Naive
                   </option>
-                  <option value={MeshingAlgorithm.BINARY_GREEDY}>
+                  <option
+                    value={MeshingAlgorithm.BINARY_GREEDY}
+                  >
                     Binary Greedy
                   </option>
                 </select>
@@ -356,7 +380,8 @@ export default function DebugPanel({
                     })
                   }
                 >
-                  {terrainConfig.greedyMeshing.crossChunkCulling
+                  {terrainConfig.greedyMeshing
+                    .crossChunkCulling
                     ? "ON"
                     : "OFF"}
                 </button>

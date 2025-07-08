@@ -4,7 +4,7 @@ import {
   ChunkData,
   RenderConfig,
   TerrainConfig,
-} from "../types";
+} from "../../types";
 
 // React component for rendering chunks using binary greedy meshing
 

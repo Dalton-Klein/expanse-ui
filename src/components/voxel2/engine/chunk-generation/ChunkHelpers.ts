@@ -3,38 +3,28 @@ import {
   Position3D,
   Voxel,
   VoxelType,
-} from "../types";
-import {
-  CHUNK_SIZE,
-  CHUNK_HEIGHT,
-} from "../terrain/TerrainConfig";
+} from "../../types";
+import { CHUNK_SIZE, CHUNK_HEIGHT } from "../TerrainConfig";
 
 // Chunk data management for voxel2 system
 // TODO: Implement chunk data utilities and management
 
-export class ChunkDataUtils {
+export class ChunkHelpers {
   // Create empty chunk
-  static createEmpty(startPos: Position3D): ChunkData {
+  static createEmpty(chunkPos: Position3D): ChunkData {
     const voxels: Voxel[][][] = [];
-    // Dynamically set end postion based on start position and chunk size
-    let endPos: Position3D = {
-      x: startPos.x + CHUNK_SIZE - 1,
-      y: startPos.y + CHUNK_HEIGHT - 1,
-      z: startPos.z + CHUNK_SIZE - 1,
-    };
     // Initialize 3D array
-    for (let x = startPos.x; x < endPos.x; x++) {
+    for (let x = 0; x < CHUNK_SIZE; x++) {
       voxels[x] = [];
-      for (let y = startPos.y; y < endPos.y; y++) {
+      for (let y = 0; y < CHUNK_HEIGHT; y++) {
         voxels[x][y] = [];
-        for (let z = startPos.z; z < endPos.z; z++) {
+        for (let z = 0; z < CHUNK_SIZE; z++) {
           voxels[x][y][z] = { type: VoxelType.AIR };
         }
       }
     }
-
     return {
-      position: startPos,
+      position: chunkPos,
       voxels,
     };
   }
@@ -83,6 +73,16 @@ export class ChunkDataUtils {
 
     chunk.voxels[x][y][z] = voxel;
     return true;
+  }
+
+  static getChunkEndPosFromStartPos(
+    startPos: Position3D
+  ): Position3D {
+    return {
+      x: startPos.x + CHUNK_SIZE - 1,
+      y: startPos.y + CHUNK_HEIGHT - 1,
+      z: startPos.z + CHUNK_SIZE - 1,
+    };
   }
 
   // TODO: Add chunk utilities:

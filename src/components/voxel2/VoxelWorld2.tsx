@@ -3,8 +3,8 @@ import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { Sky } from "@react-three/drei";
 import DebugPanel from "./debug/DebugPanel";
-import NaiveRenderer from "./rendering/NaiveRenderer";
-import GreedyMeshRenderer from "./rendering/GreedyMeshRenderer";
+import NaiveRenderer from "./engine/rendering/NaiveRenderer";
+import GreedyMeshRenderer from "./engine/rendering/GreedyMeshRenderer";
 import {
   RenderConfig,
   PerformanceMetrics,
@@ -18,10 +18,10 @@ import {
 import {
   CHUNK_SIZE,
   CHUNK_HEIGHT,
-} from "./terrain/TerrainConfig";
-import { ChunkDataUtils } from "./chunks/ChunkData";
-import { DEFAULT_TERRAIN_CONFIG } from "./terrain/TerrainConfig";
-import { DebugTerrainGenerator } from "./debug/DebugTerrainGenerator";
+} from "./engine/TerrainConfig";
+import { ChunkHelpers } from "./engine/chunk-generation/ChunkHelpers";
+import { DEFAULT_TERRAIN_CONFIG } from "./engine/TerrainConfig";
+import { TerrainGenerator } from "./engine/chunk-generation/TerrainGenerator";
 import CameraControls from "./debug/CameraControls";
 import CameraTracker from "./debug/CameraTracker";
 
@@ -60,14 +60,12 @@ export default function VoxelWorld2() {
       terrainConfig.generation.algorithm ===
       GenerationAlgorithm.DEBUG_PATTERN
     ) {
-      return DebugTerrainGenerator.generateDebugTerrain(
-        terrainConfig
-      );
+      return TerrainGenerator.generateChunks(terrainConfig);
     } else {
       // TODO: Implement noise-based terrain generation
       // For now, return empty chunks for noise mode
       return [
-        ChunkDataUtils.createEmpty({ x: 0, y: 0, z: 0 }),
+        ChunkHelpers.createEmpty({ x: 0, y: 0, z: 0 }),
       ];
     }
   }, [terrainConfig]);
@@ -202,7 +200,7 @@ function calculateTriangleCount(
     for (let x = 0; x < CHUNK_SIZE; x++) {
       for (let y = 0; y < CHUNK_HEIGHT; y++) {
         for (let z = 0; z < CHUNK_SIZE; z++) {
-          const voxel = ChunkDataUtils.getVoxel(
+          const voxel = ChunkHelpers.getVoxel(
             chunk,
             x,
             y,
