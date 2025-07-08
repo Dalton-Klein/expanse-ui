@@ -35,7 +35,44 @@ export class GreedyMesher {
     const axisCols = this.encodeToBinary(chunk);
 
     // 2. Face Culling- Cull voxel faces based on adjacency to air, use bitwise operations to find face transitions
-    //    - Generate 6 face masks (one for each direction: +X, -X, +Y, -Y, +Z, -Z)
+    const faceMasks =
+      this.generateFaceCullingMasks(axisCols);
+
+    // Debug: Enable face counting
+    if (true) {
+      // Temporarily enabled for testing
+      const faceNames = [
+        "+Y",
+        "-Y",
+        "+X",
+        "-X",
+        "+Z",
+        "-Z",
+      ];
+      console.log(
+        `[GreedyMesher] Face culling for chunk at (${chunk.position.x}, ${chunk.position.y}, ${chunk.position.z})`
+      );
+      for (let faceIdx = 0; faceIdx < 6; faceIdx++) {
+        let faceCount = 0;
+        const axis = Math.floor(faceIdx / 2);
+
+        for (let a = 0; a < CHUNK_SIZE + 2; a++) {
+          for (let b = 0; b < CHUNK_SIZE + 2; b++) {
+            const mask = faceMasks[faceIdx][axis][a][b];
+            // Count number of set bits (visible faces)
+            let bits = mask;
+            while (bits) {
+              faceCount += bits & 1;
+              bits >>>= 1;
+            }
+          }
+        }
+        console.log(
+          `  ${faceNames[faceIdx]} faces: ${faceCount}`
+        );
+      }
+    }
+
     // 3. Group Faces By Block Type (And Later Ambient Occlusion)- Create 2D binary planes for each unique combination
     //    - Store as data[axis][block_hash][y_level] = 32x32 binary plane
     // 4. Greedy algorithm- For each 2D binary plane, apply the greedy algorithm
@@ -50,7 +87,7 @@ export class GreedyMesher {
   }
 
   /**
-   * Convert 3D voxel data into binary columns for efficient face culling
+   * 1. Convert 3D voxel data into binary columns for efficient face culling
    * Based on TanTanDev's binary greedy meshing algorithm
    */
   private static encodeToBinary(
@@ -118,5 +155,78 @@ export class GreedyMesher {
     }
 
     return axisCols;
+  }
+
+  /**
+   * 2. Generate face culling masks for all 6 face directions
+   * A face is visible if there's a solid voxel with air on the adjacent side
+   *
+   * @param axisCols Binary encoded voxel columns
+   * @returns Array of 6 face masks: [+Y, -Y, +X, -X, +Z, -Z]
+   */
+  private static generateFaceCullingMasks(
+    axisCols: AxisColumns
+  ): AxisColumns[] {
+    const CHUNK_SIZE_P = CHUNK_SIZE + 2; // 32
+
+    // Initialize 6 face masks (one for each direction)
+    const faceMasks: AxisColumns[] = [];
+    for (let i = 0; i < 6; i++) {
+      faceMasks.push([
+        Array(CHUNK_SIZE_P)
+          .fill(null)
+          .map(() => new Array(CHUNK_SIZE_P).fill(0)),
+        Array(CHUNK_SIZE_P)
+          .fill(null)
+          .map(() => new Array(CHUNK_SIZE_P).fill(0)),
+        Array(CHUNK_SIZE_P)
+          .fill(null)
+          .map(() => new Array(CHUNK_SIZE_P).fill(0)),
+      ]);
+    }
+
+    // Process each axis for face culling
+    // Y-axis faces (+Y and -Y)
+    for (let z = 0; z < CHUNK_SIZE_P; z++) {
+      for (let x = 0; x < CHUNK_SIZE_P; x++) {
+        const col = axisCols[0][z][x];
+
+        // +Y faces: solid voxel with air above
+        // Shift right to check voxel above (Y+1)
+        faceMasks[0][0][z][x] = col & ~(col >> 1);
+
+        // -Y faces: solid voxel with air below
+        // Shift left to check voxel below (Y-1)
+        faceMasks[1][0][z][x] = col & ~(col << 1);
+      }
+    }
+
+    // X-axis faces (+X and -X)
+    for (let y = 0; y < CHUNK_SIZE_P; y++) {
+      for (let z = 0; z < CHUNK_SIZE_P; z++) {
+        const col = axisCols[1][y][z];
+
+        // +X faces: solid voxel with air to the right
+        faceMasks[2][1][y][z] = col & ~(col >> 1);
+
+        // -X faces: solid voxel with air to the left
+        faceMasks[3][1][y][z] = col & ~(col << 1);
+      }
+    }
+
+    // Z-axis faces (+Z and -Z)
+    for (let y = 0; y < CHUNK_SIZE_P; y++) {
+      for (let x = 0; x < CHUNK_SIZE_P; x++) {
+        const col = axisCols[2][y][x];
+
+        // +Z faces: solid voxel with air in front
+        faceMasks[4][2][y][x] = col & ~(col >> 1);
+
+        // -Z faces: solid voxel with air behind
+        faceMasks[5][2][y][x] = col & ~(col << 1);
+      }
+    }
+
+    return faceMasks;
   }
 }
