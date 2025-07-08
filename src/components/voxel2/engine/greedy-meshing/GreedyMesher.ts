@@ -8,6 +8,7 @@ import {
 } from "../../types";
 import { CHUNK_SIZE } from "../TerrainConfig";
 import { ChunkHelpers } from "../chunk-generation/ChunkHelpers";
+import { ChunkGenerator } from "../chunk-generation/ChunkGenerator";
 
 // Type for axis columns using native 32-bit integers
 // Each axis stores columns in different arrangements (same as TanTanDev):
@@ -129,5 +130,92 @@ export class GreedyMesher {
     );
 
     return axisCols;
+  }
+
+  /**
+   * Test binary encoding using the existing generateTinyChunk function
+   * Creates a 2x2x2 cube and verifies the binary representation
+   */
+  public static testBinaryEncodingWithTinyChunk(): boolean {
+    console.log("[GreedyMesher] Testing binary encoding with generateTinyChunk...");
+    
+    // Generate a tiny chunk with 2x2x2 cube pattern
+    const tinyChunk = ChunkGenerator.generateTinyChunk({ x: 0, y: 0, z: 0 });
+    
+    // Log the actual voxel data for reference
+    console.log("Generated chunk voxel data:");
+    let solidCount = 0;
+    for (let x = 0; x < CHUNK_SIZE + 2; x++) {
+      for (let y = 0; y < CHUNK_SIZE + 2; y++) {
+        for (let z = 0; z < CHUNK_SIZE + 2; z++) {
+          if (ChunkHelpers.getVoxel(tinyChunk, x, y, z)) {
+            console.log(`Solid voxel at (${x}, ${y}, ${z})`);
+            solidCount++;
+          }
+        }
+      }
+    }
+    console.log(`Total solid voxels: ${solidCount}`);
+
+    // Encode to binary
+    const axisCols = this.encodeToBinary(tinyChunk);
+    
+    // Verify the encoding
+    let success = true;
+    let errorCount = 0;
+    
+    // Based on generateTinyChunk logic: it creates blocks at (1,1,1), (1,2,1), (2,1,1), (2,2,1), 
+    // (1,1,2), (1,2,2), (2,1,2), (2,2,2) - a 2x2x2 cube starting at position 1
+    // So we expect bits set at positions 1 and 2 in all axes
+    const expectedMask = (1 << 1) | (1 << 2);  // Binary: 110 (bits 1 and 2 set)
+    
+    // Check Y-axis columns - should have bits set at positions 1 and 2 for solid blocks
+    for (let x = 1; x <= 2; x++) {
+      for (let z = 1; z <= 2; z++) {
+        if (axisCols[0][z][x] !== expectedMask) {
+          console.error(`Y-axis column [${z}][${x}] expected 0b${expectedMask.toString(2).padStart(32, '0')}, got 0b${axisCols[0][z][x].toString(2).padStart(32, '0')}`);
+          success = false;
+          errorCount++;
+        } else {
+          console.log(`✓ Y-axis column [${z}][${x}] correct: 0b${axisCols[0][z][x].toString(2).padStart(32, '0')}`);
+        }
+      }
+    }
+
+    // Check X-axis columns - should have bits set at positions 1 and 2 for solid blocks
+    for (let y = 1; y <= 2; y++) {
+      for (let z = 1; z <= 2; z++) {
+        if (axisCols[1][y][z] !== expectedMask) {
+          console.error(`X-axis column [${y}][${z}] expected 0b${expectedMask.toString(2).padStart(32, '0')}, got 0b${axisCols[1][y][z].toString(2).padStart(32, '0')}`);
+          success = false;
+          errorCount++;
+        } else {
+          console.log(`✓ X-axis column [${y}][${z}] correct: 0b${axisCols[1][y][z].toString(2).padStart(32, '0')}`);
+        }
+      }
+    }
+
+    // Check Z-axis columns - should have bits set at positions 1 and 2 for solid blocks
+    for (let x = 1; x <= 2; x++) {
+      for (let y = 1; y <= 2; y++) {
+        if (axisCols[2][y][x] !== expectedMask) {
+          console.error(`Z-axis column [${y}][${x}] expected 0b${expectedMask.toString(2).padStart(32, '0')}, got 0b${axisCols[2][y][x].toString(2).padStart(32, '0')}`);
+          success = false;
+          errorCount++;
+        } else {
+          console.log(`✓ Z-axis column [${y}][${x}] correct: 0b${axisCols[2][y][x].toString(2).padStart(32, '0')}`);
+        }
+      }
+    }
+
+    console.log(`[GreedyMesher] TinyChunk binary encoding test ${success ? 'PASSED' : 'FAILED'}`);
+    if (success) {
+      console.log(`✅ All 2x2x2 cube positions correctly encoded in all 3 axes`);
+      console.log(`Expected pattern: 0b${expectedMask.toString(2).padStart(32, '0')} (bits 1 and 2 set)`);
+    } else {
+      console.log(`❌ ${errorCount} encoding errors found`);
+    }
+    
+    return success;
   }
 }

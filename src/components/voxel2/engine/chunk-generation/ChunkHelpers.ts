@@ -12,13 +12,14 @@ import { CHUNK_SIZE } from "../TerrainConfig";
 export class ChunkHelpers {
   // Create empty chunk
   static createEmpty(chunkPos: Position3D): ChunkData {
+    const CHUNK_SIZE_P = CHUNK_SIZE + 2; // Padding for neighbor chunks
     const voxels: Voxel[][][] = [];
     // Initialize 3D array
-    for (let x = 0; x < CHUNK_SIZE; x++) {
+    for (let x = 0; x < CHUNK_SIZE_P; x++) {
       voxels[x] = [];
-      for (let y = 0; y < CHUNK_SIZE; y++) {
+      for (let y = 0; y < CHUNK_SIZE_P; y++) {
         voxels[x][y] = [];
-        for (let z = 0; z < CHUNK_SIZE; z++) {
+        for (let z = 0; z < CHUNK_SIZE_P; z++) {
           voxels[x][y][z] = { type: VoxelType.AIR };
         }
       }
