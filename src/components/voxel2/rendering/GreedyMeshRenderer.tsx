@@ -5,10 +5,6 @@ import {
   RenderConfig,
   TerrainConfig,
 } from "../types";
-import {
-  BinaryGreedyMesher,
-  BinaryMeshResult,
-} from "../meshing/BinaryGreedyMesher";
 
 // React component for rendering chunks using binary greedy meshing
 
@@ -31,14 +27,18 @@ export default function GreedyMeshRenderer({
 }: GreedyMeshRendererProps) {
   // Generate meshes for all chunks
   const meshResults = React.useMemo(() => {
-    const results: BinaryMeshResult[] = [];
+    const results: any = [];
     let totalTriangles = 0;
     let totalTime = 0;
 
     // Process each chunk
     for (const chunk of chunks) {
-      const result = BinaryGreedyMesher.generateMesh(chunk);
-      results.push(result);
+      let result = {
+        triangleCount: 0,
+        generationTimeMs: 0,
+      };
+      // const result = BinaryGreedyMesher.generateMesh(chunk);
+      // results.push(result);
       totalTriangles += result.triangleCount;
       totalTime += result.generationTimeMs;
     }
@@ -77,20 +77,22 @@ export default function GreedyMeshRenderer({
 
   return (
     <group name="greedy-mesh-terrain">
-      {meshResults.results.map((result, index) => (
-        <mesh
-          key={`chunk-${chunks[index].position.x}-${chunks[index].position.z}`}
-          geometry={result.geometry}
-          castShadow
-          receiveShadow
-        >
-          <meshLambertMaterial
-            wireframe={renderingConfig.wireframe}
-            vertexColors={true}
-            side={THREE.FrontSide}
-          />
-        </mesh>
-      ))}
+      {meshResults.results.map(
+        (result: any, index: any) => (
+          <mesh
+            key={`chunk-${chunks[index].position.x}-${chunks[index].position.z}`}
+            geometry={result.geometry}
+            castShadow
+            receiveShadow
+          >
+            <meshLambertMaterial
+              wireframe={renderingConfig.wireframe}
+              vertexColors={true}
+              side={THREE.FrontSide}
+            />
+          </mesh>
+        )
+      )}
     </group>
   );
 }

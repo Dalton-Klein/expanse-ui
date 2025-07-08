@@ -96,16 +96,13 @@ export class DebugTerrainGenerator {
     config: TerrainConfig
   ): void {
     const flatChunkHeight = 8; // 8 blocks tall for better visualization
+    const voxelType = VoxelType.GRASS;
 
     for (let x = 0; x < CHUNK_SIZE; x++) {
       for (let z = 0; z < CHUNK_SIZE; z++) {
         // Fill from Y=0 to Y=7 with blocks
         for (let y = 0; y < flatChunkHeight; y++) {
           // Top layer is grass, rest is dirt
-          const voxelType =
-            y === flatChunkHeight - 1
-              ? VoxelType.GRASS
-              : VoxelType.DIRT;
           ChunkDataUtils.setVoxel(chunk, x, y, z, {
             type: voxelType,
           });
