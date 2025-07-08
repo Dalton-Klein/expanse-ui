@@ -9,7 +9,6 @@ import {
   MeshingAlgorithm,
 } from "../types";
 import { updateTerrainConfig } from "../engine/TerrainConfig";
-import { GreedyMesher } from "../engine/greedy-meshing/GreedyMesher";
 import "./DebugPanel.scss";
 
 interface DebugPanelProps {
@@ -434,21 +433,6 @@ export default function DebugPanel({
               {terrainConfig.debug.enableNaiveComparison
                 ? "ON"
                 : "OFF"}
-            </button>
-          </div>
-          <div className="debug-item">
-            <span className="label">Test Binary Encoding:</span>
-            <button
-              className="wireframe-toggle"
-              onClick={() => {
-                console.log("=".repeat(50));
-                console.log("TESTING BINARY ENCODING");
-                console.log("=".repeat(50));
-                GreedyMesher.testBinaryEncodingWithTinyChunk();
-                console.log("=".repeat(50));
-              }}
-            >
-              RUN TEST
             </button>
           </div>
         </div>

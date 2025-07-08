@@ -15,7 +15,6 @@ import GamePage from "./components/pages/game/gamePage";
 
 function App() {
   const socketRef = useRef<any>();
-  const locationPath: string = useLocation().pathname;
 
   useEffect(() => {
     //Master connect to socket so each client only connects to server once
@@ -41,7 +40,10 @@ function App() {
               <Routes>
                 {/* Main Paths */}
                 <Route path="/" element={<HomePage />} />
-                <Route path="/game" element={<GamePage />} />
+                <Route
+                  path="/game"
+                  element={<GamePage />}
+                />
               </Routes>
             </div>
           </div>
