@@ -1,6 +1,6 @@
 import {
   ChunkData,
-  ChunkPosition,
+  Position3D,
   Voxel,
   VoxelType,
 } from "../types";
@@ -14,23 +14,27 @@ import {
 
 export class ChunkDataUtils {
   // Create empty chunk
-  static createEmpty(position: ChunkPosition): ChunkData {
-    // TODO: Implement empty chunk creation
+  static createEmpty(startPos: Position3D): ChunkData {
     const voxels: Voxel[][][] = [];
-
+    // Dynamically set end postion based on start position and chunk size
+    let endPos: Position3D = {
+      x: startPos.x + CHUNK_SIZE - 1,
+      y: startPos.y + CHUNK_HEIGHT - 1,
+      z: startPos.z + CHUNK_SIZE - 1,
+    };
     // Initialize 3D array
-    for (let x = 0; x < CHUNK_SIZE; x++) {
+    for (let x = startPos.x; x < endPos.x; x++) {
       voxels[x] = [];
-      for (let y = 0; y < CHUNK_HEIGHT; y++) {
+      for (let y = startPos.y; y < endPos.y; y++) {
         voxels[x][y] = [];
-        for (let z = 0; z < CHUNK_SIZE; z++) {
+        for (let z = startPos.z; z < endPos.z; z++) {
           voxels[x][y][z] = { type: VoxelType.AIR };
         }
       }
     }
 
     return {
-      position,
+      position: startPos,
       voxels,
     };
   }

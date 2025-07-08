@@ -15,7 +15,10 @@ import {
   VoxelType,
   MeshingAlgorithm,
 } from "./types";
-import { CHUNK_SIZE, CHUNK_HEIGHT } from "./terrain/TerrainConfig";
+import {
+  CHUNK_SIZE,
+  CHUNK_HEIGHT,
+} from "./terrain/TerrainConfig";
 import { ChunkDataUtils } from "./chunks/ChunkData";
 import { DEFAULT_TERRAIN_CONFIG } from "./terrain/TerrainConfig";
 import { DebugTerrainGenerator } from "./debug/DebugTerrainGenerator";
@@ -48,7 +51,7 @@ export default function VoxelWorld2() {
   // Camera tracking state for debug panel
   const [cameraData, setCameraData] = useState({
     position: { x: 0, y: 0, z: 0 },
-    direction: { compass: "North", face: "Z-", angle: 0 }
+    direction: { compass: "North", face: "Z-", angle: 0 },
   });
 
   // Generate terrain chunks based on config
@@ -63,22 +66,27 @@ export default function VoxelWorld2() {
     } else {
       // TODO: Implement noise-based terrain generation
       // For now, return empty chunks for noise mode
-      return [ChunkDataUtils.createEmpty({ x: 0, z: 0 })];
+      return [
+        ChunkDataUtils.createEmpty({ x: 0, y: 0, z: 0 }),
+      ];
     }
   }, [terrainConfig]);
 
   // Stable callback for mesh generation stats
-  const handleMeshGenerated = React.useCallback((stats: {
-    chunkCount: number;
-    totalTriangles: number;
-    avgGenerationTime: number;
-  }) => {
-    setPerformanceMetrics(prev => ({
-      ...prev,
-      chunks: stats.chunkCount,
-      triangles: stats.totalTriangles,
-    }));
-  }, []);
+  const handleMeshGenerated = React.useCallback(
+    (stats: {
+      chunkCount: number;
+      totalTriangles: number;
+      avgGenerationTime: number;
+    }) => {
+      setPerformanceMetrics((prev) => ({
+        ...prev,
+        chunks: stats.chunkCount,
+        triangles: stats.totalTriangles,
+      }));
+    },
+    []
+  );
 
   // Update performance metrics for naive renderer
   React.useEffect(() => {
@@ -133,7 +141,7 @@ export default function VoxelWorld2() {
           movementSpeed={15}
           mouseSensitivity={0.002}
         />
-        
+
         {/* Camera Tracker for Debug Panel */}
         <CameraTracker onUpdate={setCameraData} />
 
@@ -162,8 +170,9 @@ export default function VoxelWorld2() {
         {/* Voxel Rendering */}
         <group>
           {/* Conditional renderer based on terrain configuration */}
-          {terrainConfig.greedyMeshing.enabled && 
-           terrainConfig.greedyMeshing.algorithm === MeshingAlgorithm.BINARY_GREEDY ? (
+          {terrainConfig.greedyMeshing.enabled &&
+          terrainConfig.greedyMeshing.algorithm ===
+            MeshingAlgorithm.BINARY_GREEDY ? (
             <GreedyMeshRenderer
               chunks={chunks}
               renderingConfig={renderConfig}

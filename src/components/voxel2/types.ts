@@ -1,6 +1,11 @@
 // Voxel2 Core Type Definitions
 // Clean, well-documented types for the new voxel system
 
+// Basic voxel data structure
+export interface Voxel {
+  type: VoxelType;
+  // TODO: Add material properties, lighting, etc. as needed
+}
 // Basic voxel types
 export enum VoxelType {
   AIR = 0,
@@ -21,21 +26,9 @@ export interface Position3D {
   z: number;
 }
 
-// Chunk position (in chunk coordinates)
-export interface ChunkPosition {
-  x: number;
-  z: number;
-}
-
-// Basic voxel data structure
-export interface Voxel {
-  type: VoxelType;
-  // TODO: Add material properties, lighting, etc. as needed
-}
-
 // Chunk data structure (simplified for now)
 export interface ChunkData {
-  position: ChunkPosition;
+  position: Position3D;
   voxels: Voxel[][][]; // [x][y][z]
   // TODO: Add metadata, generation status, etc.
 }
