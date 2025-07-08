@@ -15,7 +15,7 @@ import {
   VoxelType,
   MeshingAlgorithm,
 } from "../../types";
-import { CHUNK_SIZE, CHUNK_HEIGHT } from "../TerrainConfig";
+import { CHUNK_SIZE } from "../TerrainConfig";
 import { ChunkHelpers } from "../chunk-generation/ChunkHelpers";
 import { DEFAULT_TERRAIN_CONFIG } from "../TerrainConfig";
 import { TerrainGenerator } from "../chunk-generation/TerrainGenerator";
@@ -195,7 +195,7 @@ function calculateTriangleCount(
 
   chunks.forEach((chunk) => {
     for (let x = 0; x < CHUNK_SIZE; x++) {
-      for (let y = 0; y < CHUNK_HEIGHT; y++) {
+      for (let y = 0; y < CHUNK_SIZE; y++) {
         for (let z = 0; z < CHUNK_SIZE; z++) {
           const voxel = ChunkHelpers.getVoxel(
             chunk,

@@ -4,7 +4,7 @@ import {
   Voxel,
   VoxelType,
 } from "../../types";
-import { CHUNK_SIZE, CHUNK_HEIGHT } from "../TerrainConfig";
+import { CHUNK_SIZE } from "../TerrainConfig";
 
 // Chunk data management for voxel2 system
 // TODO: Implement chunk data utilities and management
@@ -16,7 +16,7 @@ export class ChunkHelpers {
     // Initialize 3D array
     for (let x = 0; x < CHUNK_SIZE; x++) {
       voxels[x] = [];
-      for (let y = 0; y < CHUNK_HEIGHT; y++) {
+      for (let y = 0; y < CHUNK_SIZE; y++) {
         voxels[x][y] = [];
         for (let z = 0; z < CHUNK_SIZE; z++) {
           voxels[x][y][z] = { type: VoxelType.AIR };
@@ -37,13 +37,14 @@ export class ChunkHelpers {
     z: number
   ): Voxel | null {
     // TODO: Add bounds checking
+    const CHUNK_SIZE_P = CHUNK_SIZE + 2; // Padding for neighbor chunks
     if (
       x < 0 ||
-      x >= CHUNK_SIZE ||
+      x >= CHUNK_SIZE_P ||
       y < 0 ||
-      y >= CHUNK_HEIGHT ||
+      y >= CHUNK_SIZE_P ||
       z < 0 ||
-      z >= CHUNK_SIZE
+      z >= CHUNK_SIZE_P
     ) {
       return null;
     }
@@ -64,7 +65,7 @@ export class ChunkHelpers {
       x < 0 ||
       x >= CHUNK_SIZE ||
       y < 0 ||
-      y >= CHUNK_HEIGHT ||
+      y >= CHUNK_SIZE ||
       z < 0 ||
       z >= CHUNK_SIZE
     ) {
@@ -80,7 +81,7 @@ export class ChunkHelpers {
   ): Position3D {
     return {
       x: startPos.x + CHUNK_SIZE - 1,
-      y: startPos.y + CHUNK_HEIGHT - 1,
+      y: startPos.y + CHUNK_SIZE - 1,
       z: startPos.z + CHUNK_SIZE - 1,
     };
   }

@@ -6,10 +6,7 @@ import {
   TerrainConfig,
   VoxelType,
 } from "../../types";
-import {
-  CHUNK_SIZE,
-  CHUNK_HEIGHT,
-} from "../../engine/TerrainConfig";
+import { CHUNK_SIZE } from "../../engine/TerrainConfig";
 import { ChunkHelpers } from "../../engine/chunk-generation/ChunkHelpers";
 
 // Naive cube-per-voxel renderer for voxel2
@@ -87,7 +84,7 @@ function renderChunk(
   const chunkWorldZ = chunk.position.z * CHUNK_SIZE;
 
   for (let x = 0; x < CHUNK_SIZE; x++) {
-    for (let y = 0; y < CHUNK_HEIGHT; y++) {
+    for (let y = 0; y < CHUNK_SIZE; y++) {
       for (let z = 0; z < CHUNK_SIZE; z++) {
         const voxel = ChunkHelpers.getVoxel(chunk, x, y, z);
 

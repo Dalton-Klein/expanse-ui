@@ -11,8 +11,7 @@ export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
   renderDistance: 1, // chunks
 
   // Fundamental chunk configuration
-  chunkSize: 32, // voxels per chunk side
-  chunkHeight: 32, // voxels per chunk height (max 64 for binary greedy meshing)
+  chunkSize: 30, // voxels per chunk side
   voxelSize: 1, // world units per voxel
 
   // LOD system configuration
@@ -53,8 +52,7 @@ export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
 // Production-optimized terrain configuration
 export const PRODUCTION_TERRAIN_CONFIG: TerrainConfig = {
   renderDistance: 16,
-  chunkSize: 32,
-  chunkHeight: 64,
+  chunkSize: 30,
   voxelSize: 1,
 
   lod: {
@@ -147,7 +145,6 @@ export function cloneTerrainConfig(
   return {
     renderDistance: config.renderDistance,
     chunkSize: config.chunkSize,
-    chunkHeight: config.chunkHeight,
     voxelSize: config.voxelSize,
     lod: { ...config.lod },
     greedyMeshing: { ...config.greedyMeshing },
@@ -224,6 +221,4 @@ export function getTerrainConfigSummary(
 // Export performance constants for optimized access
 // These are derived from the default config for compile-time optimization
 export const CHUNK_SIZE = DEFAULT_TERRAIN_CONFIG.chunkSize;
-export const CHUNK_HEIGHT =
-  DEFAULT_TERRAIN_CONFIG.chunkHeight;
 export const VOXEL_SIZE = DEFAULT_TERRAIN_CONFIG.voxelSize;

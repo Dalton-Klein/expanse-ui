@@ -3,7 +3,7 @@ import {
   Position3D,
   VoxelType,
 } from "../../types";
-import { CHUNK_SIZE, CHUNK_HEIGHT } from "../TerrainConfig";
+import { CHUNK_SIZE } from "../TerrainConfig";
 import { ChunkHelpers } from "./ChunkHelpers";
 
 /**
@@ -20,17 +20,21 @@ export class ChunkGenerator {
   ): ChunkData {
     // 1: Initialize empty chunk
     let chunk = ChunkHelpers.createEmpty(startPos);
-    const flatChunkHeight = 8; // 8 blocks tall for better visualization
+    const flatChunkHeight = 9; // 8 blocks tall for visualization, 1 block for padding
     const voxelType = VoxelType.GRASS;
+    const chunkSizeP = CHUNK_SIZE + 2; // Padding for neighbor chunks
     // 2: Interate through x and z with assumed y, and fill chunk with flat terrain
-    for (let x = 0; x < CHUNK_SIZE; x++) {
-      for (let z = 0; z < CHUNK_SIZE; z++) {
+    for (let x = 0; x < chunkSizeP; x++) {
+      for (let z = 0; z < chunkSizeP; z++) {
         // Fill from Y=0 to Y=7 with blocks
         for (let y = 0; y < flatChunkHeight; y++) {
-          // Top layer is grass, rest is dirt
-          ChunkHelpers.setVoxel(chunk, x, y, z, {
-            type: voxelType,
-          });
+          // Make a large cube of grass, accounting for padding of neighbor chunks
+          // Assume we can create faces at chunk borders in debug mode (make neighbor data remain as air)
+          if (x !== 0 && z !== 0 && y !== 0) {
+            ChunkHelpers.setVoxel(chunk, x, y, z, {
+              type: voxelType,
+            });
+          }
         }
       }
     }
@@ -47,17 +51,19 @@ export class ChunkGenerator {
   ): ChunkData {
     // 1: Initialize empty chunk
     let chunk = ChunkHelpers.createEmpty(startPos);
-    const tinyTestSize = 2; // 8 blocks tall for better visualization
+    const tinyTestSize = 3; // 2x2 blocks tall for visualization, 1 block for padding
     const voxelType = VoxelType.GRASS;
     // 2: Interate through x and z with assumed y, and fill chunk with flat terrain
     for (let x = 0; x < tinyTestSize; x++) {
       for (let z = 0; z < tinyTestSize; z++) {
         // Fill from Y=0 to Y=7 with blocks
         for (let y = 0; y < tinyTestSize; y++) {
-          // Top layer is grass, rest is dirt
-          ChunkHelpers.setVoxel(chunk, x, y, z, {
-            type: voxelType,
-          });
+          if (x !== 0 && z !== 0 && y !== 0) {
+            // small cube of grass, accounting for padding of neighbor chunks
+            ChunkHelpers.setVoxel(chunk, x, y, z, {
+              type: voxelType,
+            });
+          }
         }
       }
     }

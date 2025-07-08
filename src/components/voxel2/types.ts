@@ -18,9 +18,6 @@ export enum VoxelType {
   WATER = 5,
 }
 
-// World configuration constants moved to TerrainConfig.ts
-// Import CHUNK_SIZE, CHUNK_HEIGHT, VOXEL_SIZE from "../terrain/TerrainConfig"
-
 // Basic 3D position
 export interface Position3D {
   x: number;
@@ -127,7 +124,6 @@ export interface DebugConfig {
 export interface TerrainConfig {
   renderDistance: number; // render distance in chunks
   chunkSize: number; // voxels per chunk side
-  chunkHeight: number; // voxels per chunk height
   voxelSize: number; // world units per voxel
   lod: LODConfig;
   greedyMeshing: GreedyMeshingConfig;
