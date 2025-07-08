@@ -51,20 +51,43 @@ jest.mock('@react-three/drei', () => ({
 }));
 
 // Mock Three.js
-jest.mock('three', () => ({
-  BufferGeometry: jest.fn(),
-  BoxGeometry: jest.fn(),
-  MeshBasicMaterial: jest.fn(),
-  Mesh: jest.fn(),
-  Scene: jest.fn(),
-  PerspectiveCamera: jest.fn(),
-  WebGLRenderer: jest.fn(),
-  Vector3: jest.fn(),
-  Color: jest.fn(),
-  DirectionalLight: jest.fn(),
-  AmbientLight: jest.fn(),
-  Float32BufferAttribute: jest.fn(),
-  DoubleSide: 'DoubleSide',
-  FrontSide: 'FrontSide',
-  BackSide: 'BackSide',
-}));
+jest.mock('three', () => {
+  class MockBufferGeometry {
+    constructor() {
+      this.attributes = {};
+      this.index = null;
+    }
+    
+    setAttribute(name, attribute) {
+      this.attributes[name] = attribute;
+    }
+    
+    setIndex(indices) {
+      this.index = { count: indices.length };
+    }
+    
+    computeVertexNormals() {}
+  }
+  
+  return {
+    BufferGeometry: MockBufferGeometry,
+    BoxGeometry: jest.fn(),
+    MeshBasicMaterial: jest.fn(),
+    Mesh: jest.fn(),
+    Scene: jest.fn(),
+    PerspectiveCamera: jest.fn(),
+    WebGLRenderer: jest.fn(),
+    Vector3: jest.fn(),
+    Color: jest.fn(),
+    DirectionalLight: jest.fn(),
+    AmbientLight: jest.fn(),
+    Float32BufferAttribute: jest.fn().mockImplementation((array, itemSize) => ({
+      array,
+      itemSize,
+      count: array.length / itemSize,
+    })),
+    DoubleSide: 'DoubleSide',
+    FrontSide: 'FrontSide',
+    BackSide: 'BackSide',
+  };
+});
