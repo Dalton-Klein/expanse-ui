@@ -594,15 +594,15 @@ export class GreedyMesher {
           x,
           y,
           z, // Bottom-left
-          x + width,
+          x,
           y,
-          z, // Bottom-right
+          z + height, // Top-left
           x + width,
           y,
           z + height, // Top-right
-          x,
+          x + width,
           y,
-          z + height // Top-left
+          z // Bottom-right
         );
         break;
       case 1: // -Y face (bottom)
@@ -610,15 +610,15 @@ export class GreedyMesher {
           x,
           y - 1,
           z + height, // Top-left
-          x + width,
+          x,
           y - 1,
-          z + height, // Top-right
+          z, // Bottom-left
           x + width,
           y - 1,
           z, // Bottom-right
-          x,
+          x + width,
           y - 1,
-          z // Bottom-left
+          z + height // Top-right
         );
         break;
       case 2: // +X face (right)
@@ -627,14 +627,14 @@ export class GreedyMesher {
           y,
           z, // Bottom-left
           x,
-          y,
-          z + width, // Bottom-right
+          y + height,
+          z, // Top-left
           x,
           y + height,
           z + width, // Top-right
           x,
-          y + height,
-          z // Top-left
+          y,
+          z + width // Bottom-right
         );
         break;
       case 3: // -X face (left)
@@ -643,14 +643,14 @@ export class GreedyMesher {
           y + height,
           z, // Top-left
           x - 1,
-          y + height,
-          z + width, // Top-right
+          y,
+          z, // Bottom-left
           x - 1,
           y,
           z + width, // Bottom-right
           x - 1,
-          y,
-          z // Bottom-left
+          y + height,
+          z + width // Top-right
         );
         break;
       case 4: // +Z face (front)

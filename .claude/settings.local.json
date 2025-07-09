@@ -14,7 +14,8 @@
       "Bash(node:*)",
       "Bash(npm run lint:*)",
       "Bash(npm run:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(true)"
     ],
     "deny": []
   }
