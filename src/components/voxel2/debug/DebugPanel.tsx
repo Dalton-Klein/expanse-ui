@@ -412,6 +412,29 @@ export default function DebugPanel({
             </button>
           </div>
           <div className="debug-item">
+            <span className="label">Chunk Borders:</span>
+            <button
+              className={`wireframe-toggle ${
+                terrainConfig.debug.showChunkBorders
+                  ? "active"
+                  : ""
+              }`}
+              onClick={() =>
+                handleTerrainConfigUpdate({
+                  debug: {
+                    ...terrainConfig.debug,
+                    showChunkBorders:
+                      !terrainConfig.debug.showChunkBorders,
+                  },
+                })
+              }
+            >
+              {terrainConfig.debug.showChunkBorders
+                ? "ON"
+                : "OFF"}
+            </button>
+          </div>
+          <div className="debug-item">
             <span className="label">Naive Comparison:</span>
             <button
               className={`wireframe-toggle ${

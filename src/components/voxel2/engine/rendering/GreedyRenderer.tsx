@@ -47,14 +47,15 @@ export default function GreedyRenderer({
     }
 
     // Log performance for debugging
+    const timeInMS =
+      chunks.length > 0
+        ? (totalTime / chunks.length).toFixed(3)
+        : 0;
     console.log(
       `[GreedyMeshRenderer] Generated ${chunks.length} chunks:`,
       {
         totalTriangles,
-        avgTimePerChunk:
-          chunks.length > 0
-            ? (totalTime / chunks.length).toFixed(3)
-            : 0,
+        avgTimePerChunk: `${timeInMS} ms`,
         totalTime: totalTime.toFixed(3),
       }
     );

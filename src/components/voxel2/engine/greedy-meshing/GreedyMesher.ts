@@ -60,11 +60,7 @@ export class GreedyMesher {
     const greedyQuads = this.generateGreedyQuads(
       faceMasksByBlockType
     );
-    console.log(
-      "qquad result = ",
-      greedyQuads.length,
-      greedyQuads
-    );
+    console.log("Greedy quads generated:", greedyQuads);
     // 4. Generate Geometry (And Later Ambient Occlusion)- Convert greedy quads to vertices with proper winding order
     result = this.generateGeometry(greedyQuads);
 
@@ -335,11 +331,12 @@ export class GreedyMesher {
         const startPos = this.findFirstSetBit(mask[j][i]);
         if (startPos === -1) continue;
 
-        // Try to expand vertically first (height)
+        // Try to expand vertically first (height in the bit dimension)
         let height = 1;
         let width = 1;
+        let depth = 1;
 
-        // Find maximum height at this column
+        // Find maximum height at this column (in the bit dimension)
         for (let h = startPos + 1; h < size; h++) {
           if (mask[j][i] & (1 << h)) {
             height++;
@@ -348,7 +345,7 @@ export class GreedyMesher {
           }
         }
 
-        // Try to expand horizontally (width) while maintaining height
+        // Try to expand in the i direction (width) while maintaining height
         for (let w = i + 1; w < size; w++) {
           let canExpand = true;
 
@@ -367,27 +364,71 @@ export class GreedyMesher {
           }
         }
 
+        // Now try to expand in the j direction (depth) while maintaining width and height
+        for (let d = j + 1; d < size; d++) {
+          let canExpand = true;
+
+          // Check if this entire row has the same pattern
+          for (let w = 0; w < width; w++) {
+            for (let h = 0; h < height; h++) {
+              if (
+                !(mask[d][i + w] & (1 << (startPos + h)))
+              ) {
+                canExpand = false;
+                break;
+              }
+            }
+            if (!canExpand) break;
+          }
+
+          if (canExpand) {
+            depth++;
+          } else {
+            break;
+          }
+        }
+
         // Create a quad for this rectangle
+        // The width and height parameters depend on the face direction
+        let quadWidth, quadHeight;
+
+        // For Y-axis faces (top/bottom), mask is [z][x], so width=x, depth=z
+        // For X-axis faces (left/right), mask is [y][z], so width=z, depth=y
+        // For Z-axis faces (front/back), mask is [y][x], so width=x, depth=y
+        const axisIndex = Math.floor(faceDirection / 2);
+        if (axisIndex === 0) {
+          // Y-axis
+          quadWidth = width;
+          quadHeight = depth;
+        } else if (axisIndex === 1) {
+          // X-axis
+          quadWidth = width;
+          quadHeight = depth;
+        } else {
+          // Z-axis
+          quadWidth = width;
+          quadHeight = depth;
+        }
+
         const quad = this.createQuadFromMask(
           blockType,
           faceDirection,
           i,
           j,
           startPos,
-          width,
-          height
+          quadWidth,
+          quadHeight
         );
         quads.push(quad);
 
         // Clear the bits we just processed to avoid duplicates
-        this.clearRectangleBits(
-          mask,
-          i,
-          j,
-          startPos,
-          width,
-          height
-        );
+        for (let d = 0; d < depth; d++) {
+          for (let w = 0; w < width; w++) {
+            for (let h = 0; h < height; h++) {
+              mask[j + d][i + w] &= ~(1 << (startPos + h));
+            }
+          }
+        }
       }
     }
   }
@@ -402,24 +443,6 @@ export class GreedyMesher {
       }
     }
     return -1;
-  }
-
-  /**
-   * Clear bits in a rectangle to mark them as processed
-   */
-  private static clearRectangleBits(
-    mask: number[][],
-    startI: number,
-    startJ: number,
-    startPos: number,
-    width: number,
-    height: number
-  ): void {
-    for (let w = 0; w < width; w++) {
-      for (let h = 0; h < height; h++) {
-        mask[startJ][startI + w] &= ~(1 << (startPos + h));
-      }
-    }
   }
 
   /**
@@ -499,7 +522,7 @@ export class GreedyMesher {
     for (const quad of quads) {
       // Generate vertices for this quad based on face direction
       const quadVertices = this.generateQuadVertices(quad);
-
+      console.log("Quad vertices:", quadVertices);
       // Add vertices
       vertices.push(...quadVertices);
 

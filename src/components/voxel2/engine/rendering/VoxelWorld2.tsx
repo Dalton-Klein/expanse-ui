@@ -5,6 +5,7 @@ import { Sky } from "@react-three/drei";
 import DebugPanel from "../../debug/DebugPanel";
 import NaiveRenderer from "./NaiveRenderer";
 import GreedyRenderer from "./GreedyRenderer";
+import ChunkBorderRenderer from "./ChunkBorderRenderer";
 import {
   RenderConfig,
   PerformanceMetrics,
@@ -181,6 +182,12 @@ export default function VoxelWorld2() {
               terrainConfig={terrainConfig}
             />
           )}
+          
+          {/* Chunk Border Visualization */}
+          <ChunkBorderRenderer
+            chunks={chunks}
+            enabled={terrainConfig.debug.showChunkBorders}
+          />
         </group>
       </Canvas>
     </div>
