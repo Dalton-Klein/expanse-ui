@@ -231,7 +231,51 @@ export class GreedyMesher {
       faceMasksByBlockType.set(blockType, faceMasks);
     }
 
+    // Debug: Print face masks in condensed format
+    this.debugFaceMasks(faceMasksByBlockType);
+
     return faceMasksByBlockType;
+  }
+
+  /**
+   * Debug helper to print face masks in a condensed binary format
+   */
+  private static debugFaceMasks(
+    faceMasksByBlockType: Map<VoxelType, AxisColumns[]>
+  ): void {
+    console.log("=== FACE MASKS DEBUG ===");
+    
+    const faceNames = ["+Y", "-Y", "+X", "-X", "+Z", "-Z"];
+    
+    for (const [blockType, faceMasks] of faceMasksByBlockType) {
+      console.log(`\nBlock Type ${blockType}:`);
+      
+      for (let faceDir = 0; faceDir < 6; faceDir++) {
+        const faceName = faceNames[faceDir];
+        const axisIndex = Math.floor(faceDir / 2);
+        const faceMask = faceMasks[faceDir][axisIndex];
+        
+        console.log(`  ${faceName} faces:`);
+        
+        let hasData = false;
+        for (let i = 0; i < CHUNK_SIZE; i++) {
+          for (let j = 0; j < CHUNK_SIZE; j++) {
+            const value = faceMask[i][j];
+            if (value !== 0) {
+              hasData = true;
+              const binary = value.toString(2).padStart(8, '0');
+              console.log(`    [${i},${j}]: ${binary} (${value})`);
+            }
+          }
+        }
+        
+        if (!hasData) {
+          console.log(`    (no faces)`);
+        }
+      }
+    }
+    
+    console.log("=== END FACE MASKS ===");
   }
 
   /**
@@ -282,7 +326,6 @@ export class GreedyMesher {
     faceMasksByBlockType: Map<VoxelType, AxisColumns[]>
   ): GreedyQuad[] {
     const quads: GreedyQuad[] = [];
-    console.log("Face masks? ", faceMasksByBlockType);
 
     // Process each block type separately
     for (const [
