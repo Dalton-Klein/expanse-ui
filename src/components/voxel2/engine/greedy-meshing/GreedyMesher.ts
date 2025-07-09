@@ -26,7 +26,7 @@ interface GreedyQuad {
   blockType: VoxelType;
   faceDirection: number; // 0=+Y, 1=-Y, 2=+X, 3=-X, 4=+Z, 5=-Z
   x: number;
-  y: number; 
+  y: number;
   z: number;
   width: number;
   height: number;
@@ -57,8 +57,14 @@ export class GreedyMesher {
       );
 
     // 3. Greedy algorithm- For each 2D binary plane, apply the greedy algorithm
-    const greedyQuads = this.generateGreedyQuads(faceMasksByBlockType);
-
+    const greedyQuads = this.generateGreedyQuads(
+      faceMasksByBlockType
+    );
+    console.log(
+      "qquad result = ",
+      greedyQuads.length,
+      greedyQuads
+    );
     // 4. Generate Geometry (And Later Ambient Occlusion)- Convert greedy quads to vertices with proper winding order
     result = this.generateGeometry(greedyQuads);
 
@@ -150,7 +156,8 @@ export class GreedyMesher {
     >();
 
     // First create a combined solid voxel mask for culling
-    const solidAxisCols = this.createCombinedSolidMask(blockTypeCols);
+    const solidAxisCols =
+      this.createCombinedSolidMask(blockTypeCols);
 
     // Helper function to create empty face masks (30x30x30 for chunk area only)
     const createEmptyFaceMasks = (): AxisColumns[] => {
@@ -178,42 +185,48 @@ export class GreedyMesher {
       // Y-axis faces (+Y and -Y) - only process chunk area (indices 1-30)
       for (let z = 1; z <= CHUNK_SIZE; z++) {
         for (let x = 1; x <= CHUNK_SIZE; x++) {
-          const thisTypeCol = axisCols[0][z][x];  // This block type
-          const allSolidCol = solidAxisCols[0][z][x];  // All solid voxels
+          const thisTypeCol = axisCols[0][z][x]; // This block type
+          const allSolidCol = solidAxisCols[0][z][x]; // All solid voxels
 
           // +Y faces: this block type with no solid voxel above
-          faceMasks[0][0][z-1][x-1] = thisTypeCol & ~(allSolidCol >> 1);
+          faceMasks[0][0][z - 1][x - 1] =
+            thisTypeCol & ~(allSolidCol >> 1);
 
           // -Y faces: this block type with no solid voxel below
-          faceMasks[1][0][z-1][x-1] = thisTypeCol & ~(allSolidCol << 1);
+          faceMasks[1][0][z - 1][x - 1] =
+            thisTypeCol & ~(allSolidCol << 1);
         }
       }
 
       // X-axis faces (+X and -X) - only process chunk area (indices 1-30)
       for (let y = 1; y <= CHUNK_SIZE; y++) {
         for (let z = 1; z <= CHUNK_SIZE; z++) {
-          const thisTypeCol = axisCols[1][y][z];  // This block type
-          const allSolidCol = solidAxisCols[1][y][z];  // All solid voxels
+          const thisTypeCol = axisCols[1][y][z]; // This block type
+          const allSolidCol = solidAxisCols[1][y][z]; // All solid voxels
 
           // +X faces: this block type with no solid voxel to the right
-          faceMasks[2][1][y-1][z-1] = thisTypeCol & ~(allSolidCol >> 1);
+          faceMasks[2][1][y - 1][z - 1] =
+            thisTypeCol & ~(allSolidCol >> 1);
 
           // -X faces: this block type with no solid voxel to the left
-          faceMasks[3][1][y-1][z-1] = thisTypeCol & ~(allSolidCol << 1);
+          faceMasks[3][1][y - 1][z - 1] =
+            thisTypeCol & ~(allSolidCol << 1);
         }
       }
 
       // Z-axis faces (+Z and -Z) - only process chunk area (indices 1-30)
       for (let y = 1; y <= CHUNK_SIZE; y++) {
         for (let x = 1; x <= CHUNK_SIZE; x++) {
-          const thisTypeCol = axisCols[2][y][x];  // This block type
-          const allSolidCol = solidAxisCols[2][y][x];  // All solid voxels
+          const thisTypeCol = axisCols[2][y][x]; // This block type
+          const allSolidCol = solidAxisCols[2][y][x]; // All solid voxels
 
           // +Z faces: this block type with no solid voxel in front
-          faceMasks[4][2][y-1][x-1] = thisTypeCol & ~(allSolidCol >> 1);
+          faceMasks[4][2][y - 1][x - 1] =
+            thisTypeCol & ~(allSolidCol >> 1);
 
           // -Z faces: this block type with no solid voxel behind
-          faceMasks[5][2][y-1][x-1] = thisTypeCol & ~(allSolidCol << 1);
+          faceMasks[5][2][y - 1][x - 1] =
+            thisTypeCol & ~(allSolidCol << 1);
         }
       }
 
@@ -227,7 +240,9 @@ export class GreedyMesher {
    * Create a combined solid voxel mask for all block types
    * Used for face culling between adjacent voxels of any type
    */
-  private static createCombinedSolidMask(blockTypeCols: BlockTypeColumns): AxisColumns {
+  private static createCombinedSolidMask(
+    blockTypeCols: BlockTypeColumns
+  ): AxisColumns {
     const CHUNK_SIZE_P = CHUNK_SIZE + 2; // 32
 
     const solidAxisCols: AxisColumns = [
@@ -247,7 +262,8 @@ export class GreedyMesher {
       for (let axis = 0; axis < 3; axis++) {
         for (let i = 0; i < CHUNK_SIZE_P; i++) {
           for (let j = 0; j < CHUNK_SIZE_P; j++) {
-            solidAxisCols[axis][i][j] |= axisCols[axis][i][j];
+            solidAxisCols[axis][i][j] |=
+              axisCols[axis][i][j];
           }
         }
       }
@@ -260,7 +276,7 @@ export class GreedyMesher {
    * 3. Apply greedy algorithm to each 2D binary plane to generate optimized quads
    * Expands rectangles first vertically (height), then horizontally (width)
    * Clears bits as they're merged to avoid duplicate processing
-   * 
+   *
    * @param faceMasksByBlockType Face culling masks for each block type and direction
    * @returns Array of greedy quads ready for geometry generation
    */
@@ -270,17 +286,27 @@ export class GreedyMesher {
     const quads: GreedyQuad[] = [];
 
     // Process each block type separately
-    for (const [blockType, faceMasks] of faceMasksByBlockType) {
+    for (const [
+      blockType,
+      faceMasks,
+    ] of faceMasksByBlockType) {
       // Process each of the 6 face directions
       for (let faceDir = 0; faceDir < 6; faceDir++) {
         const faceMask = faceMasks[faceDir];
         const axisIndex = Math.floor(faceDir / 2); // 0=Y-axis, 1=X-axis, 2=Z-axis
-        
+
         // Create a working copy of the face mask to clear bits as we process them
-        const workingMask = this.cloneFaceMask(faceMask[axisIndex]);
-        
+        const workingMask = this.cloneFaceMask(
+          faceMask[axisIndex]
+        );
+
         // Apply greedy algorithm to this 2D plane
-        this.greedyMesh2D(workingMask, blockType, faceDir, quads);
+        this.greedyMesh2D(
+          workingMask,
+          blockType,
+          faceDir,
+          quads
+        );
       }
     }
 
@@ -325,7 +351,7 @@ export class GreedyMesher {
         // Try to expand horizontally (width) while maintaining height
         for (let w = i + 1; w < size; w++) {
           let canExpand = true;
-          
+
           // Check if we can expand to this column with the same height
           for (let h = 0; h < height; h++) {
             if (!(mask[j][w] & (1 << (startPos + h)))) {
@@ -333,7 +359,7 @@ export class GreedyMesher {
               break;
             }
           }
-          
+
           if (canExpand) {
             width++;
           } else {
@@ -345,13 +371,23 @@ export class GreedyMesher {
         const quad = this.createQuadFromMask(
           blockType,
           faceDirection,
-          i, j, startPos,
-          width, height
+          i,
+          j,
+          startPos,
+          width,
+          height
         );
         quads.push(quad);
 
         // Clear the bits we just processed to avoid duplicates
-        this.clearRectangleBits(mask, i, j, startPos, width, height);
+        this.clearRectangleBits(
+          mask,
+          i,
+          j,
+          startPos,
+          width,
+          height
+        );
       }
     }
   }
@@ -422,7 +458,9 @@ export class GreedyMesher {
         z = maskPos;
         break;
       default:
-        throw new Error(`Invalid face direction: ${faceDirection}`);
+        throw new Error(
+          `Invalid face direction: ${faceDirection}`
+        );
     }
 
     return {
@@ -432,42 +470,50 @@ export class GreedyMesher {
       y,
       z,
       width,
-      height
+      height,
     };
   }
 
   /**
    * Create a deep copy of a 2D face mask for processing
    */
-  private static cloneFaceMask(mask: number[][]): number[][] {
-    return mask.map(row => [...row]);
+  private static cloneFaceMask(
+    mask: number[][]
+  ): number[][] {
+    return mask.map((row) => [...row]);
   }
 
   /**
    * 4. Generate Three.js geometry from greedy quads
    * Converts optimized quads to vertices with proper winding order
    */
-  private static generateGeometry(quads: GreedyQuad[]): ChunkMeshResult {
+  private static generateGeometry(
+    quads: GreedyQuad[]
+  ): ChunkMeshResult {
     const vertices: number[] = [];
     const indices: number[] = [];
     const colors: number[] = [];
-    
+
     let vertexIndex = 0;
 
     for (const quad of quads) {
       // Generate vertices for this quad based on face direction
       const quadVertices = this.generateQuadVertices(quad);
-      
+
       // Add vertices
       vertices.push(...quadVertices);
-      
+
       // Add indices for two triangles (quad = 2 triangles)
       indices.push(
-        vertexIndex, vertexIndex + 1, vertexIndex + 2,
-        vertexIndex, vertexIndex + 2, vertexIndex + 3
+        vertexIndex,
+        vertexIndex + 1,
+        vertexIndex + 2,
+        vertexIndex,
+        vertexIndex + 2,
+        vertexIndex + 3
       );
       vertexIndex += 4;
-      
+
       // Add colors for each vertex
       const color = this.getBlockTypeColor(quad.blockType);
       for (let i = 0; i < 4; i++) {
@@ -477,13 +523,15 @@ export class GreedyMesher {
 
     // Create Three.js geometry
     const geometry = new THREE.BufferGeometry();
-    
+
     if (vertices.length > 0) {
-      const positionAttribute = new THREE.Float32BufferAttribute(vertices, 3);
-      const colorAttribute = new THREE.Float32BufferAttribute(colors, 3);
-      
-      geometry.setAttribute('position', positionAttribute);
-      geometry.setAttribute('color', colorAttribute);
+      const positionAttribute =
+        new THREE.Float32BufferAttribute(vertices, 3);
+      const colorAttribute =
+        new THREE.Float32BufferAttribute(colors, 3);
+
+      geometry.setAttribute("position", positionAttribute);
+      geometry.setAttribute("color", colorAttribute);
       geometry.setIndex(indices);
       geometry.computeVertexNormals();
     }
@@ -491,14 +539,16 @@ export class GreedyMesher {
     return {
       geometry,
       triangleCount: indices.length / 3,
-      generationTime: 0 // Will be set by caller
+      generationTime: 0, // Will be set by caller
     };
   }
 
   /**
    * Generate the 4 vertices for a quad based on its face direction
    */
-  private static generateQuadVertices(quad: GreedyQuad): number[] {
+  private static generateQuadVertices(
+    quad: GreedyQuad
+  ): number[] {
     const { x, y, z, width, height, faceDirection } = quad;
     const vertices: number[] = [];
 
@@ -506,50 +556,98 @@ export class GreedyMesher {
     switch (faceDirection) {
       case 0: // +Y face (top)
         vertices.push(
-          x, y + 1, z,           // Bottom-left
-          x + width, y + 1, z,   // Bottom-right  
-          x + width, y + 1, z + height, // Top-right
-          x, y + 1, z + height   // Top-left
+          x,
+          y + 1,
+          z, // Bottom-left
+          x + width,
+          y + 1,
+          z, // Bottom-right
+          x + width,
+          y + 1,
+          z + height, // Top-right
+          x,
+          y + 1,
+          z + height // Top-left
         );
         break;
       case 1: // -Y face (bottom)
         vertices.push(
-          x, y, z + height,      // Top-left
-          x + width, y, z + height, // Top-right
-          x + width, y, z,       // Bottom-right
-          x, y, z                // Bottom-left
+          x,
+          y,
+          z + height, // Top-left
+          x + width,
+          y,
+          z + height, // Top-right
+          x + width,
+          y,
+          z, // Bottom-right
+          x,
+          y,
+          z // Bottom-left
         );
         break;
       case 2: // +X face (right)
         vertices.push(
-          x + 1, y, z,           // Bottom-left
-          x + 1, y, z + width,   // Bottom-right
-          x + 1, y + height, z + width, // Top-right
-          x + 1, y + height, z   // Top-left
+          x + 1,
+          y,
+          z, // Bottom-left
+          x + 1,
+          y,
+          z + width, // Bottom-right
+          x + 1,
+          y + height,
+          z + width, // Top-right
+          x + 1,
+          y + height,
+          z // Top-left
         );
         break;
       case 3: // -X face (left)
         vertices.push(
-          x, y + height, z,      // Top-left
-          x, y + height, z + width, // Top-right
-          x, y, z + width,       // Bottom-right
-          x, y, z                // Bottom-left
+          x,
+          y + height,
+          z, // Top-left
+          x,
+          y + height,
+          z + width, // Top-right
+          x,
+          y,
+          z + width, // Bottom-right
+          x,
+          y,
+          z // Bottom-left
         );
         break;
       case 4: // +Z face (front)
         vertices.push(
-          x, y, z + 1,           // Bottom-left
-          x + width, y, z + 1,   // Bottom-right
-          x + width, y + height, z + 1, // Top-right
-          x, y + height, z + 1   // Top-left
+          x,
+          y,
+          z + 1, // Bottom-left
+          x + width,
+          y,
+          z + 1, // Bottom-right
+          x + width,
+          y + height,
+          z + 1, // Top-right
+          x,
+          y + height,
+          z + 1 // Top-left
         );
         break;
       case 5: // -Z face (back)
         vertices.push(
-          x + width, y, z,       // Bottom-left
-          x, y, z,               // Bottom-right
-          x, y + height, z,      // Top-right
-          x + width, y + height, z // Top-left
+          x + width,
+          y,
+          z, // Bottom-left
+          x,
+          y,
+          z, // Bottom-right
+          x,
+          y + height,
+          z, // Top-right
+          x + width,
+          y + height,
+          z // Top-left
         );
         break;
     }
@@ -560,7 +658,11 @@ export class GreedyMesher {
   /**
    * Get color for a block type
    */
-  private static getBlockTypeColor(blockType: VoxelType): { r: number; g: number; b: number } {
+  private static getBlockTypeColor(blockType: VoxelType): {
+    r: number;
+    g: number;
+    b: number;
+  } {
     switch (blockType) {
       case VoxelType.STONE:
         return { r: 0.5, g: 0.5, b: 0.5 };

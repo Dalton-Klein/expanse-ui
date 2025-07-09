@@ -652,4 +652,23 @@ describe("GreedyMesher", () => {
       }
     });
   });
+
+  describe("geometry verification for tiny cube", () => {
+    it("should produce exactly 6 faces (24 triangles) for tiny cube", () => {
+      const chunk = ChunkGenerator.generateTinyChunk({
+        x: 0,
+        y: 0,
+        z: 0,
+      });
+
+      const meshResult =
+        GreedyMesher.generateMeshForChunk(chunk);
+
+      // A 2x2x2 cube should have exactly 6 faces
+      // Currently the greedy meshing creates 4 1x1 quads per face
+      // Total: 6 faces * 4 quads * 2 triangles = 48 triangles
+      // TODO: Should be 12 when greedy meshing properly merges into 2x2 quads
+      expect(meshResult.triangleCount).toBe(12);
+    });
+  });
 });

@@ -63,7 +63,10 @@ jest.mock('three', () => {
     }
     
     setIndex(indices) {
-      this.index = { count: indices.length };
+      this.index = { 
+        array: indices instanceof Array ? new Uint32Array(indices) : indices,
+        count: indices.length 
+      };
     }
     
     computeVertexNormals() {}
@@ -82,7 +85,7 @@ jest.mock('three', () => {
     DirectionalLight: jest.fn(),
     AmbientLight: jest.fn(),
     Float32BufferAttribute: jest.fn().mockImplementation((array, itemSize) => ({
-      array,
+      array: array instanceof Array ? new Float32Array(array) : array,
       itemSize,
       count: array.length / itemSize,
     })),
