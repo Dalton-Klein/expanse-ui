@@ -62,6 +62,7 @@ export enum DebugPattern {
   FLAT = "flat",
   CHECKERBOARD = "checkerboard",
   STEPPED = "stepped",
+  TWO_CUBES = "two-cubes",
   // TODO: Add more test patterns
 }
 

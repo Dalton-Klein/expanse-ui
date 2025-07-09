@@ -229,6 +229,9 @@ export default function DebugPanel({
                 <option value={DebugPattern.STEPPED}>
                   Stepped
                 </option>
+                <option value={DebugPattern.TWO_CUBES}>
+                  Two Cubes
+                </option>
               </select>
             </div>
           )}

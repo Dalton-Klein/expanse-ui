@@ -49,6 +49,10 @@ export class TerrainGenerator {
             chunk =
               ChunkGenerator.generateSteppedChunk(position);
             break;
+          case DebugPattern.TWO_CUBES:
+            chunk =
+              ChunkGenerator.generateTwoCubesChunk(position);
+            break;
           default:
             chunk =
               ChunkGenerator.generateFlatChunk(position);
