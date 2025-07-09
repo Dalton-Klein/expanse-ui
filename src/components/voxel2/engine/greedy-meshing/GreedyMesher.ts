@@ -49,7 +49,10 @@ export class GreedyMesher {
     // 1. Binary Encoding- Convert 3d array chunk data into binary columns separated by block type
     const blockTypeCols =
       this.encodeToBinaryByBlockType(chunk);
-
+    console.log(
+      "Block type columns generated:",
+      blockTypeCols
+    );
     // 2. Face Culling- Cull voxel faces based on adjacency to air, use bitwise operations to find face transitions
     const faceMasksByBlockType =
       this.generateFaceCullingMasksByBlockType(
@@ -117,12 +120,12 @@ export class GreedyMesher {
 
             const axisCols = blockTypeCols.get(voxel.type)!;
 
+            // X-axis column at (y,z) - set bit at position x
+            axisCols[0][y][z] |= 1 << x;
+
             // Set bit in all 3 axis representations following TanTanDev's pattern
             // Y-axis column at (x,z) - set bit at position y
-            axisCols[0][z][x] |= 1 << y;
-
-            // X-axis column at (y,z) - set bit at position x
-            axisCols[1][y][z] |= 1 << x;
+            axisCols[1][z][x] |= 1 << y;
 
             // Z-axis column at (x,y) - set bit at position z
             axisCols[2][y][x] |= 1 << z;
@@ -280,6 +283,7 @@ export class GreedyMesher {
     faceMasksByBlockType: Map<VoxelType, AxisColumns[]>
   ): GreedyQuad[] {
     const quads: GreedyQuad[] = [];
+    console.log("Face masks? ", faceMasksByBlockType);
 
     // Process each block type separately
     for (const [
@@ -469,6 +473,14 @@ export class GreedyMesher {
         z = maskJ;
         break;
       case 2: // +X faces: mask[y][z], position=x
+        console.log(
+          " masks?",
+          maskI,
+          "  ",
+          maskPos,
+          "  ",
+          maskJ
+        );
       case 3: // -X faces: mask[y][z], position=x
         x = maskPos;
         y = maskJ;
@@ -580,63 +592,63 @@ export class GreedyMesher {
       case 0: // +Y face (top)
         vertices.push(
           x,
-          y + 1,
+          y,
           z, // Bottom-left
           x + width,
-          y + 1,
+          y,
           z, // Bottom-right
           x + width,
-          y + 1,
+          y,
           z + height, // Top-right
           x,
-          y + 1,
+          y,
           z + height // Top-left
         );
         break;
       case 1: // -Y face (bottom)
         vertices.push(
           x,
-          y,
+          y - 1,
           z + height, // Top-left
           x + width,
-          y,
+          y - 1,
           z + height, // Top-right
           x + width,
-          y,
+          y - 1,
           z, // Bottom-right
           x,
-          y,
+          y - 1,
           z // Bottom-left
         );
         break;
       case 2: // +X face (right)
         vertices.push(
-          x + 1,
+          x,
           y,
           z, // Bottom-left
-          x + 1,
+          x,
           y,
           z + width, // Bottom-right
-          x + 1,
+          x,
           y + height,
           z + width, // Top-right
-          x + 1,
+          x,
           y + height,
           z // Top-left
         );
         break;
       case 3: // -X face (left)
         vertices.push(
-          x,
+          x - 1,
           y + height,
           z, // Top-left
-          x,
+          x - 1,
           y + height,
           z + width, // Top-right
-          x,
+          x - 1,
           y,
           z + width, // Bottom-right
-          x,
+          x - 1,
           y,
           z // Bottom-left
         );
@@ -645,32 +657,32 @@ export class GreedyMesher {
         vertices.push(
           x,
           y,
-          z + 1, // Bottom-left
+          z, // Bottom-left
           x + width,
           y,
-          z + 1, // Bottom-right
+          z, // Bottom-right
           x + width,
           y + height,
-          z + 1, // Top-right
+          z, // Top-right
           x,
           y + height,
-          z + 1 // Top-left
+          z // Top-left
         );
         break;
       case 5: // -Z face (back)
         vertices.push(
           x + width,
           y,
-          z, // Bottom-left
+          z - 1, // Bottom-left
           x,
           y,
-          z, // Bottom-right
+          z - 1, // Bottom-right
           x,
           y + height,
-          z, // Top-right
+          z - 1, // Top-right
           x + width,
           y + height,
-          z // Top-left
+          z - 1 // Top-left
         );
         break;
     }
