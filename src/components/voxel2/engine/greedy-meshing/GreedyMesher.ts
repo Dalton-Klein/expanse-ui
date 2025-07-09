@@ -472,14 +472,6 @@ export class GreedyMesher {
         z = maskJ;
         break;
       case 2: // +X faces: mask[y][z], position=x
-        console.log(
-          " masks?",
-          maskI,
-          "  ",
-          maskPos,
-          "  ",
-          maskJ
-        );
       case 3: // -X faces: mask[y][z], position=x
         x = maskPos;
         y = maskJ;
@@ -533,7 +525,7 @@ export class GreedyMesher {
     for (const quad of quads) {
       // Generate vertices for this quad based on face direction
       const quadVertices = this.generateQuadVertices(quad);
-      console.log("Quad vertices:", quadVertices);
+      //console.log("Quad vertices:", quadVertices);
       // Add vertices
       vertices.push(...quadVertices);
 

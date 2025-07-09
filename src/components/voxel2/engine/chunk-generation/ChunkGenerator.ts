@@ -95,17 +95,24 @@ export class ChunkGenerator {
   }
 
   /**
-   * Generate stepped pattern
-   * Diagonal height variations with different materials
+   * Generate stepped terrain pattern
+   * Creates diagonal height variations with different materials for debugging
    */
-  private static generateSteppedPattern(
-    chunk: ChunkData
-  ): void {
-    for (let x = 0; x < CHUNK_SIZE; x++) {
-      for (let z = 0; z < CHUNK_SIZE; z++) {
-        // Calculate world coordinates
-        const worldX = chunk.position.x * CHUNK_SIZE + x;
-        const worldZ = chunk.position.z * CHUNK_SIZE + z;
+  public static generateSteppedChunk(
+    startPos: Position3D
+  ): ChunkData {
+    // 1: Initialize empty chunk
+    let chunk = ChunkHelpers.createEmpty(startPos);
+
+    // 2: Generate the stepped pattern
+    const chunkSizeP = CHUNK_SIZE + 2; // Padding for neighbor chunks
+
+    // Use padded coordinates (1 to CHUNK_SIZE) to account for neighbor data
+    for (let x = 1; x <= CHUNK_SIZE; x++) {
+      for (let z = 1; z <= CHUNK_SIZE; z++) {
+        // Calculate world coordinates (subtract 1 to convert from padded to chunk coordinates)
+        const worldX = chunk.position.x + (x - 1);
+        const worldZ = chunk.position.z + (z - 1);
 
         // Create diagonal stepping pattern
         const diagonalIndex = worldX + worldZ;
@@ -130,7 +137,7 @@ export class ChunkGenerator {
             voxelType = VoxelType.GRASS;
         }
 
-        // Fill from Y=1 up to step height
+        // Fill from Y=1 up to step height (accounting for padding)
         for (let y = 1; y <= stepHeight; y++) {
           ChunkHelpers.setVoxel(chunk, x, y, z, {
             type: voxelType,
@@ -138,5 +145,7 @@ export class ChunkGenerator {
         }
       }
     }
+
+    return chunk;
   }
 }

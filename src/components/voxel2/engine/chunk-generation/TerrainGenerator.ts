@@ -47,7 +47,7 @@ export class TerrainGenerator {
             break;
           case DebugPattern.STEPPED:
             chunk =
-              ChunkGenerator.generateFlatChunk(position);
+              ChunkGenerator.generateSteppedChunk(position);
             break;
           default:
             chunk =
