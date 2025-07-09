@@ -119,13 +119,12 @@ export class GreedyMesher {
             }
 
             const axisCols = blockTypeCols.get(voxel.type)!;
-
-            // X-axis column at (y,z) - set bit at position x
-            axisCols[0][y][z] |= 1 << x;
-
             // Set bit in all 3 axis representations following TanTanDev's pattern
             // Y-axis column at (x,z) - set bit at position y
-            axisCols[1][z][x] |= 1 << y;
+            axisCols[0][z][x] |= 1 << y;
+
+            // X-axis column at (y,z) - set bit at position x
+            axisCols[1][y][z] |= 1 << x;
 
             // Z-axis column at (x,y) - set bit at position z
             axisCols[2][y][x] |= 1 << z;
