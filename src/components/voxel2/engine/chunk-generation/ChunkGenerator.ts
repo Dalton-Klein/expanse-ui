@@ -158,13 +158,13 @@ export class ChunkGenerator {
   ): ChunkData {
     // 1: Initialize empty chunk
     let chunk = ChunkHelpers.createEmpty(startPos);
-    
+
     const voxelType = VoxelType.GRASS;
 
     // 2: Generate first cube at position (2,2,2) to (3,3,3) in padded coordinates
-    for (let x = 2; x <= 3; x++) {
-      for (let y = 2; y <= 3; y++) {
-        for (let z = 2; z <= 3; z++) {
+    for (let x = 1; x <= 2; x++) {
+      for (let y = 1; y <= 2; y++) {
+        for (let z = 1; z <= 2; z++) {
           ChunkHelpers.setVoxel(chunk, x, y, z, {
             type: voxelType,
           });
@@ -175,8 +175,8 @@ export class ChunkGenerator {
     // 3: Generate second cube at position (5,2,2) to (6,3,3) in padded coordinates
     // This creates a 1-block air gap between the cubes (x=4 is air)
     for (let x = 5; x <= 6; x++) {
-      for (let y = 2; y <= 3; y++) {
-        for (let z = 2; z <= 3; z++) {
+      for (let y = 1; y <= 2; y++) {
+        for (let z = 1; z <= 2; z++) {
           ChunkHelpers.setVoxel(chunk, x, y, z, {
             type: voxelType,
           });
