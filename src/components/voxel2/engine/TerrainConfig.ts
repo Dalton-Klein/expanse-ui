@@ -36,8 +36,8 @@ export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
     seed: 12345, // consistent seed for testing
     noise: {
       scale: 0.02, // frequency of the noise
-      amplitude: 20, // height variation
-      baseHeight: 3, // minimum terrain height
+      amplitude: 80, // height variation - increased to use more of worldHeight
+      baseHeight: 10, // minimum terrain height - raised for better visibility
       octaves: 4, // number of noise layers
       persistence: 0.5, // amplitude decay between octaves
       mapSize: 1, // default to single chunk (1x1 grid)

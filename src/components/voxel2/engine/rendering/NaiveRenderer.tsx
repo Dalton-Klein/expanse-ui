@@ -131,7 +131,7 @@ function renderChunk(
 
         // World position for this voxel
         const worldX = chunkWorldX + (x - 1);
-        const worldY = y - 1;
+        const worldY = chunk.position.y + (y - 1);
         const worldZ = chunkWorldZ + (z - 1);
 
         // Generate faces for this voxel

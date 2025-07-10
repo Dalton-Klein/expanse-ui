@@ -21,10 +21,13 @@ export class TerrainGenerator {
     config: TerrainConfig
   ): ChunkData[] {
     const chunks: ChunkData[] = [];
-    
+
     // Determine grid size based on generation algorithm
     let gridSize: number;
-    if (config.generation.algorithm === GenerationAlgorithm.NOISE) {
+    if (
+      config.generation.algorithm ===
+      GenerationAlgorithm.NOISE
+    ) {
       // Use map size from noise config for noise generation
       gridSize = config.generation.noise.mapSize;
     } else {
@@ -32,59 +35,103 @@ export class TerrainGenerator {
       gridSize = config.renderDistance;
     }
 
-    // Generate NxN grid of chunks
-    // For gridSize 1: creates 1x1 grid at (0,0)
-    // For gridSize 5: creates 5x5 grid from (0,0) to (4,4)
-    // For gridSize 20: creates 20x20 grid from (0,0) to (19,19)
+    // Calculate number of vertical chunks needed
+    const verticalChunks = Math.ceil(
+      config.worldHeight / config.chunkSize
+    );
+    console.log(
+      `[TerrainGenerator] Generating ${gridSize}x${verticalChunks}x${gridSize} chunks (worldHeight: ${config.worldHeight}, chunkSize: ${config.chunkSize})`
+    );
+
+    // Generate 3D grid of chunks (X, Y, Z)
     for (let chunkX = 0; chunkX < gridSize; chunkX++) {
-      for (let chunkZ = 0; chunkZ < gridSize; chunkZ++) {
-        const position: Position3D = {
-          x: chunkX * config.chunkSize,
-          y: 0, // Y is always 0 for chunk positioning (single layer for now)
-          z: chunkZ * config.chunkSize,
-        };
-        
-        let chunk: ChunkData;
-        
-        // Generate chunks based on selected algorithm
-        if (config.generation.algorithm === GenerationAlgorithm.NOISE) {
-          // Use noise generation
-          chunk = NoiseGenerator.generateNoiseChunk(position, config);
-        } else {
-          // Use debug patterns
-          switch (config.generation.debugPattern) {
-            case DebugPattern.FLAT:
-              chunk = ChunkGenerator.generateFlatChunk(position);
-              break;
-            case DebugPattern.TINY:
-              chunk = ChunkGenerator.generateTinyChunk(position);
-              break;
-            case DebugPattern.CHECKERBOARD:
-              chunk = ChunkGenerator.generateFlatChunk(position);
-              break;
-            case DebugPattern.STEPPED:
-              chunk = ChunkGenerator.generateSteppedChunk(position);
-              break;
-            case DebugPattern.TWO_CUBES:
-              chunk = ChunkGenerator.generateTwoCubesChunk(position);
-              break;
-            default:
-              chunk = ChunkGenerator.generateFlatChunk(position);
+      for (
+        let chunkY = 0;
+        chunkY < verticalChunks;
+        chunkY++
+      ) {
+        for (let chunkZ = 0; chunkZ < gridSize; chunkZ++) {
+          const position: Position3D = {
+            x: chunkX * config.chunkSize,
+            y: chunkY * config.chunkSize, // Y position now varies (0, 30, 60, etc.)
+            z: chunkZ * config.chunkSize,
+          };
+
+          let chunk: ChunkData;
+
+          // Generate chunks based on selected algorithm
+          if (
+            config.generation.algorithm ===
+            GenerationAlgorithm.NOISE
+          ) {
+            // Use noise generation
+            chunk = NoiseGenerator.generateNoiseChunk(
+              position,
+              config
+            );
+          } else {
+            // Use debug patterns
+            switch (config.generation.debugPattern) {
+              case DebugPattern.FLAT:
+                chunk =
+                  ChunkGenerator.generateFlatChunk(
+                    position
+                  );
+                break;
+              case DebugPattern.TINY:
+                chunk =
+                  ChunkGenerator.generateTinyChunk(
+                    position
+                  );
+                break;
+              case DebugPattern.CHECKERBOARD:
+                chunk =
+                  ChunkGenerator.generateFlatChunk(
+                    position
+                  );
+                break;
+              case DebugPattern.STEPPED:
+                chunk =
+                  ChunkGenerator.generateSteppedChunk(
+                    position
+                  );
+                break;
+              case DebugPattern.TWO_CUBES:
+                chunk =
+                  ChunkGenerator.generateTwoCubesChunk(
+                    position
+                  );
+                break;
+              default:
+                chunk =
+                  ChunkGenerator.generateFlatChunk(
+                    position
+                  );
+            }
           }
+
+          // Debug: Print chunk data and validate padding for first chunk only
+          if (
+            chunkX === 0 &&
+            chunkY === 0 &&
+            chunkZ === 0
+          ) {
+            // const label =
+            //   config.generation.algorithm ===
+            //   GenerationAlgorithm.NOISE
+            //     ? `Noise ${gridSize}x${verticalChunks}x${gridSize}`
+            //     : config.generation.debugPattern;
+            //ChunkHelpers.validatePadding(chunk, `${label} Pattern`);
+          }
+
+          chunks.push(chunk);
         }
-        
-        // Debug: Print chunk data and validate padding for first chunk only
-        if (chunkX === 0 && chunkZ === 0) {
-          const label = config.generation.algorithm === GenerationAlgorithm.NOISE 
-            ? `Noise ${gridSize}x${gridSize}` 
-            : config.generation.debugPattern;
-          ChunkHelpers.validatePadding(chunk, `${label} Pattern`);
-        }
-        
-        chunks.push(chunk);
       }
     }
 
+    console.log(
+      `[TerrainGenerator] Generated ${chunks.length} chunks total`
+    );
     return chunks;
   }
 }

@@ -60,7 +60,7 @@ export class NoiseGenerator {
    *
    * @param chunkPosition Chunk position in world coordinates
    * @param config Terrain configuration
-   * @returns 32x32 height map (0-based heights)
+   * @returns 32x32 height map (world Y coordinates)
    */
   private static generateHeightMap(
     chunkPosition: Position3D,
@@ -93,16 +93,16 @@ export class NoiseGenerator {
           noiseConfig.persistence
         );
 
-        // Convert noise (-1 to 1) to height (baseHeight to baseHeight + amplitude)
+        // Convert noise (-1 to 1) to height using full world height range
         const height = Math.floor(
           noiseConfig.baseHeight +
             (noiseValue + 1) * 0.5 * noiseConfig.amplitude
         );
 
-        // Clamp height to reasonable bounds
+        // Clamp height to world bounds (1 to worldHeight-1)
         heightMap[localZ][localX] = Math.max(
           1,
-          Math.min(height, CHUNK_SIZE - 1)
+          Math.min(height, config.worldHeight - 1)
         );
       }
     }
@@ -115,23 +115,33 @@ export class NoiseGenerator {
    * Creates simple layered terrain: grass on top 2 layers, stone below
    *
    * @param chunk Chunk to populate
-   * @param heightMap 32x32 height map
+   * @param heightMap 32x32 height map (contains world Y coordinates)
    */
   private static populateChunkFromHeightMap(
     chunk: ChunkData,
     heightMap: number[][]
   ): void {
     const CHUNK_SIZE_P = CHUNK_SIZE + 2; // 32
+    const chunkMinY = chunk.position.y; // World Y coordinate where this chunk starts
+    const chunkMaxY = chunkMinY + CHUNK_SIZE - 1; // World Y coordinate where this chunk ends
 
     for (let x = 1; x <= CHUNK_SIZE; x++) {
       for (let z = 1; z <= CHUNK_SIZE; z++) {
-        const terrainHeight = heightMap[z][x]; // Note: heightMap is [z][x]
-        // Fill column from Y=1 up to terrain height
-        for (let y = 1; y <= terrainHeight; y++) {
+        const terrainHeight = heightMap[z][x]; // Note: heightMap is [z][x], contains world Y coordinate
+        
+        // For each Y position in this chunk
+        for (let localY = 1; localY <= CHUNK_SIZE; localY++) {
+          const worldY = chunkMinY + localY - 1; // Convert to world Y coordinate
+          
+          // Skip if this position is above the terrain
+          if (worldY > terrainHeight) {
+            continue; // Leave as air
+          }
+          
+          // Determine voxel type based on depth from surface
           let voxelType: VoxelType;
-
-          // Simple layering system
-          const surfaceDepth = terrainHeight - y;
+          const surfaceDepth = terrainHeight - worldY;
+          
           if (surfaceDepth === 0) {
             // Surface layer: grass
             voxelType = VoxelType.GRASS;
@@ -139,7 +149,7 @@ export class NoiseGenerator {
             // Second layer: grass (for thicker grass layer)
             voxelType = VoxelType.GRASS;
           } else if (surfaceDepth <= 2) {
-            // Next 2 layers: stone
+            // Next 2 layers: dirt
             voxelType = VoxelType.DIRT;
           } else if (surfaceDepth <= 4) {
             // Next 2 layers: stone
@@ -149,7 +159,7 @@ export class NoiseGenerator {
             voxelType = VoxelType.STONE;
           }
 
-          ChunkHelpers.setVoxel(chunk, x, y, z, {
+          ChunkHelpers.setVoxel(chunk, x, localY, z, {
             type: voxelType,
           });
         }
