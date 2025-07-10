@@ -3,6 +3,7 @@ import {
   GenerationAlgorithm,
   DebugPattern,
   MeshingAlgorithm,
+  NoiseConfig,
 } from "../types";
 
 // Default terrain configuration with sensible values for development and production
@@ -31,8 +32,15 @@ export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
   // Terrain generation configuration
   generation: {
     algorithm: GenerationAlgorithm.DEBUG_PATTERN, // start with debug patterns
-    debugPattern: DebugPattern.TINY, // default to flat pattern
+    debugPattern: DebugPattern.TINY, // default to tiny pattern
     seed: 12345, // consistent seed for testing
+    noise: {
+      scale: 0.02, // frequency of the noise
+      amplitude: 10, // height variation
+      baseHeight: 5, // minimum terrain height
+      octaves: 4, // number of noise layers
+      persistence: 0.5, // amplitude decay between octaves
+    },
   },
 
   // Performance configuration
@@ -72,6 +80,13 @@ export const PRODUCTION_TERRAIN_CONFIG: TerrainConfig = {
     algorithm: GenerationAlgorithm.NOISE,
     debugPattern: DebugPattern.FLAT, // unused in noise mode
     seed: Math.floor(Math.random() * 1000000),
+    noise: {
+      scale: 0.015, // larger features for production
+      amplitude: 15, // more dramatic height variation
+      baseHeight: 8, // higher base level
+      octaves: 6, // more detail layers
+      persistence: 0.6, // slightly more persistent detail
+    },
   },
 
   performance: {
@@ -177,7 +192,13 @@ export function updateTerrainConfig(
         }
       : current.greedyMeshing,
     generation: updates.generation
-      ? { ...current.generation, ...updates.generation }
+      ? {
+          ...current.generation,
+          ...updates.generation,
+          noise: updates.generation.noise
+            ? { ...current.generation.noise, ...updates.generation.noise }
+            : current.generation.noise,
+        }
       : current.generation,
     performance: updates.performance
       ? { ...current.performance, ...updates.performance }

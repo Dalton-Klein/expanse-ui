@@ -4,8 +4,10 @@ import {
   DebugPattern,
   Position3D,
   TerrainConfig,
+  GenerationAlgorithm,
 } from "../../types";
 import { ChunkGenerator } from "./ChunkGenerator";
+import { NoiseGenerator } from "../noise-generation/noiseGenerator";
 
 // This class is the parent for noise generation algorithms
 // It takes in requests to build terrain, and then calls the appropriate algorithm based on the config
@@ -28,34 +30,37 @@ export class TerrainGenerator {
       for (let chunkZ = 0; chunkZ < gridSize; chunkZ++) {
         const position: Position3D = {
           x: chunkX * config.chunkSize,
-          y: 0, // Y is always 0 for debug terrain
+          y: 0, // Y is always 0 for chunk positioning
           z: chunkZ * config.chunkSize,
         };
+        
         let chunk: ChunkData;
-        switch (config.generation.debugPattern) {
-          case DebugPattern.FLAT:
-            chunk =
-              ChunkGenerator.generateFlatChunk(position);
-            break;
-          case DebugPattern.TINY:
-            chunk =
-              ChunkGenerator.generateTinyChunk(position);
-            break;
-          case DebugPattern.CHECKERBOARD:
-            chunk =
-              ChunkGenerator.generateFlatChunk(position);
-            break;
-          case DebugPattern.STEPPED:
-            chunk =
-              ChunkGenerator.generateSteppedChunk(position);
-            break;
-          case DebugPattern.TWO_CUBES:
-            chunk =
-              ChunkGenerator.generateTwoCubesChunk(position);
-            break;
-          default:
-            chunk =
-              ChunkGenerator.generateFlatChunk(position);
+        
+        // Generate chunks based on selected algorithm
+        if (config.generation.algorithm === GenerationAlgorithm.NOISE) {
+          // Use noise generation
+          chunk = NoiseGenerator.generateNoiseChunk(position, config);
+        } else {
+          // Use debug patterns
+          switch (config.generation.debugPattern) {
+            case DebugPattern.FLAT:
+              chunk = ChunkGenerator.generateFlatChunk(position);
+              break;
+            case DebugPattern.TINY:
+              chunk = ChunkGenerator.generateTinyChunk(position);
+              break;
+            case DebugPattern.CHECKERBOARD:
+              chunk = ChunkGenerator.generateFlatChunk(position);
+              break;
+            case DebugPattern.STEPPED:
+              chunk = ChunkGenerator.generateSteppedChunk(position);
+              break;
+            case DebugPattern.TWO_CUBES:
+              chunk = ChunkGenerator.generateTwoCubesChunk(position);
+              break;
+            default:
+              chunk = ChunkGenerator.generateFlatChunk(position);
+          }
         }
         chunks.push(chunk);
       }

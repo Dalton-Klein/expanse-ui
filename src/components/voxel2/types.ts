@@ -100,12 +100,21 @@ export interface GreedyMeshingConfig {
   crossChunkCulling: boolean; // enable face culling across chunk boundaries
 }
 
+// Noise generation configuration
+export interface NoiseConfig {
+  scale: number; // frequency of the noise (smaller = larger features)
+  amplitude: number; // height variation
+  baseHeight: number; // minimum terrain height
+  octaves: number; // number of noise layers
+  persistence: number; // amplitude decay between octaves
+}
+
 // Terrain generation configuration
 export interface GenerationConfig {
   algorithm: GenerationAlgorithm;
   debugPattern: DebugPattern; // used when algorithm is DEBUG_PATTERN
   seed: number; // seed for procedural generation
-  // TODO: Add noise settings when noise generation is implemented
+  noise: NoiseConfig; // noise generation settings
 }
 
 // Performance configuration

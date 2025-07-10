@@ -53,42 +53,46 @@ export default function VoxelWorld2() {
   });
 
   // Stable camera update callback to prevent unnecessary re-renders
-  const handleCameraUpdate = React.useCallback((data: {
-    position: { x: number; y: number; z: number };
-    direction: { compass: string; face: string; angle: number };
-  }) => {
-    setCameraData(data);
-  }, []);
+  const handleCameraUpdate = React.useCallback(
+    (data: {
+      position: { x: number; y: number; z: number };
+      direction: {
+        compass: string;
+        face: string;
+        angle: number;
+      };
+    }) => {
+      setCameraData(data);
+    },
+    []
+  );
 
   // Stable metrics update callback
-  const handleMetricsUpdate = React.useCallback((metrics: PerformanceMetrics) => {
-    console.log('[VoxelWorld2] handleMetricsUpdate called with:', metrics);
-    setPerformanceMetrics(metrics);
-  }, []);
+  const handleMetricsUpdate = React.useCallback(
+    (metrics: PerformanceMetrics) => {
+      console.log(
+        "[VoxelWorld2] handleMetricsUpdate called with:",
+        metrics
+      );
+      setPerformanceMetrics(metrics);
+    },
+    []
+  );
 
   // Separate FPS update callback to avoid overriding other metrics
-  const handleFpsUpdate = React.useCallback((fps: number) => {
-    console.log('[VoxelWorld2] FPS Update to:', fps);
-    setPerformanceMetrics((prev) => ({
-      ...prev,
-      fps: fps,
-    }));
-  }, []);
+  const handleFpsUpdate = React.useCallback(
+    (fps: number) => {
+      setPerformanceMetrics((prev) => ({
+        ...prev,
+        fps: fps,
+      }));
+    },
+    []
+  );
 
   // Generate terrain chunks based on config
   const chunks = React.useMemo(() => {
-    if (
-      terrainConfig.generation.algorithm ===
-      GenerationAlgorithm.DEBUG_PATTERN
-    ) {
-      return TerrainGenerator.generateChunks(terrainConfig);
-    } else {
-      // TODO: Implement noise-based terrain generation
-      // For now, return empty chunks for noise mode
-      return [
-        ChunkHelpers.createEmpty({ x: 0, y: 0, z: 0 }),
-      ];
-    }
+    return TerrainGenerator.generateChunks(terrainConfig);
   }, [terrainConfig]);
 
   // Stable callback for mesh generation stats
@@ -98,7 +102,7 @@ export default function VoxelWorld2() {
       totalTriangles: number;
       avgGenerationTime: number;
     }) => {
-      console.log('[VoxelWorld2] Updating metrics:', stats);
+      console.log("[VoxelWorld2] Updating metrics:", stats);
       setPerformanceMetrics((prev) => ({
         ...prev,
         chunks: stats.chunkCount,
@@ -198,7 +202,7 @@ export default function VoxelWorld2() {
               onMeshGenerated={handleMeshGenerated}
             />
           )}
-          
+
           {/* Chunk Border Visualization */}
           <ChunkBorderRenderer
             chunks={chunks}

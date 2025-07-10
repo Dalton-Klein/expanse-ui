@@ -60,7 +60,6 @@ export default function DebugPanel({
         setFps(newFps);
 
         // Update FPS without overriding other metrics
-        console.log('[DebugPanel] FPS Update to:', newFps);
         onFpsUpdate(newFps);
 
         frameCount = 0;
