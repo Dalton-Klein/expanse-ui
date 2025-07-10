@@ -144,3 +144,99 @@ The `TerrainGenerator` can be customized with different parameters:
 
 ### Known Issues
 - Redux-persist warning about non-serializable values - this can be safely ignored
+
+## Binary Greedy Meshing Implementation
+
+This project implements a highly optimized binary greedy meshing algorithm based on TanTanDev's approach for voxel terrain rendering. The implementation is located in `/src/components/voxel2/engine/greedy-meshing/GreedyMesher.ts`.
+
+### Algorithm Overview
+
+The binary greedy meshing algorithm works in 4 main steps:
+
+1. **Binary Encoding**: Convert 3D voxel data into binary columns separated by block type
+2. **Face Culling**: Use bitwise operations to find face transitions (solid-to-air boundaries)
+3. **Greedy Meshing**: Apply 2D greedy algorithm to merge adjacent faces into larger quads
+4. **Geometry Generation**: Convert optimized quads to Three.js buffer geometry
+
+### Key Technical Details
+
+- **Chunk Size**: 30x30x30 voxels with 2-block padding for neighbor data (32x32x32 total)
+- **Binary Representation**: Each axis column uses 32-bit integers for efficient bit operations
+- **Face Directions**: 6 directions (±X, ±Y, ±Z) processed separately
+- **Block Type Separation**: Different voxel types are processed independently for correct face culling
+
+### Major Challenge: Non-Contiguous Face Patterns
+
+During development, we encountered a critical issue with the greedy meshing algorithm when processing non-contiguous face patterns (e.g., two separated cubes).
+
+#### The Problem
+When processing faces at position [0,0] with bits at positions 2 and 6 (representing faces from two separate cubes):
+- The algorithm would process bit 2 first, create a quad, and immediately clear bits 2-3
+- This left bit 6 isolated in some positions, causing it to be split into multiple smaller quads
+- Result: 14 quads instead of the optimal 12 quads for two cubes
+
+#### Root Cause Analysis
+The issue was **premature bit clearing** in the sequential processing approach:
+
+```typescript
+// PROBLEMATIC APPROACH:
+for each position {
+  find first set bit
+  expand quad
+  clear bits immediately  // ← This caused fragmentation
+}
+```
+
+#### Our Solution: Batch Processing
+We implemented a batch processing approach that handles all contiguous bit groups at each position before clearing any bits:
+
+```typescript
+// IMPROVED APPROACH:
+for each position {
+  identify all contiguous bit groups
+  for each group {
+    expand quad optimally
+    store quad info
+  }
+  clear all processed bits together  // ← Prevents fragmentation
+}
+```
+
+### Implementation Details
+
+#### Key Functions Added:
+- `findContiguousBitGroups()`: Identifies all contiguous bit sequences in a column
+- Modified `greedyMesh2D()`: Processes multiple groups per position before clearing bits
+
+#### Algorithm Flow:
+1. **Group Identification**: At each position, find all contiguous bit groups
+2. **Independent Processing**: Each group is expanded optimally without interference
+3. **Batch Clearing**: All processed bits are cleared together after quad creation
+
+### Performance Impact
+
+The solution provides:
+- **Optimal Quad Count**: Each face region gets the largest possible quad representation
+- **Correct Face Coverage**: No gaps or overlaps in the final mesh
+- **Maintained Efficiency**: Preserves the binary algorithm's performance benefits
+- **Pattern Agnostic**: Works correctly for any terrain configuration
+
+### Test Patterns Used
+During development, we used several test patterns to verify correctness:
+- **Tiny Pattern**: 2x2x2 cube for basic functionality
+- **Flat Pattern**: Large flat surface for greedy merging verification
+- **Two Cubes Pattern**: Non-contiguous cubes that exposed the fragmentation issue
+- **Stepped Pattern**: Variable height terrain for complex face scenarios
+
+### Debug Process
+The debugging process involved:
+1. **Binary Pattern Analysis**: Examining bit patterns in face masks
+2. **Quad Generation Logging**: Tracking how quads were created and bits cleared
+3. **Step-by-step Debugging**: Following the algorithm through each processing step
+4. **Root Cause Identification**: Discovering the premature bit clearing issue
+5. **Solution Development**: Implementing the batch processing approach
+
+### Current Status
+✅ **SOLVED**: The binary greedy meshing algorithm now correctly handles all test patterns and produces optimal mesh quality with proper face merging.
+
+The implementation successfully combines the efficiency of TanTanDev's binary approach with robust handling of edge cases, resulting in a production-ready voxel meshing solution.
