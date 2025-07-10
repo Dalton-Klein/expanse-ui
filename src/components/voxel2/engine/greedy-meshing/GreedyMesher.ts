@@ -240,7 +240,7 @@ export class GreedyMesher {
     faceMasksByBlockType: Map<VoxelType, AxisColumns[]>
   ): void {
     if (true) {
-      console.log("=== FACE MASKS DEBUG ===");
+      console.log("=== X-AXIS FACE MASKS DEBUG ===");
 
       const faceNames = [
         "+Y",
@@ -257,7 +257,8 @@ export class GreedyMesher {
       ] of faceMasksByBlockType) {
         console.log(`\nBlock Type ${blockType}:`);
 
-        for (let faceDir = 0; faceDir < 6; faceDir++) {
+        // Only show X-axis faces (indices 2 and 3)
+        for (let faceDir = 2; faceDir <= 3; faceDir++) {
           const faceName = faceNames[faceDir];
           const axisIndex = Math.floor(faceDir / 2);
           const faceMask = faceMasks[faceDir][axisIndex];
@@ -285,7 +286,7 @@ export class GreedyMesher {
           }
         }
       }
-      console.log("=== END FACE MASKS ===");
+      console.log("=== END X-AXIS FACE MASKS ===");
     }
   }
 
@@ -365,7 +366,9 @@ export class GreedyMesher {
           }
         }
 
-        if (totalBits > 0) {
+        // Only log X-axis faces (+X and -X)
+        const isXAxis = faceDir === 2 || faceDir === 3;
+        if (totalBits > 0 && isXAxis) {
           console.log(`\nProcessing ${faceNames[faceDir]} faces: BlockType=${blockType}, TotalBits=${totalBits}`);
         }
 
@@ -380,7 +383,7 @@ export class GreedyMesher {
         
         const newQuads = quads.length - startQuadCount;
         quadCounts[faceDir] += newQuads;
-        if (newQuads > 0) {
+        if (newQuads > 0 && isXAxis) {
           console.log(`  Generated ${newQuads} quads for ${faceNames[faceDir]}`);
         }
       }
@@ -410,6 +413,8 @@ export class GreedyMesher {
     quads: GreedyQuad[]
   ): void {
     const size = CHUNK_SIZE;
+    const faceNames = ["+Y", "-Y", "+X", "-X", "+Z", "-Z"];
+    const isXAxis = faceDirection === 2 || faceDirection === 3;
 
     // Scan through the 2D plane
     for (let j = 0; j < size; j++) {
@@ -420,6 +425,13 @@ export class GreedyMesher {
         // Find the first set bit in this column
         const startPos = this.findFirstSetBit(mask[j][i]);
         if (startPos === -1) continue;
+
+        // For X-axis faces, show the initial bit pattern
+        if (isXAxis) {
+          const initialBits = mask[j][i].toString(2).padStart(32, '0');
+          console.log(`    X-axis: [${i},${j}] initial bits: ${initialBits} (decimal: ${mask[j][i]})`);
+          console.log(`      First set bit at position: ${startPos}`);
+        }
 
         // Try to expand vertically first (height in the bit dimension)
         let height = 1;
@@ -511,21 +523,35 @@ export class GreedyMesher {
         );
         quads.push(quad);
 
-        // Debug: Log quad creation
-        const faceNames = ["+Y", "-Y", "+X", "-X", "+Z", "-Z"];
-        console.log(`    Quad: ${faceNames[faceDirection]} at [${i},${j}] bit=${startPos}, dims=${width}x${height}x${depth} -> quadDims=${quadWidth}x${quadHeight}`);
+        // Debug: Log quad creation (only for X-axis)
+        if (isXAxis) {
+          console.log(`      Creating quad: ${faceNames[faceDirection]} at [${i},${j}] bit=${startPos}, dims=${width}x${height}x${depth} -> quadDims=${quadWidth}x${quadHeight}`);
+          
+          // Show which bits will be cleared
+          let bitsToClear = [];
+          for (let d = 0; d < depth; d++) {
+            for (let w = 0; w < width; w++) {
+              for (let h = 0; h < height; h++) {
+                bitsToClear.push(startPos + h);
+              }
+            }
+          }
+          console.log(`      Will clear bits at positions: ${bitsToClear.join(', ')}`);
+        }
 
         // Clear the bits we just processed to avoid duplicates
-        let clearedBits = 0;
         for (let d = 0; d < depth; d++) {
           for (let w = 0; w < width; w++) {
+            const beforeClear = mask[j + d][i + w];
             for (let h = 0; h < height; h++) {
               mask[j + d][i + w] &= ~(1 << (startPos + h));
-              clearedBits++;
+            }
+            if (isXAxis && beforeClear !== mask[j + d][i + w]) {
+              const afterClear = mask[j + d][i + w];
+              console.log(`      Mask[${j + d}][${i + w}]: ${beforeClear.toString(2).padStart(8, '0')} -> ${afterClear.toString(2).padStart(8, '0')}`);
             }
           }
         }
-        console.log(`      Cleared ${clearedBits} bits from mask`);
       }
     }
   }
