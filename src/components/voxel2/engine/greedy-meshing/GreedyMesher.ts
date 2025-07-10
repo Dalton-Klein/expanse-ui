@@ -403,6 +403,43 @@ export class GreedyMesher {
   }
 
   /**
+   * Find all contiguous bit groups in a 32-bit integer
+   * Returns array of groups with start position and height
+   */
+  private static findContiguousBitGroups(value: number): Array<{start: number, height: number}> {
+    const groups: Array<{start: number, height: number}> = [];
+    let currentStart = -1;
+    let currentHeight = 0;
+    
+    for (let bit = 0; bit < 32; bit++) {
+      if (value & (1 << bit)) {
+        if (currentStart === -1) {
+          // Start of a new group
+          currentStart = bit;
+          currentHeight = 1;
+        } else {
+          // Continue current group
+          currentHeight++;
+        }
+      } else {
+        if (currentStart !== -1) {
+          // End of current group
+          groups.push({start: currentStart, height: currentHeight});
+          currentStart = -1;
+          currentHeight = 0;
+        }
+      }
+    }
+    
+    // Don't forget the last group if it ends at bit 31
+    if (currentStart !== -1) {
+      groups.push({start: currentStart, height: currentHeight});
+    }
+    
+    return groups;
+  }
+
+  /**
    * Apply greedy meshing algorithm to a single 2D binary plane
    * Based on TanTanDev's approach with rectangular expansion
    */
@@ -422,133 +459,131 @@ export class GreedyMesher {
         // Skip if this column has no bits set
         if (mask[j][i] === 0) continue;
 
-        // Find the first set bit in this column
-        const startPos = this.findFirstSetBit(mask[j][i]);
-        if (startPos === -1) continue;
-
         // For X-axis faces, show the initial bit pattern
         if (isXAxis) {
           const initialBits = mask[j][i].toString(2).padStart(32, '0');
           console.log(`    X-axis: [${i},${j}] initial bits: ${initialBits} (decimal: ${mask[j][i]})`);
-          console.log(`      First set bit at position: ${startPos}`);
         }
 
-        // Try to expand vertically first (height in the bit dimension)
-        let height = 1;
-        let width = 1;
-        let depth = 1;
-
-        // Find maximum height at this column (in the bit dimension)
-        for (let h = startPos + 1; h < size; h++) {
-          if (mask[j][i] & (1 << h)) {
-            height++;
-          } else {
-            break;
-          }
+        // Find all contiguous bit groups in this column
+        const bitGroups = this.findContiguousBitGroups(mask[j][i]);
+        
+        if (isXAxis && bitGroups.length > 0) {
+          console.log(`      Found ${bitGroups.length} contiguous groups:`, bitGroups.map(g => `bits ${g.start}-${g.start + g.height - 1}`).join(', '));
         }
 
-        // Try to expand in the i direction (width) while maintaining height
-        for (let w = i + 1; w < size; w++) {
-          let canExpand = true;
+        // Process each contiguous group separately
+        const quadsToCreate: Array<{
+          startPos: number;
+          width: number;
+          height: number;
+          depth: number;
+        }> = [];
 
-          // Check if we can expand to this column with the same height
-          for (let h = 0; h < height; h++) {
-            if (!(mask[j][w] & (1 << (startPos + h)))) {
-              canExpand = false;
-              break;
-            }
-          }
+        for (const group of bitGroups) {
+          const startPos = group.start;
+          const height = group.height;
+          let width = 1;
+          let depth = 1;
 
-          if (canExpand) {
-            width++;
-          } else {
-            break;
-          }
-        }
+          // Try to expand in the i direction (width) while maintaining height
+          for (let w = i + 1; w < size; w++) {
+            let canExpand = true;
 
-        // Now try to expand in the j direction (depth) while maintaining width and height
-        for (let d = j + 1; d < size; d++) {
-          let canExpand = true;
-
-          // Check if this entire row has the same pattern
-          for (let w = 0; w < width; w++) {
+            // Check if we can expand to this column with the same height
             for (let h = 0; h < height; h++) {
-              if (
-                !(mask[d][i + w] & (1 << (startPos + h)))
-              ) {
+              if (!(mask[j][w] & (1 << (startPos + h)))) {
                 canExpand = false;
                 break;
               }
             }
-            if (!canExpand) break;
+
+            if (canExpand) {
+              width++;
+            } else {
+              break;
+            }
           }
 
-          if (canExpand) {
-            depth++;
-          } else {
-            break;
-          }
-        }
+          // Now try to expand in the j direction (depth) while maintaining width and height
+          for (let d = j + 1; d < size; d++) {
+            let canExpand = true;
 
-        // Create a quad for this rectangle
-        // The width and height parameters depend on the face direction
-        let quadWidth, quadHeight;
-
-        // For Y-axis faces (top/bottom), mask is [z][x], so width=x, depth=z
-        // For X-axis faces (left/right), mask is [y][z], so width=z, depth=y
-        // For Z-axis faces (front/back), mask is [y][x], so width=x, depth=y
-        const axisIndex = Math.floor(faceDirection / 2);
-        if (axisIndex === 0) {
-          // Y-axis
-          quadWidth = width;
-          quadHeight = depth;
-        } else if (axisIndex === 1) {
-          // X-axis
-          quadWidth = width;
-          quadHeight = depth;
-        } else {
-          // Z-axis
-          quadWidth = width;
-          quadHeight = depth;
-        }
-
-        const quad = this.createQuadFromMask(
-          blockType,
-          faceDirection,
-          i,
-          j,
-          startPos,
-          quadWidth,
-          quadHeight
-        );
-        quads.push(quad);
-
-        // Debug: Log quad creation (only for X-axis)
-        if (isXAxis) {
-          console.log(`      Creating quad: ${faceNames[faceDirection]} at [${i},${j}] bit=${startPos}, dims=${width}x${height}x${depth} -> quadDims=${quadWidth}x${quadHeight}`);
-          
-          // Show which bits will be cleared
-          let bitsToClear = [];
-          for (let d = 0; d < depth; d++) {
+            // Check if this entire row has the same pattern
             for (let w = 0; w < width; w++) {
               for (let h = 0; h < height; h++) {
-                bitsToClear.push(startPos + h);
+                if (
+                  !(mask[d][i + w] & (1 << (startPos + h)))
+                ) {
+                  canExpand = false;
+                  break;
+                }
               }
+              if (!canExpand) break;
+            }
+
+            if (canExpand) {
+              depth++;
+            } else {
+              break;
             }
           }
-          console.log(`      Will clear bits at positions: ${bitsToClear.join(', ')}`);
+
+          quadsToCreate.push({ startPos, width, height, depth });
         }
 
-        // Clear the bits we just processed to avoid duplicates
-        for (let d = 0; d < depth; d++) {
-          for (let w = 0; w < width; w++) {
-            const beforeClear = mask[j + d][i + w];
-            for (let h = 0; h < height; h++) {
-              mask[j + d][i + w] &= ~(1 << (startPos + h));
-            }
-            if (isXAxis && beforeClear !== mask[j + d][i + w]) {
-              const afterClear = mask[j + d][i + w];
-              console.log(`      Mask[${j + d}][${i + w}]: ${beforeClear.toString(2).padStart(8, '0')} -> ${afterClear.toString(2).padStart(8, '0')}`);
+        // Now create all quads and clear bits for this position
+        for (const quadInfo of quadsToCreate) {
+          const { startPos, width, height, depth } = quadInfo;
+
+          // Create a quad for this rectangle
+          let quadWidth, quadHeight;
+
+          // For Y-axis faces (top/bottom), mask is [z][x], so width=x, depth=z
+          // For X-axis faces (left/right), mask is [y][z], so width=z, depth=y
+          // For Z-axis faces (front/back), mask is [y][x], so width=x, depth=y
+          const axisIndex = Math.floor(faceDirection / 2);
+          if (axisIndex === 0) {
+            // Y-axis
+            quadWidth = width;
+            quadHeight = depth;
+          } else if (axisIndex === 1) {
+            // X-axis
+            quadWidth = width;
+            quadHeight = depth;
+          } else {
+            // Z-axis
+            quadWidth = width;
+            quadHeight = depth;
+          }
+
+          const quad = this.createQuadFromMask(
+            blockType,
+            faceDirection,
+            i,
+            j,
+            startPos,
+            quadWidth,
+            quadHeight
+          );
+          quads.push(quad);
+
+          // Debug: Log quad creation (only for X-axis)
+          if (isXAxis) {
+            console.log(`      Creating quad: ${faceNames[faceDirection]} at [${i},${j}] bit=${startPos}, dims=${width}x${height}x${depth} -> quadDims=${quadWidth}x${quadHeight}`);
+          }
+
+          // Clear the bits we just processed to avoid duplicates
+          for (let d = 0; d < depth; d++) {
+            for (let w = 0; w < width; w++) {
+              const beforeClear = mask[j + d][i + w];
+              for (let h = 0; h < height; h++) {
+                mask[j + d][i + w] &= ~(1 << (startPos + h));
+              }
+              if (isXAxis && beforeClear !== mask[j + d][i + w]) {
+                const afterClear = mask[j + d][i + w];
+                console.log(`      Mask[${j + d}][${i + w}]: ${beforeClear.toString(2).padStart(8, '0')} -> ${afterClear.toString(2).padStart(8, '0')}`);
+              }
             }
           }
         }
