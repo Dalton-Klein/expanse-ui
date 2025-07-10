@@ -138,7 +138,10 @@ export class NoiseGenerator {
           } else if (surfaceDepth === 1) {
             // Second layer: grass (for thicker grass layer)
             voxelType = VoxelType.GRASS;
-          } else if (surfaceDepth <= 3) {
+          } else if (surfaceDepth <= 2) {
+            // Next 2 layers: stone
+            voxelType = VoxelType.DIRT;
+          } else if (surfaceDepth <= 4) {
             // Next 2 layers: stone
             voxelType = VoxelType.STONE;
           } else {
