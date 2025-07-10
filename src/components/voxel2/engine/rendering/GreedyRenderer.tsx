@@ -26,8 +26,19 @@ export default function GreedyRenderer({
   terrainConfig,
   onMeshGenerated,
 }: GreedyRendererProps) {
+  // Store previous geometries for cleanup
+  const previousGeometriesRef = React.useRef<THREE.BufferGeometry[]>([]);
+
   // Generate meshes for all chunks
   const meshResults = React.useMemo(() => {
+    // Dispose of previous geometries to prevent memory leaks
+    previousGeometriesRef.current.forEach(geometry => {
+      if (geometry) {
+        geometry.dispose();
+      }
+    });
+    previousGeometriesRef.current = [];
+
     // Results should be an array of generated meshes which represent a single chunk
     // Each element in results should be a buffer geometry
     // containing the vertices, normals, and colors for that chunk
@@ -44,6 +55,9 @@ export default function GreedyRenderer({
       totalTriangles += result.triangleCount;
       totalTime += result.generationTime;
       results.push(result);
+      
+      // Store geometry for cleanup
+      previousGeometriesRef.current.push(result.geometry);
     }
 
     // Log performance for debugging
@@ -67,6 +81,17 @@ export default function GreedyRenderer({
         chunks.length > 0 ? totalTime / chunks.length : 0,
     };
   }, [chunks]);
+
+  // Cleanup geometries on unmount
+  React.useEffect(() => {
+    return () => {
+      previousGeometriesRef.current.forEach(geometry => {
+        if (geometry) {
+          geometry.dispose();
+        }
+      });
+    };
+  }, []);
 
   // Report statistics when mesh results change
   React.useEffect(() => {

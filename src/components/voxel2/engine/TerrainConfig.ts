@@ -24,7 +24,7 @@ export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
   // Greedy meshing configuration
   greedyMeshing: {
     enabled: true, // start with greedy meshing enabled
-    algorithm: MeshingAlgorithm.NAIVE, // start with naive for comparison
+    algorithm: MeshingAlgorithm.BINARY_GREEDY, // use binary greedy by default
     crossChunkCulling: true, // enable cross-chunk face culling
   },
 

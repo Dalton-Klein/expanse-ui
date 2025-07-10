@@ -1,5 +1,6 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { useRef } from "react";
 
 interface CameraTrackerProps {
   onUpdate: (data: {
@@ -10,8 +11,19 @@ interface CameraTrackerProps {
 
 export default function CameraTracker({ onUpdate }: CameraTrackerProps) {
   const { camera } = useThree();
+  const lastUpdateTime = useRef(0);
+  const UPDATE_INTERVAL = 100; // Update every 100ms instead of every frame
   
-  useFrame(() => {
+  useFrame((state) => {
+    const currentTime = state.clock.getElapsedTime() * 1000; // Convert to milliseconds
+    
+    // Throttle updates to reduce frequency
+    if (currentTime - lastUpdateTime.current < UPDATE_INTERVAL) {
+      return;
+    }
+    
+    lastUpdateTime.current = currentTime;
+    
     // Get camera position
     const pos = camera.position;
     

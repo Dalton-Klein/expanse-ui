@@ -16,6 +16,11 @@ interface NaiveRendererProps {
   chunks: ChunkData[];
   renderingConfig: RenderConfig;
   terrainConfig: TerrainConfig;
+  onMeshGenerated?: (stats: {
+    chunkCount: number;
+    totalTriangles: number;
+    avgGenerationTime: number;
+  }) => void;
 }
 
 // Voxel colors for material visualization
@@ -32,13 +37,17 @@ export default function NaiveRenderer({
   chunks,
   renderingConfig,
   terrainConfig,
+  onMeshGenerated,
 }: NaiveRendererProps) {
-  // Generate geometry from all chunks
-  const geometry = React.useMemo(() => {
+  // Generate geometry from all chunks with performance tracking
+  const meshResults = React.useMemo(() => {
+    const startTime = performance.now();
+    
     const geometry = new THREE.BufferGeometry();
     const vertices: number[] = [];
     const normals: number[] = [];
     const colors: number[] = [];
+    
     // Render each chunk
     chunks.forEach((chunk) => {
       renderChunk(chunk, vertices, normals, colors);
@@ -58,12 +67,40 @@ export default function NaiveRenderer({
       new THREE.Float32BufferAttribute(colors, 3)
     );
 
-    return geometry;
+    const endTime = performance.now();
+    const totalTriangles = vertices.length / 9; // 3 vertices per triangle, 3 coords per vertex
+    const generationTime = endTime - startTime;
+
+    // Log performance for debugging
+    console.log(
+      `[NaiveRenderer] Generated ${chunks.length} chunks:`,
+      {
+        totalTriangles,
+        generationTime: generationTime.toFixed(3),
+      }
+    );
+
+    return {
+      geometry,
+      totalTriangles,
+      generationTime,
+    };
   }, [chunks]);
+
+  // Report statistics when mesh results change
+  React.useEffect(() => {
+    if (onMeshGenerated) {
+      onMeshGenerated({
+        chunkCount: chunks.length,
+        totalTriangles: meshResults.totalTriangles,
+        avgGenerationTime: meshResults.generationTime,
+      });
+    }
+  }, [meshResults, onMeshGenerated, chunks.length]);
 
   return (
     <group>
-      <mesh geometry={geometry}>
+      <mesh geometry={meshResults.geometry}>
         <meshLambertMaterial
           wireframe={renderingConfig.wireframe}
           vertexColors={true}

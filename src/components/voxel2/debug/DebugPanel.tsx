@@ -17,7 +17,7 @@ interface DebugPanelProps {
   terrainConfig: TerrainConfig;
   onTerrainConfigChange: (config: TerrainConfig) => void;
   metrics: PerformanceMetrics;
-  onMetricsUpdate: (metrics: PerformanceMetrics) => void;
+  onFpsUpdate: (fps: number) => void; // Separate FPS callback
   cameraData: {
     position: { x: number; y: number; z: number };
     direction: {
@@ -34,44 +34,76 @@ export default function DebugPanel({
   terrainConfig,
   onTerrainConfigChange,
   metrics,
-  onMetricsUpdate,
+  onFpsUpdate,
   cameraData,
 }: DebugPanelProps) {
   // FPS tracking
   const [fps, setFps] = useState(0);
-  const [frameCount, setFrameCount] = useState(0);
-  const [lastTime, setLastTime] = useState(
-    performance.now()
-  );
 
   useEffect(() => {
+    let animationId: number;
+    let frameCount = 0;
+    let lastTime = performance.now();
+    let lastMemoryCheck = performance.now();
+    let currentFps = 0; // Track current FPS outside the update block
+
     const updateFPS = () => {
       const currentTime = performance.now();
-      setFrameCount((prev) => prev + 1);
+      frameCount++;
 
       // Update FPS every second
       if (currentTime - lastTime >= 1000) {
         const newFps = Math.round(
           (frameCount * 1000) / (currentTime - lastTime)
         );
+        currentFps = newFps; // Store for memory logging
         setFps(newFps);
 
-        // Update metrics
-        onMetricsUpdate({
-          ...metrics,
-          fps: newFps,
-        });
+        // Update FPS without overriding other metrics
+        console.log('[DebugPanel] FPS Update to:', newFps);
+        onFpsUpdate(newFps);
 
-        setFrameCount(0);
-        setLastTime(currentTime);
+        frameCount = 0;
+        lastTime = currentTime;
       }
 
-      requestAnimationFrame(updateFPS);
+      // Log memory usage every 30 seconds for debugging
+      if (currentTime - lastMemoryCheck >= 30000) {
+        if ((performance as any).memory) {
+          const memInfo = (performance as any).memory;
+          console.log(`[Performance] Memory Usage:`, {
+            used: `${(
+              memInfo.usedJSHeapSize /
+              1024 /
+              1024
+            ).toFixed(1)}MB`,
+            total: `${(
+              memInfo.totalJSHeapSize /
+              1024 /
+              1024
+            ).toFixed(1)}MB`,
+            limit: `${(
+              memInfo.jsHeapSizeLimit /
+              1024 /
+              1024
+            ).toFixed(1)}MB`,
+            fps: currentFps,
+          });
+        }
+        lastMemoryCheck = currentTime;
+      }
+
+      animationId = requestAnimationFrame(updateFPS);
     };
 
-    const animationId = requestAnimationFrame(updateFPS);
-    return () => cancelAnimationFrame(animationId);
-  }, [frameCount, lastTime, metrics, onMetricsUpdate]);
+    animationId = requestAnimationFrame(updateFPS);
+
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, [onFpsUpdate]); // Only depend on the FPS callback
 
   const handlePatternChange = (pattern: DebugPattern) => {
     // Update both the render config and terrain config to keep them in sync

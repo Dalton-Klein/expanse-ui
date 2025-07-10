@@ -52,6 +52,29 @@ export default function VoxelWorld2() {
     direction: { compass: "North", face: "Z-", angle: 0 },
   });
 
+  // Stable camera update callback to prevent unnecessary re-renders
+  const handleCameraUpdate = React.useCallback((data: {
+    position: { x: number; y: number; z: number };
+    direction: { compass: string; face: string; angle: number };
+  }) => {
+    setCameraData(data);
+  }, []);
+
+  // Stable metrics update callback
+  const handleMetricsUpdate = React.useCallback((metrics: PerformanceMetrics) => {
+    console.log('[VoxelWorld2] handleMetricsUpdate called with:', metrics);
+    setPerformanceMetrics(metrics);
+  }, []);
+
+  // Separate FPS update callback to avoid overriding other metrics
+  const handleFpsUpdate = React.useCallback((fps: number) => {
+    console.log('[VoxelWorld2] FPS Update to:', fps);
+    setPerformanceMetrics((prev) => ({
+      ...prev,
+      fps: fps,
+    }));
+  }, []);
+
   // Generate terrain chunks based on config
   const chunks = React.useMemo(() => {
     if (
@@ -75,6 +98,7 @@ export default function VoxelWorld2() {
       totalTriangles: number;
       avgGenerationTime: number;
     }) => {
+      console.log('[VoxelWorld2] Updating metrics:', stats);
       setPerformanceMetrics((prev) => ({
         ...prev,
         chunks: stats.chunkCount,
@@ -84,16 +108,7 @@ export default function VoxelWorld2() {
     []
   );
 
-  // Update performance metrics for naive renderer
-  React.useEffect(() => {
-    if (!terrainConfig.greedyMeshing.enabled) {
-      setPerformanceMetrics((prev) => ({
-        ...prev,
-        chunks: chunks.length,
-        triangles: calculateTriangleCount(chunks),
-      }));
-    }
-  }, [chunks, terrainConfig.greedyMeshing.enabled]);
+  // Performance metrics are now handled by the onMeshGenerated callbacks from both renderers
 
   return (
     <div
@@ -119,7 +134,7 @@ export default function VoxelWorld2() {
             terrainConfig={terrainConfig}
             onTerrainConfigChange={setTerrainConfig}
             metrics={performanceMetrics}
-            onMetricsUpdate={setPerformanceMetrics}
+            onFpsUpdate={handleFpsUpdate}
             cameraData={cameraData}
           />
         </div>
@@ -139,7 +154,7 @@ export default function VoxelWorld2() {
         />
 
         {/* Camera Tracker for Debug Panel */}
-        <CameraTracker onUpdate={setCameraData} />
+        <CameraTracker onUpdate={handleCameraUpdate} />
 
         {/* Lighting */}
         <ambientLight intensity={0.6} />
@@ -180,6 +195,7 @@ export default function VoxelWorld2() {
               chunks={chunks}
               renderingConfig={renderConfig}
               terrainConfig={terrainConfig}
+              onMeshGenerated={handleMeshGenerated}
             />
           )}
           

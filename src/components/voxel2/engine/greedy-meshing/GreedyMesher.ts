@@ -59,7 +59,6 @@ export class GreedyMesher {
     const greedyQuads = this.generateGreedyQuads(
       faceMasksByBlockType
     );
-    console.log("Greedy quads generated:", greedyQuads);
     // 4. Generate Geometry (And Later Ambient Occlusion)- Convert greedy quads to vertices with proper winding order
     result = this.generateGeometry(greedyQuads);
 
@@ -239,7 +238,7 @@ export class GreedyMesher {
   private static debugFaceMasks(
     faceMasksByBlockType: Map<VoxelType, AxisColumns[]>
   ): void {
-    if (true) {
+    if (false) {
       console.log("=== X-AXIS FACE MASKS DEBUG ===");
 
       const faceNames = [
@@ -361,16 +360,15 @@ export class GreedyMesher {
         for (let j = 0; j < CHUNK_SIZE; j++) {
           for (let i = 0; i < CHUNK_SIZE; i++) {
             if (workingMask[j][i] !== 0) {
-              totalBits += this.countSetBits(workingMask[j][i]);
+              totalBits += this.countSetBits(
+                workingMask[j][i]
+              );
             }
           }
         }
 
         // Only log X-axis faces (+X and -X)
         const isXAxis = faceDir === 2 || faceDir === 3;
-        if (totalBits > 0 && isXAxis) {
-          console.log(`\nProcessing ${faceNames[faceDir]} faces: BlockType=${blockType}, TotalBits=${totalBits}`);
-        }
 
         // Apply greedy algorithm to this 2D plane
         const startQuadCount = quads.length;
@@ -380,16 +378,11 @@ export class GreedyMesher {
           faceDir,
           quads
         );
-        
+
         const newQuads = quads.length - startQuadCount;
         quadCounts[faceDir] += newQuads;
-        if (newQuads > 0 && isXAxis) {
-          console.log(`  Generated ${newQuads} quads for ${faceNames[faceDir]}`);
-        }
       }
     }
-
-    console.log("\nQuad Summary:", quadCounts.map((count, i) => `${faceNames[i]}:${count}`).join(", "));
     return quads;
   }
 
@@ -406,11 +399,14 @@ export class GreedyMesher {
    * Find all contiguous bit groups in a 32-bit integer
    * Returns array of groups with start position and height
    */
-  private static findContiguousBitGroups(value: number): Array<{start: number, height: number}> {
-    const groups: Array<{start: number, height: number}> = [];
+  private static findContiguousBitGroups(
+    value: number
+  ): Array<{ start: number; height: number }> {
+    const groups: Array<{ start: number; height: number }> =
+      [];
     let currentStart = -1;
     let currentHeight = 0;
-    
+
     for (let bit = 0; bit < 32; bit++) {
       if (value & (1 << bit)) {
         if (currentStart === -1) {
@@ -424,18 +420,24 @@ export class GreedyMesher {
       } else {
         if (currentStart !== -1) {
           // End of current group
-          groups.push({start: currentStart, height: currentHeight});
+          groups.push({
+            start: currentStart,
+            height: currentHeight,
+          });
           currentStart = -1;
           currentHeight = 0;
         }
       }
     }
-    
+
     // Don't forget the last group if it ends at bit 31
     if (currentStart !== -1) {
-      groups.push({start: currentStart, height: currentHeight});
+      groups.push({
+        start: currentStart,
+        height: currentHeight,
+      });
     }
-    
+
     return groups;
   }
 
@@ -451,26 +453,18 @@ export class GreedyMesher {
   ): void {
     const size = CHUNK_SIZE;
     const faceNames = ["+Y", "-Y", "+X", "-X", "+Z", "-Z"];
-    const isXAxis = faceDirection === 2 || faceDirection === 3;
+    const isXAxis =
+      faceDirection === 2 || faceDirection === 3;
 
     // Scan through the 2D plane
     for (let j = 0; j < size; j++) {
       for (let i = 0; i < size; i++) {
         // Skip if this column has no bits set
         if (mask[j][i] === 0) continue;
-
-        // For X-axis faces, show the initial bit pattern
-        if (isXAxis) {
-          const initialBits = mask[j][i].toString(2).padStart(32, '0');
-          console.log(`    X-axis: [${i},${j}] initial bits: ${initialBits} (decimal: ${mask[j][i]})`);
-        }
-
         // Find all contiguous bit groups in this column
-        const bitGroups = this.findContiguousBitGroups(mask[j][i]);
-        
-        if (isXAxis && bitGroups.length > 0) {
-          console.log(`      Found ${bitGroups.length} contiguous groups:`, bitGroups.map(g => `bits ${g.start}-${g.start + g.height - 1}`).join(', '));
-        }
+        const bitGroups = this.findContiguousBitGroups(
+          mask[j][i]
+        );
 
         // Process each contiguous group separately
         const quadsToCreate: Array<{
@@ -529,12 +523,18 @@ export class GreedyMesher {
             }
           }
 
-          quadsToCreate.push({ startPos, width, height, depth });
+          quadsToCreate.push({
+            startPos,
+            width,
+            height,
+            depth,
+          });
         }
 
         // Now create all quads and clear bits for this position
         for (const quadInfo of quadsToCreate) {
-          const { startPos, width, height, depth } = quadInfo;
+          const { startPos, width, height, depth } =
+            quadInfo;
 
           // Create a quad for this rectangle
           let quadWidth, quadHeight;
@@ -568,21 +568,15 @@ export class GreedyMesher {
           );
           quads.push(quad);
 
-          // Debug: Log quad creation (only for X-axis)
-          if (isXAxis) {
-            console.log(`      Creating quad: ${faceNames[faceDirection]} at [${i},${j}] bit=${startPos}, dims=${width}x${height}x${depth} -> quadDims=${quadWidth}x${quadHeight}`);
-          }
-
           // Clear the bits we just processed to avoid duplicates
           for (let d = 0; d < depth; d++) {
             for (let w = 0; w < width; w++) {
               const beforeClear = mask[j + d][i + w];
               for (let h = 0; h < height; h++) {
-                mask[j + d][i + w] &= ~(1 << (startPos + h));
-              }
-              if (isXAxis && beforeClear !== mask[j + d][i + w]) {
-                const afterClear = mask[j + d][i + w];
-                console.log(`      Mask[${j + d}][${i + w}]: ${beforeClear.toString(2).padStart(8, '0')} -> ${afterClear.toString(2).padStart(8, '0')}`);
+                mask[j + d][i + w] &= ~(
+                  1 <<
+                  (startPos + h)
+                );
               }
             }
           }
@@ -680,7 +674,6 @@ export class GreedyMesher {
     for (const quad of quads) {
       // Generate vertices for this quad based on face direction
       const quadVertices = this.generateQuadVertices(quad);
-      //console.log("Quad vertices:", quadVertices);
       // Add vertices
       vertices.push(...quadVertices);
 
