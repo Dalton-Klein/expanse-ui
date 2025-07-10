@@ -49,16 +49,12 @@ export class GreedyMesher {
     // 1. Binary Encoding- Convert 3d array chunk data into binary columns separated by block type
     const blockTypeCols =
       this.encodeToBinaryByBlockType(chunk);
-    console.log(
-      "Block type columns generated:",
-      blockTypeCols
-    );
+
     // 2. Face Culling- Cull voxel faces based on adjacency to air, use bitwise operations to find face transitions
     const faceMasksByBlockType =
       this.generateFaceCullingMasksByBlockType(
         blockTypeCols
       );
-
     // 3. Greedy algorithm- For each 2D binary plane, apply the greedy algorithm
     const greedyQuads = this.generateGreedyQuads(
       faceMasksByBlockType
@@ -243,7 +239,7 @@ export class GreedyMesher {
   private static debugFaceMasks(
     faceMasksByBlockType: Map<VoxelType, AxisColumns[]>
   ): void {
-    if (false) {
+    if (true) {
       console.log("=== FACE MASKS DEBUG ===");
 
       const faceNames = [
@@ -341,6 +337,8 @@ export class GreedyMesher {
     faceMasksByBlockType: Map<VoxelType, AxisColumns[]>
   ): GreedyQuad[] {
     const quads: GreedyQuad[] = [];
+    const faceNames = ["+Y", "-Y", "+X", "-X", "+Z", "-Z"];
+    const quadCounts: number[] = [0, 0, 0, 0, 0, 0];
 
     // Process each block type separately
     for (const [
@@ -357,17 +355,48 @@ export class GreedyMesher {
           faceMask[axisIndex]
         );
 
+        // Count total set bits before processing
+        let totalBits = 0;
+        for (let j = 0; j < CHUNK_SIZE; j++) {
+          for (let i = 0; i < CHUNK_SIZE; i++) {
+            if (workingMask[j][i] !== 0) {
+              totalBits += this.countSetBits(workingMask[j][i]);
+            }
+          }
+        }
+
+        if (totalBits > 0) {
+          console.log(`\nProcessing ${faceNames[faceDir]} faces: BlockType=${blockType}, TotalBits=${totalBits}`);
+        }
+
         // Apply greedy algorithm to this 2D plane
+        const startQuadCount = quads.length;
         this.greedyMesh2D(
           workingMask,
           blockType,
           faceDir,
           quads
         );
+        
+        const newQuads = quads.length - startQuadCount;
+        quadCounts[faceDir] += newQuads;
+        if (newQuads > 0) {
+          console.log(`  Generated ${newQuads} quads for ${faceNames[faceDir]}`);
+        }
       }
     }
 
+    console.log("\nQuad Summary:", quadCounts.map((count, i) => `${faceNames[i]}:${count}`).join(", "));
     return quads;
+  }
+
+  private static countSetBits(n: number): number {
+    let count = 0;
+    while (n) {
+      count += n & 1;
+      n >>>= 1;
+    }
+    return count;
   }
 
   /**
@@ -482,14 +511,21 @@ export class GreedyMesher {
         );
         quads.push(quad);
 
+        // Debug: Log quad creation
+        const faceNames = ["+Y", "-Y", "+X", "-X", "+Z", "-Z"];
+        console.log(`    Quad: ${faceNames[faceDirection]} at [${i},${j}] bit=${startPos}, dims=${width}x${height}x${depth} -> quadDims=${quadWidth}x${quadHeight}`);
+
         // Clear the bits we just processed to avoid duplicates
+        let clearedBits = 0;
         for (let d = 0; d < depth; d++) {
           for (let w = 0; w < width; w++) {
             for (let h = 0; h < height; h++) {
               mask[j + d][i + w] &= ~(1 << (startPos + h));
+              clearedBits++;
             }
           }
         }
+        console.log(`      Cleared ${clearedBits} bits from mask`);
       }
     }
   }
@@ -761,5 +797,12 @@ export class GreedyMesher {
       default:
         return { r: 1.0, g: 0.0, b: 1.0 }; // Magenta for unknown types
     }
+  }
+
+  private static customGreedyQuadGenerator(
+    faceMasksByBlockType: Map<VoxelType, AxisColumns[]>
+  ): GreedyQuad[] {
+    const quads: GreedyQuad[] = [];
+    return quads;
   }
 }
