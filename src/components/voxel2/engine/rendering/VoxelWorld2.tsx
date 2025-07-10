@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import { Sky } from "@react-three/drei";
 import DebugPanel from "../../debug/DebugPanel";
@@ -9,15 +8,10 @@ import ChunkBorderRenderer from "./ChunkBorderRenderer";
 import {
   RenderConfig,
   PerformanceMetrics,
-  ChunkData,
   DebugPattern,
   TerrainConfig,
-  GenerationAlgorithm,
-  VoxelType,
   MeshingAlgorithm,
 } from "../../types";
-import { CHUNK_SIZE } from "../TerrainConfig";
-import { ChunkHelpers } from "../chunk-generation/ChunkHelpers";
 import { DEFAULT_TERRAIN_CONFIG } from "../TerrainConfig";
 import { TerrainGenerator } from "../chunk-generation/TerrainGenerator";
 import CameraControls from "../../debug/CameraControls";
@@ -64,18 +58,6 @@ export default function VoxelWorld2() {
       };
     }) => {
       setCameraData(data);
-    },
-    []
-  );
-
-  // Stable metrics update callback
-  const handleMetricsUpdate = React.useCallback(
-    (metrics: PerformanceMetrics) => {
-      console.log(
-        "[VoxelWorld2] handleMetricsUpdate called with:",
-        metrics
-      );
-      setPerformanceMetrics(metrics);
     },
     []
   );
@@ -215,38 +197,3 @@ export default function VoxelWorld2() {
     </div>
   );
 }
-
-// Calculate triangle count for performance metrics
-function calculateTriangleCount(
-  chunks: ChunkData[]
-): number {
-  let triangleCount = 0;
-
-  chunks.forEach((chunk) => {
-    for (let x = 0; x < CHUNK_SIZE; x++) {
-      for (let y = 0; y < CHUNK_SIZE; y++) {
-        for (let z = 0; z < CHUNK_SIZE; z++) {
-          const voxel = ChunkHelpers.getVoxel(
-            chunk,
-            x,
-            y,
-            z
-          );
-          if (voxel && voxel.type !== VoxelType.AIR) {
-            // Each voxel can have up to 6 faces, each face has 2 triangles
-            // For now, estimate 3 faces per voxel on average (rough approximation)
-            triangleCount += 6; // 3 faces * 2 triangles per face
-          }
-        }
-      }
-    }
-  });
-
-  return triangleCount;
-}
-
-// TODO: Add component utilities:
-// - Camera control integration
-// - Chunk loading management
-// - Debug overlay management
-// - Performance optimization

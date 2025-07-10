@@ -22,21 +22,28 @@ export class ChunkGenerator {
     let chunk = ChunkHelpers.createEmpty(startPos);
     const platformHeight = 8; // Platform height in world coordinates
     const voxelType = VoxelType.GRASS;
-    
+
     // Determine if this chunk contains the platform (platform is at world Y=8)
     const chunkMinY = startPos.y;
     const chunkMaxY = startPos.y + CHUNK_SIZE - 1;
-    
+
     // Only fill if the platform height intersects with this chunk
-    if (platformHeight >= chunkMinY && platformHeight <= chunkMaxY) {
+    if (
+      platformHeight >= chunkMinY &&
+      platformHeight <= chunkMaxY
+    ) {
       // 2: Iterate through x and z and fill at the platform level
       for (let x = 1; x <= CHUNK_SIZE; x++) {
         for (let z = 1; z <= CHUNK_SIZE; z++) {
           // Calculate local Y position for the platform
           const localY = platformHeight - chunkMinY + 1;
-          
+
           // Fill from bottom of chunk up to platform height
-          for (let y = 1; y <= localY && y <= CHUNK_SIZE; y++) {
+          for (
+            let y = 1;
+            y <= localY && y <= CHUNK_SIZE;
+            y++
+          ) {
             ChunkHelpers.setVoxel(chunk, x, y, z, {
               type: voxelType,
             });
@@ -70,11 +77,11 @@ export class ChunkGenerator {
     // 1: Initialize empty chunk
     let chunk = ChunkHelpers.createEmpty(startPos);
     const voxelType = VoxelType.GRASS;
-    
+
     // Define the world position of the tiny cube
     const cubeWorldPos = { x: 10, y: 10, z: 10 };
     const cubeSize = 2;
-    
+
     // Check if this chunk contains any part of the cube
     const chunkMinX = startPos.x;
     const chunkMinY = startPos.y;
@@ -82,12 +89,16 @@ export class ChunkGenerator {
     const chunkMaxX = startPos.x + CHUNK_SIZE - 1;
     const chunkMaxY = startPos.y + CHUNK_SIZE - 1;
     const chunkMaxZ = startPos.z + CHUNK_SIZE - 1;
-    
+
     // Check if cube intersects with this chunk
-    if (cubeWorldPos.x >= chunkMinX && cubeWorldPos.x < chunkMaxX &&
-        cubeWorldPos.y >= chunkMinY && cubeWorldPos.y < chunkMaxY &&
-        cubeWorldPos.z >= chunkMinZ && cubeWorldPos.z < chunkMaxZ) {
-      
+    if (
+      cubeWorldPos.x >= chunkMinX &&
+      cubeWorldPos.x < chunkMaxX &&
+      cubeWorldPos.y >= chunkMinY &&
+      cubeWorldPos.y < chunkMaxY &&
+      cubeWorldPos.z >= chunkMinZ &&
+      cubeWorldPos.z < chunkMaxZ
+    ) {
       // Fill the cube within this chunk
       for (let dx = 0; dx < cubeSize; dx++) {
         for (let dy = 0; dy < cubeSize; dy++) {
@@ -95,25 +106,36 @@ export class ChunkGenerator {
             const worldX = cubeWorldPos.x + dx;
             const worldY = cubeWorldPos.y + dy;
             const worldZ = cubeWorldPos.z + dz;
-            
+
             // Convert to local chunk coordinates (with padding offset)
             const localX = worldX - chunkMinX + 1;
             const localY = worldY - chunkMinY + 1;
             const localZ = worldZ - chunkMinZ + 1;
-            
+
             // Ensure we're within chunk bounds
-            if (localX >= 1 && localX <= CHUNK_SIZE &&
-                localY >= 1 && localY <= CHUNK_SIZE &&
-                localZ >= 1 && localZ <= CHUNK_SIZE) {
-              ChunkHelpers.setVoxel(chunk, localX, localY, localZ, {
-                type: voxelType,
-              });
+            if (
+              localX >= 1 &&
+              localX <= CHUNK_SIZE &&
+              localY >= 1 &&
+              localY <= CHUNK_SIZE &&
+              localZ >= 1 &&
+              localZ <= CHUNK_SIZE
+            ) {
+              ChunkHelpers.setVoxel(
+                chunk,
+                localX,
+                localY,
+                localZ,
+                {
+                  type: voxelType,
+                }
+              );
             }
           }
         }
       }
     }
-    
+
     return chunk;
   }
 
@@ -153,7 +175,6 @@ export class ChunkGenerator {
 
     // Get chunk Y bounds
     const chunkMinY = startPos.y;
-    const chunkMaxY = startPos.y + CHUNK_SIZE - 1;
 
     // Use padded coordinates (1 to CHUNK_SIZE) to account for neighbor data
     for (let x = 1; x <= CHUNK_SIZE; x++) {

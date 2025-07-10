@@ -1,14 +1,11 @@
 import * as THREE from "three";
 import {
   ChunkData,
-  Position3D,
   VoxelType,
-  TerrainResult,
   ChunkMeshResult,
 } from "../../types";
 import { CHUNK_SIZE } from "../TerrainConfig";
 import { ChunkHelpers } from "../chunk-generation/ChunkHelpers";
-import { ChunkGenerator } from "../chunk-generation/ChunkGenerator";
 import { getRGB } from "../rendering/MaterialSystem";
 
 // Type for axis columns using native 32-bit integers
@@ -143,7 +140,6 @@ export class GreedyMesher {
   private static generateFaceCullingMasksByBlockType(
     blockTypeCols: BlockTypeColumns
   ): Map<VoxelType, AxisColumns[]> {
-    const CHUNK_SIZE_P = CHUNK_SIZE + 2; // 32 (with padding for accurate culling)
     const faceMasksByBlockType = new Map<
       VoxelType,
       AxisColumns[]
@@ -338,7 +334,7 @@ export class GreedyMesher {
     faceMasksByBlockType: Map<VoxelType, AxisColumns[]>
   ): GreedyQuad[] {
     const quads: GreedyQuad[] = [];
-    const faceNames = ["+Y", "-Y", "+X", "-X", "+Z", "-Z"];
+    //faceNames = ["+Y", "-Y", "+X", "-X", "+Z", "-Z"];
     const quadCounts: number[] = [0, 0, 0, 0, 0, 0];
 
     // Process each block type separately
@@ -355,21 +351,6 @@ export class GreedyMesher {
         const workingMask = this.cloneFaceMask(
           faceMask[axisIndex]
         );
-
-        // Count total set bits before processing
-        let totalBits = 0;
-        for (let j = 0; j < CHUNK_SIZE; j++) {
-          for (let i = 0; i < CHUNK_SIZE; i++) {
-            if (workingMask[j][i] !== 0) {
-              totalBits += this.countSetBits(
-                workingMask[j][i]
-              );
-            }
-          }
-        }
-
-        // Only log X-axis faces (+X and -X)
-        const isXAxis = faceDir === 2 || faceDir === 3;
 
         // Apply greedy algorithm to this 2D plane
         const startQuadCount = quads.length;
@@ -453,9 +434,7 @@ export class GreedyMesher {
     quads: GreedyQuad[]
   ): void {
     const size = CHUNK_SIZE;
-    const faceNames = ["+Y", "-Y", "+X", "-X", "+Z", "-Z"];
-    const isXAxis =
-      faceDirection === 2 || faceDirection === 3;
+    // faceNames = ["+Y", "-Y", "+X", "-X", "+Z", "-Z"];
 
     // Scan through the 2D plane
     for (let j = 0; j < size; j++) {
@@ -572,7 +551,6 @@ export class GreedyMesher {
           // Clear the bits we just processed to avoid duplicates
           for (let d = 0; d < depth; d++) {
             for (let w = 0; w < width; w++) {
-              const beforeClear = mask[j + d][i + w];
               for (let h = 0; h < height; h++) {
                 mask[j + d][i + w] &= ~(
                   1 <<

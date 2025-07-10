@@ -1,13 +1,11 @@
 import {
   ChunkData,
-  VoxelType,
   DebugPattern,
   Position3D,
   TerrainConfig,
   GenerationAlgorithm,
 } from "../../types";
 import { ChunkGenerator } from "./ChunkGenerator";
-import { ChunkHelpers } from "./ChunkHelpers";
 import { NoiseGenerator } from "../noise-generation/noiseGenerator";
 
 // This class is the parent for noise generation algorithms

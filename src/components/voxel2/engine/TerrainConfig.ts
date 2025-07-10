@@ -3,8 +3,6 @@ import {
   GenerationAlgorithm,
   DebugPattern,
   MeshingAlgorithm,
-  LayeredNoiseConfig,
-  NoiseLayer,
 } from "../types";
 
 // Default terrain configuration with sensible values for development and production
