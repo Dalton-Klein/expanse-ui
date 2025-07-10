@@ -7,6 +7,7 @@ import {
   TerrainConfig,
   GenerationAlgorithm,
   MeshingAlgorithm,
+  NoiseLayer,
 } from "../types";
 import { updateTerrainConfig } from "../engine/TerrainConfig";
 import "./DebugPanel.scss";
@@ -269,32 +270,123 @@ export default function DebugPanel({
 
           {terrainConfig.generation.algorithm ===
             GenerationAlgorithm.NOISE && (
-            <div className="debug-item">
-              <span className="label">Map Size:</span>
-              <input
-                type="range"
-                min="1"
-                max="20"
-                value={
-                  terrainConfig.generation.noise.mapSize
-                }
-                onChange={(e) =>
-                  handleTerrainConfigUpdate({
-                    generation: {
-                      ...terrainConfig.generation,
-                      noise: {
-                        ...terrainConfig.generation.noise,
-                        mapSize: parseInt(e.target.value),
+            <>
+              <div className="debug-item">
+                <span className="label">Map Size:</span>
+                <input
+                  type="range"
+                  min="1"
+                  max="20"
+                  value={
+                    terrainConfig.generation.noise.mapSize
+                  }
+                  onChange={(e) =>
+                    handleTerrainConfigUpdate({
+                      generation: {
+                        ...terrainConfig.generation,
+                        noise: {
+                          ...terrainConfig.generation.noise,
+                          mapSize: parseInt(e.target.value),
+                        },
                       },
-                    },
-                  })
-                }
-              />
-              <span className="value">
-                {terrainConfig.generation.noise.mapSize}x
-                {terrainConfig.generation.noise.mapSize}
-              </span>
-            </div>
+                    })
+                  }
+                />
+                <span className="value">
+                  {terrainConfig.generation.noise.mapSize}x
+                  {terrainConfig.generation.noise.mapSize}
+                </span>
+              </div>
+
+              {/* Noise Layers Section */}
+              <div className="debug-subsection">
+                <h5>Noise Layers</h5>
+                
+                {/* Continental Layer */}
+                <div className="noise-layer">
+                  <div className="debug-item">
+                    <span className="label">Continental:</span>
+                    <button
+                      className={`wireframe-toggle ${
+                        terrainConfig.generation.noise.continental.enabled ? "active" : ""
+                      }`}
+                      onClick={() =>
+                        handleTerrainConfigUpdate({
+                          generation: {
+                            ...terrainConfig.generation,
+                            noise: {
+                              ...terrainConfig.generation.noise,
+                              continental: {
+                                ...terrainConfig.generation.noise.continental,
+                                enabled: !terrainConfig.generation.noise.continental.enabled,
+                              },
+                            },
+                          },
+                        })
+                      }
+                    >
+                      {terrainConfig.generation.noise.continental.enabled ? "ON" : "OFF"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Regional Layer */}
+                <div className="noise-layer">
+                  <div className="debug-item">
+                    <span className="label">Regional:</span>
+                    <button
+                      className={`wireframe-toggle ${
+                        terrainConfig.generation.noise.regional.enabled ? "active" : ""
+                      }`}
+                      onClick={() =>
+                        handleTerrainConfigUpdate({
+                          generation: {
+                            ...terrainConfig.generation,
+                            noise: {
+                              ...terrainConfig.generation.noise,
+                              regional: {
+                                ...terrainConfig.generation.noise.regional,
+                                enabled: !terrainConfig.generation.noise.regional.enabled,
+                              },
+                            },
+                          },
+                        })
+                      }
+                    >
+                      {terrainConfig.generation.noise.regional.enabled ? "ON" : "OFF"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Local Layer */}
+                <div className="noise-layer">
+                  <div className="debug-item">
+                    <span className="label">Local:</span>
+                    <button
+                      className={`wireframe-toggle ${
+                        terrainConfig.generation.noise.local.enabled ? "active" : ""
+                      }`}
+                      onClick={() =>
+                        handleTerrainConfigUpdate({
+                          generation: {
+                            ...terrainConfig.generation,
+                            noise: {
+                              ...terrainConfig.generation.noise,
+                              local: {
+                                ...terrainConfig.generation.noise.local,
+                                enabled: !terrainConfig.generation.noise.local.enabled,
+                              },
+                            },
+                          },
+                        })
+                      }
+                    >
+                      {terrainConfig.generation.noise.local.enabled ? "ON" : "OFF"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </div>
 

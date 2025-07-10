@@ -85,19 +85,52 @@ export class NoiseGenerator {
         const worldX = chunkPosition.x + localX - 1;
         const worldZ = chunkPosition.z + localZ - 1;
 
-        // Sample Perlin noise at world coordinates
-        const noiseValue = this.perlinNoise.octaveNoise2D(
-          worldX * noiseConfig.scale,
-          worldZ * noiseConfig.scale,
-          noiseConfig.octaves,
-          noiseConfig.persistence
-        );
+        // Initialize height with base height
+        let totalHeight = noiseConfig.baseHeight;
 
-        // Convert noise (-1 to 1) to height using full world height range
-        const height = Math.floor(
-          noiseConfig.baseHeight +
-            (noiseValue + 1) * 0.5 * noiseConfig.amplitude
-        );
+        // Continental layer (large-scale landmasses)
+        if (noiseConfig.continental.enabled) {
+          const continentalNoise =
+            this.perlinNoise.octaveNoise2D(
+              worldX * noiseConfig.continental.scale,
+              worldZ * noiseConfig.continental.scale,
+              noiseConfig.continental.octaves,
+              noiseConfig.continental.persistence
+            );
+          totalHeight +=
+            (continentalNoise + 0.2) *
+            noiseConfig.continental.amplitude;
+        }
+
+        // Regional layer (hills and valleys)
+        if (noiseConfig.regional.enabled) {
+          const regionalNoise =
+            this.perlinNoise.octaveNoise2D(
+              worldX * noiseConfig.regional.scale,
+              worldZ * noiseConfig.regional.scale,
+              noiseConfig.regional.octaves,
+              noiseConfig.regional.persistence
+            );
+          totalHeight +=
+            (regionalNoise + 0.2) *
+            noiseConfig.regional.amplitude;
+        }
+
+        // Local layer (surface detail)
+        if (noiseConfig.local.enabled) {
+          const localNoise = this.perlinNoise.octaveNoise2D(
+            worldX * noiseConfig.local.scale,
+            worldZ * noiseConfig.local.scale,
+            noiseConfig.local.octaves,
+            noiseConfig.local.persistence
+          );
+          totalHeight +=
+            (localNoise + 0.2) *
+            noiseConfig.local.amplitude;
+        }
+
+        // Convert to integer height
+        const height = Math.floor(totalHeight);
 
         // Clamp height to world bounds (1 to worldHeight-1)
         heightMap[localZ][localX] = Math.max(
@@ -128,20 +161,24 @@ export class NoiseGenerator {
     for (let x = 1; x <= CHUNK_SIZE; x++) {
       for (let z = 1; z <= CHUNK_SIZE; z++) {
         const terrainHeight = heightMap[z][x]; // Note: heightMap is [z][x], contains world Y coordinate
-        
+
         // For each Y position in this chunk
-        for (let localY = 1; localY <= CHUNK_SIZE; localY++) {
+        for (
+          let localY = 1;
+          localY <= CHUNK_SIZE;
+          localY++
+        ) {
           const worldY = chunkMinY + localY - 1; // Convert to world Y coordinate
-          
+
           // Skip if this position is above the terrain
           if (worldY > terrainHeight) {
             continue; // Leave as air
           }
-          
+
           // Determine voxel type based on depth from surface
           let voxelType: VoxelType;
           const surfaceDepth = terrainHeight - worldY;
-          
+
           if (surfaceDepth === 0) {
             // Surface layer: grass
             voxelType = VoxelType.GRASS;

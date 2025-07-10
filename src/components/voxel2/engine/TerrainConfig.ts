@@ -3,7 +3,8 @@ import {
   GenerationAlgorithm,
   DebugPattern,
   MeshingAlgorithm,
-  NoiseConfig,
+  LayeredNoiseConfig,
+  NoiseLayer,
 } from "../types";
 
 // Default terrain configuration with sensible values for development and production
@@ -31,15 +32,32 @@ export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
 
   // Terrain generation configuration
   generation: {
-    algorithm: GenerationAlgorithm.DEBUG_PATTERN, // start with debug patterns
+    algorithm: GenerationAlgorithm.NOISE, // start with debug patterns
     debugPattern: DebugPattern.TINY, // default to tiny pattern
     seed: 12345, // consistent seed for testing
     noise: {
-      scale: 0.02, // frequency of the noise
-      amplitude: 80, // height variation - increased to use more of worldHeight
-      baseHeight: 10, // minimum terrain height - raised for better visibility
-      octaves: 4, // number of noise layers
-      persistence: 0.5, // amplitude decay between octaves
+      continental: {
+        enabled: true,
+        scale: 0.002, // Very large features for landmasses
+        amplitude: 130, // Major elevation changes
+        octaves: 2, // Simple, broad shapes
+        persistence: 0.5,
+      },
+      regional: {
+        enabled: true,
+        scale: 0.011, // Medium features for hills and valleys
+        amplitude: 80, // Moderate elevation changes
+        octaves: 3, // More detail than continental
+        persistence: 0.6,
+      },
+      local: {
+        enabled: true,
+        scale: 0.08, // Fine details for surface roughness
+        amplitude: 5, // Small elevation changes
+        octaves: 2, // High detail
+        persistence: 0.4,
+      },
+      baseHeight: 10, // minimum terrain height
       mapSize: 1, // default to single chunk (1x1 grid)
     },
   },
@@ -82,11 +100,28 @@ export const PRODUCTION_TERRAIN_CONFIG: TerrainConfig = {
     debugPattern: DebugPattern.FLAT, // unused in noise mode
     seed: Math.floor(Math.random() * 1000000),
     noise: {
-      scale: 0.015, // larger features for production
-      amplitude: 15, // more dramatic height variation
-      baseHeight: 8, // higher base level
-      octaves: 6, // more detail layers
-      persistence: 0.6, // slightly more persistent detail
+      continental: {
+        enabled: true,
+        scale: 0.0005, // Massive landmasses for production
+        amplitude: 80, // Major continental features
+        octaves: 2, // Simple, broad shapes
+        persistence: 0.5,
+      },
+      regional: {
+        enabled: true,
+        scale: 0.005, // Mountain ranges and valleys
+        amplitude: 40, // Significant elevation changes
+        octaves: 4, // More detail for production
+        persistence: 0.65,
+      },
+      local: {
+        enabled: true,
+        scale: 0.03, // Surface detail
+        amplitude: 12, // Moderate surface variation
+        octaves: 6, // High detail for production
+        persistence: 0.45,
+      },
+      baseHeight: 10, // higher base level
       mapSize: 10, // larger map for production
     },
   },

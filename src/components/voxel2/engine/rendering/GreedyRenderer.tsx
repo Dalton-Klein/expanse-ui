@@ -109,7 +109,7 @@ export default function GreedyRenderer({
       {meshResults.results.map(
         (result: any, index: any) => (
           <mesh
-            key={`chunk-${chunks[index].position.x}-${chunks[index].position.z}`}
+            key={`chunk-${chunks[index].position.x}-${chunks[index].position.y}-${chunks[index].position.z}`}
             geometry={result.geometry}
             position={[chunks[index].position.x, chunks[index].position.y, chunks[index].position.z]}
             castShadow
