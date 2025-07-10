@@ -44,6 +44,7 @@ export default function VoxelWorld2() {
       fps: 0,
       triangles: 0,
       chunks: 0,
+      avgGenerationTime: 0,
     });
 
   // Camera tracking state for debug panel
@@ -107,6 +108,7 @@ export default function VoxelWorld2() {
         ...prev,
         chunks: stats.chunkCount,
         triangles: stats.totalTriangles,
+        avgGenerationTime: stats.avgGenerationTime,
       }));
     },
     []

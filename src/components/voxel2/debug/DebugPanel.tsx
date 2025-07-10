@@ -188,7 +188,7 @@ export default function DebugPanel({
               }
             />
           </div>
-          <div className="debug-item">
+          {/* <div className="debug-item">
             <span className="label">Render Distance:</span>
             <input
               type="range"
@@ -204,7 +204,7 @@ export default function DebugPanel({
             <span className="value">
               {terrainConfig.renderDistance}
             </span>
-          </div>
+          </div> */}
         </div>
 
         <div className="debug-section">
@@ -264,6 +264,36 @@ export default function DebugPanel({
                   Two Cubes
                 </option>
               </select>
+            </div>
+          )}
+
+          {terrainConfig.generation.algorithm ===
+            GenerationAlgorithm.NOISE && (
+            <div className="debug-item">
+              <span className="label">Map Size:</span>
+              <input
+                type="range"
+                min="1"
+                max="20"
+                value={
+                  terrainConfig.generation.noise.mapSize
+                }
+                onChange={(e) =>
+                  handleTerrainConfigUpdate({
+                    generation: {
+                      ...terrainConfig.generation,
+                      noise: {
+                        ...terrainConfig.generation.noise,
+                        mapSize: parseInt(e.target.value),
+                      },
+                    },
+                  })
+                }
+              />
+              <span className="value">
+                {terrainConfig.generation.noise.mapSize}x
+                {terrainConfig.generation.noise.mapSize}
+              </span>
             </div>
           )}
         </div>
@@ -509,6 +539,10 @@ export default function DebugPanel({
           <div className="debug-item">
             <span className="label">Chunks:</span>
             <span className="value">{metrics.chunks}</span>
+          </div>
+          <div className="debug-item">
+            <span className="label">Avg Gen Time:</span>
+            <span className="value">{metrics.avgGenerationTime.toFixed(2)} ms</span>
           </div>
         </div>
 

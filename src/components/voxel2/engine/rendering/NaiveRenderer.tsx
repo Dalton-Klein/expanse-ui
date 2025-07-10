@@ -93,7 +93,7 @@ export default function NaiveRenderer({
       onMeshGenerated({
         chunkCount: chunks.length,
         totalTriangles: meshResults.totalTriangles,
-        avgGenerationTime: meshResults.generationTime,
+        avgGenerationTime: chunks.length > 0 ? meshResults.generationTime / chunks.length : 0,
       });
     }
   }, [meshResults, onMeshGenerated, chunks.length]);
@@ -117,8 +117,8 @@ function renderChunk(
   normals: number[],
   colors: number[]
 ): void {
-  const chunkWorldX = chunk.position.x * CHUNK_SIZE;
-  const chunkWorldZ = chunk.position.z * CHUNK_SIZE;
+  const chunkWorldX = chunk.position.x;
+  const chunkWorldZ = chunk.position.z;
 
   for (let x = 1; x <= CHUNK_SIZE; x++) {
     for (let y = 1; y <= CHUNK_SIZE; y++) {

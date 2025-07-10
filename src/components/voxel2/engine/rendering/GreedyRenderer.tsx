@@ -111,6 +111,7 @@ export default function GreedyRenderer({
           <mesh
             key={`chunk-${chunks[index].position.x}-${chunks[index].position.z}`}
             geometry={result.geometry}
+            position={[chunks[index].position.x, chunks[index].position.y, chunks[index].position.z]}
             castShadow
             receiveShadow
           >

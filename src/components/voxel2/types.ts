@@ -107,6 +107,7 @@ export interface NoiseConfig {
   baseHeight: number; // minimum terrain height
   octaves: number; // number of noise layers
   persistence: number; // amplitude decay between octaves
+  mapSize: number; // number of chunks in X and Z directions (NxN grid)
 }
 
 // Terrain generation configuration
@@ -115,6 +116,14 @@ export interface GenerationConfig {
   debugPattern: DebugPattern; // used when algorithm is DEBUG_PATTERN
   seed: number; // seed for procedural generation
   noise: NoiseConfig; // noise generation settings
+}
+
+// Performance metrics for debug panel
+export interface PerformanceMetrics {
+  fps: number;
+  triangles: number;
+  chunks: number;
+  avgGenerationTime: number; // average milliseconds per chunk
 }
 
 // Performance configuration

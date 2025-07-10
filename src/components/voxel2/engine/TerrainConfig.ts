@@ -40,6 +40,7 @@ export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
       baseHeight: 5, // minimum terrain height
       octaves: 4, // number of noise layers
       persistence: 0.5, // amplitude decay between octaves
+      mapSize: 1, // default to single chunk (1x1 grid)
     },
   },
 
@@ -86,6 +87,7 @@ export const PRODUCTION_TERRAIN_CONFIG: TerrainConfig = {
       baseHeight: 8, // higher base level
       octaves: 6, // more detail layers
       persistence: 0.6, // slightly more persistent detail
+      mapSize: 10, // larger map for production
     },
   },
 
