@@ -64,9 +64,10 @@ export class TerrainGenerator {
           }
         }
         
-        // Debug: Print chunk data for first chunk only
+        // Debug: Print chunk data and validate padding for first chunk only
         if (chunkX === 0 && chunkZ === 0) {
-          ChunkHelpers.debugPrintChunk(chunk, `${config.generation.algorithm === GenerationAlgorithm.NOISE ? 'Noise' : config.generation.debugPattern} Pattern`);
+          const label = config.generation.algorithm === GenerationAlgorithm.NOISE ? 'Noise' : config.generation.debugPattern;
+          ChunkHelpers.validatePadding(chunk, `${label} Pattern`);
         }
         
         chunks.push(chunk);

@@ -1,4 +1,9 @@
-import { ChunkData, Position3D, VoxelType, TerrainConfig } from "../../types";
+import {
+  ChunkData,
+  Position3D,
+  VoxelType,
+  TerrainConfig,
+} from "../../types";
 import { ChunkHelpers } from "../chunk-generation/ChunkHelpers";
 import { CHUNK_SIZE } from "../TerrainConfig";
 import { PerlinNoise } from "./perlinNoise";
@@ -20,7 +25,7 @@ export class NoiseGenerator {
   /**
    * Generate a single chunk using Perlin noise
    * Creates a 32x32 height map (including padding) and converts to voxel data
-   * 
+   *
    * @param position Chunk position in world coordinates
    * @param config Terrain configuration
    * @returns ChunkData compatible with greedy meshing system
@@ -38,7 +43,10 @@ export class NoiseGenerator {
     let chunk = ChunkHelpers.createEmpty(position);
 
     // Generate height map for the chunk including padding
-    const heightMap = this.generateHeightMap(position, config);
+    const heightMap = this.generateHeightMap(
+      position,
+      config
+    );
 
     // Convert height map to voxel data
     this.populateChunkFromHeightMap(chunk, heightMap);
@@ -49,7 +57,7 @@ export class NoiseGenerator {
   /**
    * Generate a 32x32 height map for a chunk position
    * Includes padding for seamless chunk boundaries
-   * 
+   *
    * @param chunkPosition Chunk position in world coordinates
    * @param config Terrain configuration
    * @returns 32x32 height map (0-based heights)
@@ -67,7 +75,11 @@ export class NoiseGenerator {
     // Generate height for each position including padding
     for (let localZ = 0; localZ < CHUNK_SIZE_P; localZ++) {
       heightMap[localZ] = [];
-      for (let localX = 0; localX < CHUNK_SIZE_P; localX++) {
+      for (
+        let localX = 0;
+        localX < CHUNK_SIZE_P;
+        localX++
+      ) {
         // Convert local chunk coordinates to world coordinates
         // Subtract 1 to account for padding (padding extends 1 block in each direction)
         const worldX = chunkPosition.x + localX - 1;
@@ -83,11 +95,15 @@ export class NoiseGenerator {
 
         // Convert noise (-1 to 1) to height (baseHeight to baseHeight + amplitude)
         const height = Math.floor(
-          noiseConfig.baseHeight + (noiseValue + 1) * 0.5 * noiseConfig.amplitude
+          noiseConfig.baseHeight +
+            (noiseValue + 1) * 0.5 * noiseConfig.amplitude
         );
-        
+
         // Clamp height to reasonable bounds
-        heightMap[localZ][localX] = Math.max(1, Math.min(height, CHUNK_SIZE - 1));
+        heightMap[localZ][localX] = Math.max(
+          1,
+          Math.min(height, CHUNK_SIZE - 1)
+        );
       }
     }
 
@@ -97,7 +113,7 @@ export class NoiseGenerator {
   /**
    * Populate chunk voxel data from a height map
    * Creates simple layered terrain: grass on top 2 layers, stone below
-   * 
+   *
    * @param chunk Chunk to populate
    * @param heightMap 32x32 height map
    */
@@ -107,12 +123,11 @@ export class NoiseGenerator {
   ): void {
     const CHUNK_SIZE_P = CHUNK_SIZE + 2; // 32
 
-    for (let x = 0; x < CHUNK_SIZE_P; x++) {
-      for (let z = 0; z < CHUNK_SIZE_P; z++) {
+    for (let x = 1; x <= CHUNK_SIZE; x++) {
+      for (let z = 1; z <= CHUNK_SIZE; z++) {
         const terrainHeight = heightMap[z][x]; // Note: heightMap is [z][x]
-
-        // Fill column from Y=0 up to terrain height
-        for (let y = 0; y <= terrainHeight; y++) {
+        // Fill column from Y=1 up to terrain height
+        for (let y = 1; y <= terrainHeight; y++) {
           let voxelType: VoxelType;
 
           // Simple layering system
@@ -138,5 +153,4 @@ export class NoiseGenerator {
       }
     }
   }
-
 }
