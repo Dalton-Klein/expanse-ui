@@ -5,7 +5,11 @@ import {
   TerrainConfig,
 } from "../../types";
 import { ChunkHelpers } from "../chunk-generation/ChunkHelpers";
-import { CHUNK_SIZE } from "../TerrainConfig";
+import {
+  CHUNK_SIZE,
+  WORLD_HEIGHT,
+  WORLD_SEED,
+} from "../TerrainConfig";
 import { PerlinNoise } from "./perlinNoise";
 
 /**
@@ -208,35 +212,136 @@ export class NoiseGenerator {
         ) {
           const worldY = chunkMinY + localY - 1; // Convert to world Y coordinate
 
+          // Define sea level (25% of world height)
+          const seaLevel = WORLD_HEIGHT * 0.25;
+
+          // Handle water generation first
+          if (
+            worldY <= seaLevel &&
+            worldY > terrainHeight
+          ) {
+            // Fill air spaces below sea level with water
+            ChunkHelpers.setVoxel(chunk, x, localY, z, {
+              type: VoxelType.WATER,
+            });
+            continue;
+          }
+
           // Skip if this position is above the terrain
           if (worldY > terrainHeight) {
             continue; // Leave as air
           }
 
-          // Determine voxel type based on depth from surface and slope
+          // Determine voxel type based on depth from surface, slope, and altitude
           let voxelType: VoxelType;
           const surfaceDepth = terrainHeight - worldY;
 
+          // Calculate world coordinates for snow generation
+          const worldX = chunk.position.x + (x - 1);
+          const worldZ = chunk.position.z + (z - 1);
+
+          // Calculate elevation percentage for snow generation
+          const elevationPercent = worldY / WORLD_HEIGHT;
+
+          // Snow rules based on elevation
+          let hasSnow = false;
+          if (elevationPercent >= 0.96) {
+            // 100% snow above 96% of world height
+            hasSnow = true;
+          } else if (elevationPercent >= 0.93) {
+            // 100% snow above 93% of world height
+            hasSnow =
+              NoiseGenerator.calcPseudoRandomProbability(
+                worldX,
+                worldY,
+                worldZ
+              ) < 0.75;
+          } else if (elevationPercent >= 0.9) {
+            // 50% chance of snow between 90-95% of world height
+            // Use deterministic pseudo-random based on world position for consistency
+            hasSnow =
+              NoiseGenerator.calcPseudoRandomProbability(
+                worldX,
+                worldY,
+                worldZ
+              ) < 0.5;
+          }
+
+          // Sand rules for low-altitude areas (deserts/beaches)
+          let hasSand = false;
+          if (
+            elevationPercent < 0.26 &&
+            surfaceDepth <= 3
+          ) {
+            // Sand in low-altitude areas for top 4 layers
+            hasSand = true;
+          } else if (
+            elevationPercent < 0.28 &&
+            surfaceDepth <= 3
+          ) {
+            // Sand in low-altitude areas for top 4 layers
+            hasSand =
+              NoiseGenerator.calcPseudoRandomProbability(
+                worldX,
+                worldY,
+                worldZ
+              ) < 0.75;
+          } else if (
+            elevationPercent < 0.3 &&
+            surfaceDepth <= 3
+          ) {
+            // Sand in low-altitude areas for top 4 layers
+            hasSand =
+              NoiseGenerator.calcPseudoRandomProbability(
+                worldX,
+                worldY,
+                worldZ
+              ) < 0.5;
+          }
+
           if (surfaceDepth === 0) {
-            // Surface layer: stone on steep slopes, grass on gentle slopes
-            voxelType = isSteepSlope
-              ? VoxelType.STONE
-              : VoxelType.GRASS;
+            // Surface layer: Priority: Snow > Sand > Slope-based materials
+            if (hasSnow) {
+              voxelType = VoxelType.SNOW;
+            } else if (hasSand) {
+              voxelType = VoxelType.SAND;
+            } else {
+              voxelType = isSteepSlope
+                ? VoxelType.STONE
+                : VoxelType.GRASS;
+            }
           } else if (surfaceDepth === 1) {
-            // Second layer: follow surface material for consistency
-            voxelType = isSteepSlope
-              ? VoxelType.STONE
-              : VoxelType.GRASS;
-          } else if (surfaceDepth <= 2) {
-            // Next 2 layers: dirt
-            voxelType = isSteepSlope
-              ? VoxelType.STONE
-              : VoxelType.DIRT;
-          } else if (surfaceDepth <= 4) {
-            // Next 2 layers: stone
-            voxelType = isSteepSlope
-              ? VoxelType.DIRT
-              : VoxelType.STONE;
+            // Second layer: Priority: Snow > Sand > Slope-based materials
+            if (hasSnow) {
+              voxelType = VoxelType.SNOW;
+            } else if (hasSand) {
+              voxelType = VoxelType.SAND;
+            } else {
+              voxelType = isSteepSlope
+                ? VoxelType.STONE
+                : VoxelType.GRASS;
+            }
+          } else if (surfaceDepth === 2) {
+            // Third layer: Sand can still appear here
+            if (hasSnow) {
+              voxelType = VoxelType.SNOW;
+            } else if (hasSand) {
+              voxelType = VoxelType.SAND;
+            } else {
+              voxelType = VoxelType.DIRT;
+            }
+          } else if (surfaceDepth === 3) {
+            // Fourth layer: Sand can still appear here
+            if (hasSnow) {
+              voxelType = VoxelType.SNOW;
+            } else if (hasSand) {
+              voxelType = VoxelType.SAND;
+            } else {
+              voxelType = VoxelType.DIRT;
+            }
+          } else if (surfaceDepth <= 6) {
+            // Deeper layers: stone
+            voxelType = VoxelType.STONE;
           } else {
             // Deep layers: stone
             voxelType = VoxelType.STONE;
@@ -248,5 +353,18 @@ export class NoiseGenerator {
         }
       }
     }
+  }
+
+  public static calcPseudoRandomProbability(
+    x: number,
+    y: number,
+    z: number
+  ) {
+    const randomSeed =
+      (x * 2785255) ^
+      (y * 83492791) ^
+      (z * 354453) ^
+      (WORLD_SEED * 858584);
+    return Math.abs(Math.sin(randomSeed)) % 1;
   }
 }

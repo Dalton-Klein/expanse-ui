@@ -283,5 +283,9 @@ export function getTerrainConfigSummary(
 
 // Export performance constants for optimized access
 // These are derived from the default config for compile-time optimization
+export const WORLD_SEED =
+  DEFAULT_TERRAIN_CONFIG.generation.seed;
 export const CHUNK_SIZE = DEFAULT_TERRAIN_CONFIG.chunkSize;
 export const VOXEL_SIZE = DEFAULT_TERRAIN_CONFIG.voxelSize;
+export const WORLD_HEIGHT =
+  DEFAULT_TERRAIN_CONFIG.worldHeight;
