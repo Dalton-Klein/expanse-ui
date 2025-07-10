@@ -841,13 +841,15 @@ export class GreedyMesher {
       case VoxelType.STONE:
         return { r: 0.5, g: 0.5, b: 0.5 };
       case VoxelType.GRASS:
-        return { r: 0.0, g: 0.8, b: 0.0 };
+        return { r: 0.25, g: 0.61, b: 0.04 };
       case VoxelType.DIRT:
         return { r: 0.6, g: 0.4, b: 0.2 };
       case VoxelType.SAND:
         return { r: 1.0, g: 1.0, b: 0.6 };
       case VoxelType.WATER:
         return { r: 0.0, g: 0.4, b: 0.8 };
+      case VoxelType.SNOW:
+        return { r: 1.0, g: 0.98, b: 0.98 };
       default:
         return { r: 1.0, g: 0.0, b: 1.0 }; // Magenta for unknown types
     }

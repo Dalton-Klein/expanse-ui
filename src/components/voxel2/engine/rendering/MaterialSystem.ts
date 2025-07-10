@@ -11,6 +11,7 @@ export const VoxelColors: { [key in VoxelType]: string } = {
   [VoxelType.DIRT]: "#8B4513", // Saddle brown
   [VoxelType.SAND]: "#F4A460", // Sandy brown
   [VoxelType.WATER]: "#4682B4", // Steel blue
+  [VoxelType.SNOW]: "#FFFAFA", // White
 };
 
 // TODO: Add material properties

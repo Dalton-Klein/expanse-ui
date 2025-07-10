@@ -31,6 +31,7 @@ const voxelColors: Record<VoxelType, THREE.Color> = {
   [VoxelType.DIRT]: new THREE.Color(0x8d6e63),
   [VoxelType.SAND]: new THREE.Color(0xfdd835),
   [VoxelType.WATER]: new THREE.Color(0x2196f3),
+  [VoxelType.SNOW]: new THREE.Color(0xfffafa), // White for snow
 };
 
 export default function NaiveRenderer({
@@ -93,7 +94,10 @@ export default function NaiveRenderer({
       onMeshGenerated({
         chunkCount: chunks.length,
         totalTriangles: meshResults.totalTriangles,
-        avgGenerationTime: chunks.length > 0 ? meshResults.generationTime / chunks.length : 0,
+        avgGenerationTime:
+          chunks.length > 0
+            ? meshResults.generationTime / chunks.length
+            : 0,
       });
     }
   }, [meshResults, onMeshGenerated, chunks.length]);

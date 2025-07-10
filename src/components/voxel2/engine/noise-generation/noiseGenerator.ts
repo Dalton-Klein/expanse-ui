@@ -144,8 +144,42 @@ export class NoiseGenerator {
   }
 
   /**
+   * Calculate slope at a given position in the height map
+   * Returns the maximum height difference to adjacent positions
+   *
+   * @param heightMap 32x32 height map
+   * @param x X coordinate in height map
+   * @param z Z coordinate in height map
+   * @returns Maximum height difference to neighbors
+   */
+  private static calculateSlope(
+    heightMap: number[][],
+    x: number,
+    z: number
+  ): number {
+    const centerHeight = heightMap[z][x];
+    const northHeight =
+      heightMap[z - 1]?.[x] ?? centerHeight;
+    const southHeight =
+      heightMap[z + 1]?.[x] ?? centerHeight;
+    const westHeight =
+      heightMap[z]?.[x - 1] ?? centerHeight;
+    const eastHeight =
+      heightMap[z]?.[x + 1] ?? centerHeight;
+
+    // Return maximum height difference in any direction
+    return Math.max(
+      Math.abs(centerHeight - northHeight),
+      Math.abs(centerHeight - southHeight),
+      Math.abs(centerHeight - westHeight),
+      Math.abs(centerHeight - eastHeight)
+    );
+  }
+
+  /**
    * Populate chunk voxel data from a height map
    * Creates simple layered terrain: grass on top 2 layers, stone below
+   * Uses slope detection to place stone on steep surfaces
    *
    * @param chunk Chunk to populate
    * @param heightMap 32x32 height map (contains world Y coordinates)
@@ -162,6 +196,10 @@ export class NoiseGenerator {
       for (let z = 1; z <= CHUNK_SIZE; z++) {
         const terrainHeight = heightMap[z][x]; // Note: heightMap is [z][x], contains world Y coordinate
 
+        // Calculate slope for this position (once per column)
+        const slope = this.calculateSlope(heightMap, x, z);
+        const isSteepSlope = slope >= 3; // Steep if height difference is 2+ blocks
+
         // For each Y position in this chunk
         for (
           let localY = 1;
@@ -175,22 +213,30 @@ export class NoiseGenerator {
             continue; // Leave as air
           }
 
-          // Determine voxel type based on depth from surface
+          // Determine voxel type based on depth from surface and slope
           let voxelType: VoxelType;
           const surfaceDepth = terrainHeight - worldY;
 
           if (surfaceDepth === 0) {
-            // Surface layer: grass
-            voxelType = VoxelType.GRASS;
+            // Surface layer: stone on steep slopes, grass on gentle slopes
+            voxelType = isSteepSlope
+              ? VoxelType.STONE
+              : VoxelType.GRASS;
           } else if (surfaceDepth === 1) {
-            // Second layer: grass (for thicker grass layer)
-            voxelType = VoxelType.GRASS;
+            // Second layer: follow surface material for consistency
+            voxelType = isSteepSlope
+              ? VoxelType.STONE
+              : VoxelType.GRASS;
           } else if (surfaceDepth <= 2) {
             // Next 2 layers: dirt
-            voxelType = VoxelType.DIRT;
+            voxelType = isSteepSlope
+              ? VoxelType.STONE
+              : VoxelType.DIRT;
           } else if (surfaceDepth <= 4) {
             // Next 2 layers: stone
-            voxelType = VoxelType.STONE;
+            voxelType = isSteepSlope
+              ? VoxelType.DIRT
+              : VoxelType.STONE;
           } else {
             // Deep layers: stone
             voxelType = VoxelType.STONE;

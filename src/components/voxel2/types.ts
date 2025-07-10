@@ -16,6 +16,7 @@ export enum VoxelType {
   DIRT = 3,
   SAND = 4,
   WATER = 5,
+  SNOW = 6,
 }
 
 // Basic 3D position
