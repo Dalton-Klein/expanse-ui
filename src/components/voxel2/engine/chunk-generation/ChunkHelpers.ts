@@ -61,14 +61,14 @@ export class ChunkHelpers {
     z: number,
     voxel: Voxel
   ): boolean {
-    // TODO: Add bounds checking
+    const CHUNK_SIZE_P = CHUNK_SIZE + 2;
     if (
       x < 0 ||
-      x >= CHUNK_SIZE ||
+      x >= CHUNK_SIZE_P ||
       y < 0 ||
-      y >= CHUNK_SIZE ||
+      y >= CHUNK_SIZE_P ||
       z < 0 ||
-      z >= CHUNK_SIZE
+      z >= CHUNK_SIZE_P
     ) {
       return false;
     }
@@ -86,12 +86,6 @@ export class ChunkHelpers {
       z: startPos.z + CHUNK_SIZE - 1,
     };
   }
-
-  // TODO: Add chunk utilities:
-  // - Chunk validation
-  // - Chunk serialization
-  // - Chunk comparison
-  // - Chunk statistics
 }
 
 // TODO: Add chunk management system

@@ -24,17 +24,19 @@ export class ChunkGenerator {
     const voxelType = VoxelType.GRASS;
     const chunkSizeP = CHUNK_SIZE + 2; // Padding for neighbor chunks
     // 2: Interate through x and z with assumed y, and fill chunk with flat terrain
-    for (let x = 0; x < chunkSizeP; x++) {
-      for (let z = 0; z < chunkSizeP; z++) {
+    for (let x = 1; x <= CHUNK_SIZE; x++) {
+      // 1 to 30                                                                                                                │ │
+      for (let z = 1; z <= CHUNK_SIZE; z++) {
+        // 1 to 30
         // Fill from Y=0 to Y=7 with blocks
-        for (let y = 0; y < flatChunkHeight; y++) {
+        for (let y = 1; y <= flatChunkHeight; y++) {
+          // 1 to flatChunkHeight
           // Make a large cube of grass, accounting for padding of neighbor chunks
           // Assume we can create faces at chunk borders in debug mode (make neighbor data remain as air)
-          if (x !== 0 && z !== 0 && y !== 0) {
-            ChunkHelpers.setVoxel(chunk, x, y, z, {
-              type: voxelType,
-            });
-          }
+
+          ChunkHelpers.setVoxel(chunk, x, y, z, {
+            type: voxelType,
+          });
         }
       }
     }

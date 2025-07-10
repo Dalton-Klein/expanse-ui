@@ -42,12 +42,12 @@ export default function NaiveRenderer({
   // Generate geometry from all chunks with performance tracking
   const meshResults = React.useMemo(() => {
     const startTime = performance.now();
-    
+
     const geometry = new THREE.BufferGeometry();
     const vertices: number[] = [];
     const normals: number[] = [];
     const colors: number[] = [];
-    
+
     // Render each chunk
     chunks.forEach((chunk) => {
       renderChunk(chunk, vertices, normals, colors);
@@ -120,9 +120,9 @@ function renderChunk(
   const chunkWorldX = chunk.position.x * CHUNK_SIZE;
   const chunkWorldZ = chunk.position.z * CHUNK_SIZE;
 
-  for (let x = 0; x < CHUNK_SIZE; x++) {
-    for (let y = 0; y < CHUNK_SIZE; y++) {
-      for (let z = 0; z < CHUNK_SIZE; z++) {
+  for (let x = 1; x <= CHUNK_SIZE; x++) {
+    for (let y = 1; y <= CHUNK_SIZE; y++) {
+      for (let z = 1; z <= CHUNK_SIZE; z++) {
         const voxel = ChunkHelpers.getVoxel(chunk, x, y, z);
 
         if (!voxel || voxel.type === VoxelType.AIR) {
@@ -130,9 +130,9 @@ function renderChunk(
         }
 
         // World position for this voxel
-        const worldX = chunkWorldX + x;
-        const worldY = y;
-        const worldZ = chunkWorldZ + z;
+        const worldX = chunkWorldX + (x - 1);
+        const worldY = y - 1;
+        const worldZ = chunkWorldZ + (z - 1);
 
         // Generate faces for this voxel
         generateVoxelFaces(

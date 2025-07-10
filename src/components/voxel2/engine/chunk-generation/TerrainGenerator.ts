@@ -7,6 +7,7 @@ import {
   GenerationAlgorithm,
 } from "../../types";
 import { ChunkGenerator } from "./ChunkGenerator";
+import { ChunkHelpers } from "./ChunkHelpers";
 import { NoiseGenerator } from "../noise-generation/noiseGenerator";
 
 // This class is the parent for noise generation algorithms
@@ -62,6 +63,12 @@ export class TerrainGenerator {
               chunk = ChunkGenerator.generateFlatChunk(position);
           }
         }
+        
+        // Debug: Print chunk data for first chunk only
+        if (chunkX === 0 && chunkZ === 0) {
+          ChunkHelpers.debugPrintChunk(chunk, `${config.generation.algorithm === GenerationAlgorithm.NOISE ? 'Noise' : config.generation.debugPattern} Pattern`);
+        }
+        
         chunks.push(chunk);
       }
     }
