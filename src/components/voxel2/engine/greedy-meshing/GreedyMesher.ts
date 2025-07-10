@@ -9,6 +9,7 @@ import {
 import { CHUNK_SIZE } from "../TerrainConfig";
 import { ChunkHelpers } from "../chunk-generation/ChunkHelpers";
 import { ChunkGenerator } from "../chunk-generation/ChunkGenerator";
+import { getRGB } from "../rendering/MaterialSystem";
 
 // Type for axis columns using native 32-bit integers
 // Each axis stores columns in different arrangements (same as TanTanDev):
@@ -830,29 +831,15 @@ export class GreedyMesher {
   }
 
   /**
-   * Get color for a block type
+   * Get color for a block type - now uses MaterialSystem as single source of truth
    */
   private static getBlockTypeColor(blockType: VoxelType): {
     r: number;
     g: number;
     b: number;
   } {
-    switch (blockType) {
-      case VoxelType.STONE:
-        return { r: 0.5, g: 0.5, b: 0.5 };
-      case VoxelType.GRASS:
-        return { r: 0.25, g: 0.61, b: 0.04 };
-      case VoxelType.DIRT:
-        return { r: 0.6, g: 0.4, b: 0.2 };
-      case VoxelType.SAND:
-        return { r: 1.0, g: 1.0, b: 0.6 };
-      case VoxelType.WATER:
-        return { r: 0.0, g: 0.4, b: 0.8 };
-      case VoxelType.SNOW:
-        return { r: 1.0, g: 0.98, b: 0.98 };
-      default:
-        return { r: 1.0, g: 0.0, b: 1.0 }; // Magenta for unknown types
-    }
+    const [r, g, b] = getRGB(blockType);
+    return { r, g, b };
   }
 
   private static customGreedyQuadGenerator(

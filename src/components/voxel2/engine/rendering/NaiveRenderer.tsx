@@ -8,6 +8,7 @@ import {
 } from "../../types";
 import { CHUNK_SIZE } from "../../engine/TerrainConfig";
 import { ChunkHelpers } from "../../engine/chunk-generation/ChunkHelpers";
+import { getThreeColor } from "./MaterialSystem";
 
 // Naive cube-per-voxel renderer for voxel2
 // Simple, reliable baseline renderer for debugging and comparison
@@ -23,16 +24,7 @@ interface NaiveRendererProps {
   }) => void;
 }
 
-// Voxel colors for material visualization
-const voxelColors: Record<VoxelType, THREE.Color> = {
-  [VoxelType.AIR]: new THREE.Color(0x000000),
-  [VoxelType.STONE]: new THREE.Color(0x808080),
-  [VoxelType.GRASS]: new THREE.Color(0x4caf50),
-  [VoxelType.DIRT]: new THREE.Color(0x8d6e63),
-  [VoxelType.SAND]: new THREE.Color(0xfdd835),
-  [VoxelType.WATER]: new THREE.Color(0x2196f3),
-  [VoxelType.SNOW]: new THREE.Color(0xfffafa), // White for snow
-};
+// Voxel colors now sourced from MaterialSystem - single source of truth
 
 export default function NaiveRenderer({
   chunks,
@@ -171,7 +163,7 @@ function generateVoxelFaces(
   normals: number[],
   colors: number[]
 ): void {
-  const color = voxelColors[voxelType];
+  const color = getThreeColor(voxelType);
 
   // Face checks: only render face if neighbor is air
   const faces = [
