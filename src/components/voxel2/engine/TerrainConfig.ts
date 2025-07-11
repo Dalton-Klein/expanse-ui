@@ -36,21 +36,21 @@ export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
     noise: {
       continental: {
         enabled: true,
-        scale: 0.002, // Very large features for landmasses
+        scale: 0.0015, // Very large features for landmasses
         amplitude: 165, // Major elevation changes
         octaves: 2, // Simple, broad shapes
         persistence: 0.5,
       },
       regional: {
         enabled: true,
-        scale: 0.007, // Medium features for hills and valleys
+        scale: 0.003, // Medium features for hills and valleys
         amplitude: 80, // Moderate elevation changes
         octaves: 3, // More detail than continental
         persistence: 0.6,
       },
       local: {
         enabled: true,
-        scale: 0.08, // Fine details for surface roughness
+        scale: 0.04, // Fine details for surface roughness
         amplitude: 5, // Small elevation changes
         octaves: 2, // High detail
         persistence: 0.4,

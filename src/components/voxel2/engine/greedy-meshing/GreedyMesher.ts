@@ -757,15 +757,13 @@ export class GreedyMesher {
       const sampleY = Math.floor(y + dy);
       const sampleZ = Math.floor(z + dz);
       
-      // Enhanced bounds checking - treat chunk boundaries as having no occlusion
-      if (sampleX <= 0 || sampleX >= 31 || 
-          sampleY <= 0 || sampleY >= 31 || 
-          sampleZ <= 0 || sampleZ >= 31) {
-        totalWeight += 1;
-        continue; // No occlusion at chunk boundaries
-      }
+      // Clamp coordinates to chunk boundaries instead of skipping
+      // This prevents bright highlights along chunk seams
+      const clampedX = Math.max(1, Math.min(30, sampleX));
+      const clampedY = Math.max(1, Math.min(30, sampleY));
+      const clampedZ = Math.max(1, Math.min(30, sampleZ));
       
-      const voxel = ChunkHelpers.getVoxel(chunk, sampleX, sampleY, sampleZ);
+      const voxel = ChunkHelpers.getVoxel(chunk, clampedX, clampedY, clampedZ);
       const sampleType = voxel ? voxel.type : VoxelType.AIR;
       
       if (sampleType !== VoxelType.AIR) {
@@ -807,14 +805,12 @@ export class GreedyMesher {
       const sampleY = Math.floor(y + dy);
       const sampleZ = Math.floor(z + dz);
       
-      // Skip if near chunk boundaries to avoid artifacts
-      if (sampleX <= 1 || sampleX >= 30 || 
-          sampleY <= 1 || sampleY >= 30 || 
-          sampleZ <= 1 || sampleZ >= 30) {
-        continue;
-      }
+      // Clamp coordinates for water AO to maintain consistency
+      const clampedX = Math.max(1, Math.min(30, sampleX));
+      const clampedY = Math.max(1, Math.min(30, sampleY));
+      const clampedZ = Math.max(1, Math.min(30, sampleZ));
       
-      const voxel = ChunkHelpers.getVoxel(chunk, sampleX, sampleY, sampleZ);
+      const voxel = ChunkHelpers.getVoxel(chunk, clampedX, clampedY, clampedZ);
       const sampleType = voxel ? voxel.type : VoxelType.AIR;
       
       if (sampleType === VoxelType.STONE) {
