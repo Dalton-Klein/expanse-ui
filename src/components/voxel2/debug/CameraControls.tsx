@@ -32,6 +32,14 @@ export default function CameraControls({
   // Mouse movement tracking
   const eulerRef = useRef(new THREE.Euler(0, 0, 0, "YXZ"));
 
+  // Set initial camera rotation to face south on first mount
+  // **TODO REMOVE** This is temp to face south for debugging speed
+  useEffect(() => {
+    // Face south by rotating 180 degrees around Y axis
+    eulerRef.current.y = Math.PI; // 180 degrees in radians
+    camera.quaternion.setFromEuler(eulerRef.current);
+  }, []); // Run once on mount
+
   useEffect(() => {
     if (!enabled) return;
 

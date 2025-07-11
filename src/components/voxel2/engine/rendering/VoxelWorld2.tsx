@@ -130,7 +130,7 @@ export default function VoxelWorld2() {
 
       {/* 3D Scene */}
       <Canvas
-        camera={{ position: [16, 10, 16], fov: 60 }}
+        camera={{ position: [38, 41, -29], fov: 60 }}
         shadows
         gl={{ antialias: true }}
       >
