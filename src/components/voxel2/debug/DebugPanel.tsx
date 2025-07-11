@@ -297,124 +297,120 @@ export default function DebugPanel({
               </div>
 
               {/* Noise Layers Section */}
-              <div className="debug-subsection">
-                <h5>Noise Layers</h5>
-
-                {/* Continental Layer */}
-                <div className="noise-layer">
-                  <div className="debug-item">
-                    <span className="label">
-                      Continental:
-                    </span>
-                    <button
-                      className={`wireframe-toggle ${
-                        terrainConfig.generation.noise
-                          .continental.enabled
-                          ? "active"
-                          : ""
-                      }`}
-                      onClick={() =>
-                        handleTerrainConfigUpdate({
-                          generation: {
-                            ...terrainConfig.generation,
-                            noise: {
-                              ...terrainConfig.generation
-                                .noise,
-                              continental: {
-                                ...terrainConfig.generation
-                                  .noise.continental,
-                                enabled:
-                                  !terrainConfig.generation
-                                    .noise.continental
-                                    .enabled,
-                              },
-                            },
-                          },
-                        })
-                      }
-                    >
-                      {terrainConfig.generation.noise
+              {/* Continental Layer */}
+              <div className="noise-layer">
+                <div className="debug-item">
+                  <span className="label">
+                    Continental Noise:
+                  </span>
+                  <button
+                    className={`wireframe-toggle ${
+                      terrainConfig.generation.noise
                         .continental.enabled
-                        ? "ON"
-                        : "OFF"}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Regional Layer */}
-                <div className="noise-layer">
-                  <div className="debug-item">
-                    <span className="label">Regional:</span>
-                    <button
-                      className={`wireframe-toggle ${
-                        terrainConfig.generation.noise
-                          .regional.enabled
-                          ? "active"
-                          : ""
-                      }`}
-                      onClick={() =>
-                        handleTerrainConfigUpdate({
-                          generation: {
-                            ...terrainConfig.generation,
-                            noise: {
+                        ? "active"
+                        : ""
+                    }`}
+                    onClick={() =>
+                      handleTerrainConfigUpdate({
+                        generation: {
+                          ...terrainConfig.generation,
+                          noise: {
+                            ...terrainConfig.generation
+                              .noise,
+                            continental: {
                               ...terrainConfig.generation
-                                .noise,
-                              regional: {
-                                ...terrainConfig.generation
-                                  .noise.regional,
-                                enabled:
-                                  !terrainConfig.generation
-                                    .noise.regional.enabled,
-                              },
+                                .noise.continental,
+                              enabled:
+                                !terrainConfig.generation
+                                  .noise.continental
+                                  .enabled,
                             },
                           },
-                        })
-                      }
-                    >
-                      {terrainConfig.generation.noise
+                        },
+                      })
+                    }
+                  >
+                    {terrainConfig.generation.noise
+                      .continental.enabled
+                      ? "ON"
+                      : "OFF"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Regional Layer */}
+              <div className="noise-layer">
+                <div className="debug-item">
+                  <span className="label">Regional Noise:</span>
+                  <button
+                    className={`wireframe-toggle ${
+                      terrainConfig.generation.noise
                         .regional.enabled
-                        ? "ON"
-                        : "OFF"}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Local Layer */}
-                <div className="noise-layer">
-                  <div className="debug-item">
-                    <span className="label">Local:</span>
-                    <button
-                      className={`wireframe-toggle ${
-                        terrainConfig.generation.noise.local
-                          .enabled
-                          ? "active"
-                          : ""
-                      }`}
-                      onClick={() =>
-                        handleTerrainConfigUpdate({
-                          generation: {
-                            ...terrainConfig.generation,
-                            noise: {
+                        ? "active"
+                        : ""
+                    }`}
+                    onClick={() =>
+                      handleTerrainConfigUpdate({
+                        generation: {
+                          ...terrainConfig.generation,
+                          noise: {
+                            ...terrainConfig.generation
+                              .noise,
+                            regional: {
                               ...terrainConfig.generation
-                                .noise,
-                              local: {
-                                ...terrainConfig.generation
-                                  .noise.local,
-                                enabled:
-                                  !terrainConfig.generation
-                                    .noise.local.enabled,
-                              },
+                                .noise.regional,
+                              enabled:
+                                !terrainConfig.generation
+                                  .noise.regional.enabled,
                             },
                           },
-                        })
-                      }
-                    >
-                      {terrainConfig.generation.noise.local
+                        },
+                      })
+                    }
+                  >
+                    {terrainConfig.generation.noise
+                      .regional.enabled
+                      ? "ON"
+                      : "OFF"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Local Layer */}
+              <div className="noise-layer">
+                <div className="debug-item">
+                  <span className="label">Local Noise:</span>
+                  <button
+                    className={`wireframe-toggle ${
+                      terrainConfig.generation.noise.local
                         .enabled
-                        ? "ON"
-                        : "OFF"}
-                    </button>
-                  </div>
+                        ? "active"
+                        : ""
+                    }`}
+                    onClick={() =>
+                      handleTerrainConfigUpdate({
+                        generation: {
+                          ...terrainConfig.generation,
+                          noise: {
+                            ...terrainConfig.generation
+                              .noise,
+                            local: {
+                              ...terrainConfig.generation
+                                .noise.local,
+                              enabled:
+                                !terrainConfig.generation
+                                  .noise.local.enabled,
+                            },
+                          },
+                        },
+                      })
+                    }
+                  >
+                    {terrainConfig.generation.noise.local
+                      .enabled
+                      ? "ON"
+                      : "OFF"}
+                  </button>
                 </div>
               </div>
             </>
@@ -605,30 +601,6 @@ export default function DebugPanel({
               }
             >
               {terrainConfig.debug.showChunkBorders
-                ? "ON"
-                : "OFF"}
-            </button>
-          </div>
-          <div className="debug-item">
-            <span className="label">Naive Comparison:</span>
-            <button
-              className={`wireframe-toggle ${
-                terrainConfig.debug.enableNaiveComparison
-                  ? "active"
-                  : ""
-              }`}
-              onClick={() =>
-                handleTerrainConfigUpdate({
-                  debug: {
-                    ...terrainConfig.debug,
-                    enableNaiveComparison:
-                      !terrainConfig.debug
-                        .enableNaiveComparison,
-                  },
-                })
-              }
-            >
-              {terrainConfig.debug.enableNaiveComparison
                 ? "ON"
                 : "OFF"}
             </button>
