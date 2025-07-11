@@ -3,6 +3,7 @@ import {
   ChunkData,
   VoxelType,
   ChunkMeshResult,
+  RenderConfig,
 } from "../../types";
 import { CHUNK_SIZE } from "../TerrainConfig";
 import { ChunkHelpers } from "../chunk-generation/ChunkHelpers";
@@ -34,7 +35,8 @@ interface GreedyQuad {
 // It is based on TanTanDevs binary greedy meshing algorithm found here: https://github.com/TanTanDev/binary_greedy_mesher_demo
 export class GreedyMesher {
   public static generateMeshForChunk(
-    chunk: ChunkData
+    chunk: ChunkData,
+    renderConfig?: RenderConfig
   ): ChunkMeshResult {
     const startTime = performance.now();
 
@@ -57,8 +59,8 @@ export class GreedyMesher {
     const greedyQuads = this.generateGreedyQuads(
       faceMasksByBlockType
     );
-    // 4. Generate Geometry (And Later Ambient Occlusion)- Convert greedy quads to vertices with proper winding order
-    result = this.generateGeometry(greedyQuads);
+    // 4. Generate Geometry with Ambient Occlusion- Convert greedy quads to vertices with proper winding order
+    result = this.generateGeometry(greedyQuads, chunk, renderConfig);
 
     const endTime = performance.now();
     result.generationTime = endTime - startTime;
@@ -324,7 +326,7 @@ export class GreedyMesher {
     ];
 
     // Combine all block types into a single solid mask
-    for (const [blockType, axisCols] of blockTypeCols) {
+    for (const [, axisCols] of blockTypeCols) {
       for (let axis = 0; axis < 3; axis++) {
         for (let i = 0; i < CHUNK_SIZE_P; i++) {
           for (let j = 0; j < CHUNK_SIZE_P; j++) {
@@ -654,11 +656,13 @@ export class GreedyMesher {
   }
 
   /**
-   * 4. Generate Three.js geometry from greedy quads
-   * Converts optimized quads to vertices with proper winding order
+   * 4. Generate Three.js geometry from greedy quads with ambient occlusion
+   * Converts optimized quads to vertices with proper winding order and AO
    */
   private static generateGeometry(
-    quads: GreedyQuad[]
+    quads: GreedyQuad[],
+    chunk: ChunkData,
+    renderConfig?: RenderConfig
   ): ChunkMeshResult {
     const vertices: number[] = [];
     const indices: number[] = [];
@@ -667,8 +671,9 @@ export class GreedyMesher {
     let vertexIndex = 0;
 
     for (const quad of quads) {
-      // Generate vertices for this quad based on face direction
-      const quadVertices = this.generateQuadVertices(quad);
+      // Generate vertices and AO values for this quad based on face direction
+      const enableAO = renderConfig?.ambientOcclusion !== false; // Default to true if not specified
+      const { vertices: quadVertices, aoValues } = this.generateQuadVertices(quad, chunk, enableAO);
       // Add vertices
       vertices.push(...quadVertices);
 
@@ -683,10 +688,15 @@ export class GreedyMesher {
       );
       vertexIndex += 4;
 
-      // Add colors for each vertex
-      const color = this.getBlockTypeColor(quad.blockType);
+      // Add colors for each vertex with AO applied
+      const baseColor = this.getBlockTypeColor(quad.blockType);
       for (let i = 0; i < 4; i++) {
-        colors.push(color.r, color.g, color.b);
+        const aoFactor = enableAO ? aoValues[i] : 1.0; // No AO if disabled
+        colors.push(
+          baseColor.r * aoFactor,
+          baseColor.g * aoFactor,
+          baseColor.b * aoFactor
+        );
       }
     }
 
@@ -713,13 +723,153 @@ export class GreedyMesher {
   }
 
   /**
+   * Calculate ambient occlusion for a vertex by sampling neighboring voxels
+   * Returns AO intensity: 0.0 = full occlusion, 1.0 = no occlusion
+   */
+  private static calculateCornerAO(
+    x: number,
+    y: number, 
+    z: number,
+    chunk: ChunkData,
+    currentBlockType?: VoxelType
+  ): number {
+    // Get the voxel at the vertex position to determine context
+    const centerVoxel = ChunkHelpers.getVoxel(chunk, Math.floor(x), Math.floor(y), Math.floor(z));
+    const contextBlockType = currentBlockType || (centerVoxel ? centerVoxel.type : VoxelType.AIR);
+    
+    // Special handling for water surfaces - minimal AO to prevent ocean artifacts
+    if (contextBlockType === VoxelType.WATER) {
+      return this.calculateWaterAO(x, y, z, chunk);
+    }
+    
+    // Corner sampling pattern for better edge detection
+    let occlusionWeight = 0;
+    let totalWeight = 0;
+    
+    // Use 3x3 corner sampling pattern instead of 6-directional for better corner detection
+    const cornerOffsets = [
+      [-0.5, -0.5, -0.5], [-0.5, -0.5, 0.5], [-0.5, 0.5, -0.5], [-0.5, 0.5, 0.5],
+      [0.5, -0.5, -0.5], [0.5, -0.5, 0.5], [0.5, 0.5, -0.5], [0.5, 0.5, 0.5]
+    ];
+    
+    for (const [dx, dy, dz] of cornerOffsets) {
+      const sampleX = Math.floor(x + dx);
+      const sampleY = Math.floor(y + dy);
+      const sampleZ = Math.floor(z + dz);
+      
+      // Enhanced bounds checking - treat chunk boundaries as having no occlusion
+      if (sampleX <= 0 || sampleX >= 31 || 
+          sampleY <= 0 || sampleY >= 31 || 
+          sampleZ <= 0 || sampleZ >= 31) {
+        totalWeight += 1;
+        continue; // No occlusion at chunk boundaries
+      }
+      
+      const voxel = ChunkHelpers.getVoxel(chunk, sampleX, sampleY, sampleZ);
+      const sampleType = voxel ? voxel.type : VoxelType.AIR;
+      
+      if (sampleType !== VoxelType.AIR) {
+        // Calculate occlusion weight based on block type compatibility
+        const weight = this.getOcclusionWeight(contextBlockType, sampleType);
+        occlusionWeight += weight * 0.3; // Stronger per-sample impact for visible AO
+      }
+      totalWeight += 1;
+    }
+    
+    // Calculate AO intensity with block-type specific adjustments
+    const occlusionRatio = totalWeight > 0 ? occlusionWeight / totalWeight : 0;
+    let aoIntensity = Math.max(0.3, 1.0 - occlusionRatio * 1.2);
+    
+    // Additional reduction for terrain blocks to prevent over-darkening
+    const terrainTypes = [VoxelType.DIRT, VoxelType.GRASS, VoxelType.SAND];
+    if (terrainTypes.includes(contextBlockType)) {
+      aoIntensity = Math.max(0.4, aoIntensity);
+    }
+    
+    return aoIntensity;
+  }
+  
+  /**
+   * Specialized AO calculation for water surfaces to minimize artifacts
+   */
+  private static calculateWaterAO(x: number, y: number, z: number, chunk: ChunkData): number {
+    // Very light AO sampling for water to prevent ocean artifacts
+    let occlusionCount = 0;
+    let totalSamples = 0;
+    
+    // Only check immediate horizontal neighbors for water AO
+    const waterOffsets = [
+      [-1, 0, 0], [1, 0, 0], [0, 0, -1], [0, 0, 1]
+    ];
+    
+    for (const [dx, dy, dz] of waterOffsets) {
+      const sampleX = Math.floor(x + dx);
+      const sampleY = Math.floor(y + dy);
+      const sampleZ = Math.floor(z + dz);
+      
+      // Skip if near chunk boundaries to avoid artifacts
+      if (sampleX <= 1 || sampleX >= 30 || 
+          sampleY <= 1 || sampleY >= 30 || 
+          sampleZ <= 1 || sampleZ >= 30) {
+        continue;
+      }
+      
+      const voxel = ChunkHelpers.getVoxel(chunk, sampleX, sampleY, sampleZ);
+      const sampleType = voxel ? voxel.type : VoxelType.AIR;
+      
+      if (sampleType === VoxelType.STONE) {
+        occlusionCount += 1; // Only solid stone creates significant water occlusion
+      }
+      totalSamples += 1;
+    }
+    
+    // Very minimal AO effect for water
+    const occlusionRatio = totalSamples > 0 ? occlusionCount / totalSamples : 0;
+    return Math.max(0.85, 1.0 - occlusionRatio * 0.15); // Very light AO for water
+  }
+  
+  /**
+   * Calculate occlusion weight between two block types
+   * Returns how much the neighbor block should occlude the current block
+   */
+  private static getOcclusionWeight(currentType: VoxelType, neighborType: VoxelType): number {
+    // Minimal self-occlusion for water blocks (reduces ocean artifacts)
+    if (currentType === VoxelType.WATER && neighborType === VoxelType.WATER) {
+      return 0.1; // Very minimal occlusion between water blocks
+    }
+    
+    // Water against terrain - moderate occlusion
+    if (currentType === VoxelType.WATER && neighborType !== VoxelType.WATER) {
+      return 0.4;
+    }
+    
+    // Strong occlusion between similar terrain types
+    const terrainTypes = [VoxelType.DIRT, VoxelType.GRASS, VoxelType.SAND];
+    if (terrainTypes.includes(currentType) && terrainTypes.includes(neighborType)) {
+      return 0.8; // Strong occlusion between terrain blocks
+    }
+    
+    // Maximum occlusion for solid terrain blocks
+    if (neighborType === VoxelType.STONE) {
+      return 1.0;
+    }
+    
+    // Default strong occlusion
+    return 0.9;
+  }
+
+  /**
    * Generate the 4 vertices for a quad based on its face direction
+   * Returns object with vertices and AO values
    */
   private static generateQuadVertices(
-    quad: GreedyQuad
-  ): number[] {
+    quad: GreedyQuad,
+    chunk: ChunkData,
+    enableAO: boolean = true
+  ): { vertices: number[]; aoValues: number[] } {
     const { x, y, z, width, height, faceDirection } = quad;
     const vertices: number[] = [];
+    const aoValues: number[] = [];
 
     // Define quad vertices based on face direction with proper winding order
     switch (faceDirection) {
@@ -738,6 +888,18 @@ export class GreedyMesher {
           y,
           z // Bottom-right
         );
+        
+        // Calculate AO for each vertex
+        if (enableAO) {
+          aoValues.push(
+            this.calculateCornerAO(x, y, z, chunk, quad.blockType),
+            this.calculateCornerAO(x, y, z + height, chunk, quad.blockType),
+            this.calculateCornerAO(x + width, y, z + height, chunk, quad.blockType),
+            this.calculateCornerAO(x + width, y, z, chunk, quad.blockType)
+          );
+        } else {
+          aoValues.push(1.0, 1.0, 1.0, 1.0);
+        }
         break;
       case 1: // -Y face (bottom)
         vertices.push(
@@ -754,6 +916,17 @@ export class GreedyMesher {
           y - 1,
           z + height // Top-right
         );
+        
+        if (enableAO) {
+          aoValues.push(
+            this.calculateCornerAO(x, y - 1, z + height, chunk, quad.blockType),
+            this.calculateCornerAO(x, y - 1, z, chunk, quad.blockType),
+            this.calculateCornerAO(x + width, y - 1, z, chunk, quad.blockType),
+            this.calculateCornerAO(x + width, y - 1, z + height, chunk, quad.blockType)
+          );
+        } else {
+          aoValues.push(1.0, 1.0, 1.0, 1.0);
+        }
         break;
       case 2: // +X face (right)
         vertices.push(
@@ -770,6 +943,17 @@ export class GreedyMesher {
           y,
           z + width // Bottom-right
         );
+        
+        if (enableAO) {
+          aoValues.push(
+            this.calculateCornerAO(x, y, z, chunk, quad.blockType),
+            this.calculateCornerAO(x, y + height, z, chunk, quad.blockType),
+            this.calculateCornerAO(x, y + height, z + width, chunk, quad.blockType),
+            this.calculateCornerAO(x, y, z + width, chunk, quad.blockType)
+          );
+        } else {
+          aoValues.push(1.0, 1.0, 1.0, 1.0);
+        }
         break;
       case 3: // -X face (left)
         vertices.push(
@@ -786,6 +970,17 @@ export class GreedyMesher {
           y + height,
           z + width // Top-right
         );
+        
+        if (enableAO) {
+          aoValues.push(
+            this.calculateCornerAO(x - 1, y + height, z, chunk, quad.blockType),
+            this.calculateCornerAO(x - 1, y, z, chunk, quad.blockType),
+            this.calculateCornerAO(x - 1, y, z + width, chunk, quad.blockType),
+            this.calculateCornerAO(x - 1, y + height, z + width, chunk, quad.blockType)
+          );
+        } else {
+          aoValues.push(1.0, 1.0, 1.0, 1.0);
+        }
         break;
       case 4: // +Z face (front)
         vertices.push(
@@ -802,6 +997,17 @@ export class GreedyMesher {
           y + height,
           z // Top-left
         );
+        
+        if (enableAO) {
+          aoValues.push(
+            this.calculateCornerAO(x, y, z, chunk, quad.blockType),
+            this.calculateCornerAO(x + width, y, z, chunk, quad.blockType),
+            this.calculateCornerAO(x + width, y + height, z, chunk, quad.blockType),
+            this.calculateCornerAO(x, y + height, z, chunk, quad.blockType)
+          );
+        } else {
+          aoValues.push(1.0, 1.0, 1.0, 1.0);
+        }
         break;
       case 5: // -Z face (back)
         vertices.push(
@@ -818,10 +1024,21 @@ export class GreedyMesher {
           y + height,
           z - 1 // Top-left
         );
+        
+        if (enableAO) {
+          aoValues.push(
+            this.calculateCornerAO(x + width, y, z - 1, chunk, quad.blockType),
+            this.calculateCornerAO(x, y, z - 1, chunk, quad.blockType),
+            this.calculateCornerAO(x, y + height, z - 1, chunk, quad.blockType),
+            this.calculateCornerAO(x + width, y + height, z - 1, chunk, quad.blockType)
+          );
+        } else {
+          aoValues.push(1.0, 1.0, 1.0, 1.0);
+        }
         break;
     }
 
-    return vertices;
+    return { vertices, aoValues };
   }
 
   /**
@@ -836,10 +1053,4 @@ export class GreedyMesher {
     return { r, g, b };
   }
 
-  private static customGreedyQuadGenerator(
-    faceMasksByBlockType: Map<VoxelType, AxisColumns[]>
-  ): GreedyQuad[] {
-    const quads: GreedyQuad[] = [];
-    return quads;
-  }
 }

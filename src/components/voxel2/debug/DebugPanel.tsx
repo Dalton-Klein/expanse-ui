@@ -599,6 +599,22 @@ export default function DebugPanel({
             </button>
           </div>
           <div className="debug-item">
+            <span className="label">Ambient Occlusion:</span>
+            <button
+              className={`wireframe-toggle ${
+                config.ambientOcclusion ? "active" : ""
+              }`}
+              onClick={() =>
+                onConfigChange({
+                  ...config,
+                  ambientOcclusion: !config.ambientOcclusion,
+                })
+              }
+            >
+              {config.ambientOcclusion ? "ON" : "OFF"}
+            </button>
+          </div>
+          <div className="debug-item">
             <span className="label">Chunk Borders:</span>
             <button
               className={`wireframe-toggle ${

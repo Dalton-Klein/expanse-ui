@@ -27,6 +27,7 @@ export default function VoxelWorld2() {
       wireframe: false,
       showDebugInfo: true,
       terrainPattern: DebugPattern.FLAT,
+      ambientOcclusion: true,
     });
 
   // Master terrain configuration - single source of truth

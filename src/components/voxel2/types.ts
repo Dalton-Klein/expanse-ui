@@ -54,6 +54,7 @@ export interface RenderConfig {
   wireframe: boolean;
   showDebugInfo: boolean;
   terrainPattern: DebugPattern;
+  ambientOcclusion: boolean;
   // TODO: Add more rendering options
 }
 

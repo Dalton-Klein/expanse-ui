@@ -51,7 +51,7 @@ export default function GreedyRenderer({
     // Process each chunk
     for (const chunk of chunks) {
       const result =
-        GreedyMesher.generateMeshForChunk(chunk);
+        GreedyMesher.generateMeshForChunk(chunk, renderingConfig);
       totalTriangles += result.triangleCount;
       totalTime += result.generationTime;
       results.push(result);
@@ -80,7 +80,7 @@ export default function GreedyRenderer({
       avgGenerationTime:
         chunks.length > 0 ? totalTime / chunks.length : 0,
     };
-  }, [chunks]);
+  }, [chunks, renderingConfig]);
 
   // Cleanup geometries on unmount
   React.useEffect(() => {
