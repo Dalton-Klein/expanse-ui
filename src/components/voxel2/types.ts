@@ -55,6 +55,13 @@ export interface RenderConfig {
   showDebugInfo: boolean;
   terrainPattern: DebugPattern;
   ambientOcclusion: boolean;
+  fog: {
+    enabled: boolean;
+    near: number;
+    far: number;
+    density: number;
+    color: string;
+  };
   // TODO: Add more rendering options
 }
 

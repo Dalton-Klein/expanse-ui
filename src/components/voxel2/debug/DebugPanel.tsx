@@ -583,6 +583,67 @@ export default function DebugPanel({
             </button>
           </div>
           <div className="debug-item">
+            <span className="label">Distance Fog:</span>
+            <button
+              className={`wireframe-toggle ${
+                config.fog.enabled ? "active" : ""
+              }`}
+              onClick={() =>
+                onConfigChange({
+                  ...config,
+                  fog: {
+                    ...config.fog,
+                    enabled: !config.fog.enabled,
+                  },
+                })
+              }
+            >
+              {config.fog.enabled ? "ON" : "OFF"}
+            </button>
+          </div>
+          {config.fog.enabled && (
+            <>
+              <div className="debug-item">
+                <span className="label">Fog Near:</span>
+                <input
+                  type="range"
+                  min="50"
+                  max="200"
+                  value={config.fog.near}
+                  onChange={(e) =>
+                    onConfigChange({
+                      ...config,
+                      fog: {
+                        ...config.fog,
+                        near: parseInt(e.target.value),
+                      },
+                    })
+                  }
+                />
+                <span className="value">{config.fog.near}</span>
+              </div>
+              <div className="debug-item">
+                <span className="label">Fog Far:</span>
+                <input
+                  type="range"
+                  min="250"
+                  max="750"
+                  value={config.fog.far}
+                  onChange={(e) =>
+                    onConfigChange({
+                      ...config,
+                      fog: {
+                        ...config.fog,
+                        far: parseInt(e.target.value),
+                      },
+                    })
+                  }
+                />
+                <span className="value">{config.fog.far}</span>
+              </div>
+            </>
+          )}
+          <div className="debug-item">
             <span className="label">Chunk Borders:</span>
             <button
               className={`wireframe-toggle ${

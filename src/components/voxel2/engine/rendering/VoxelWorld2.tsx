@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { Sky } from "@react-three/drei";
+import * as THREE from "three";
 import DebugPanel from "../../debug/DebugPanel";
 import NaiveRenderer from "./NaiveRenderer";
 import GreedyRenderer from "./GreedyRenderer";
@@ -17,6 +18,25 @@ import { TerrainGenerator } from "../chunk-generation/TerrainGenerator";
 import CameraControls from "../../debug/CameraControls";
 import CameraTracker from "../../debug/CameraTracker";
 
+// Fog component to apply distance fog to the scene
+function FogComponent({ config }: { config: RenderConfig['fog'] }) {
+  const { scene } = useThree();
+  
+  React.useEffect(() => {
+    if (config.enabled) {
+      scene.fog = new THREE.FogExp2(config.color, config.density);
+    } else {
+      scene.fog = null;
+    }
+    
+    return () => {
+      scene.fog = null;
+    };
+  }, [scene, config]);
+  
+  return null;
+}
+
 // Main voxel2 world component - clean, debug-first implementation
 // TODO: Implement incremental functionality with comprehensive debugging
 
@@ -28,6 +48,13 @@ export default function VoxelWorld2() {
       showDebugInfo: true,
       terrainPattern: DebugPattern.FLAT,
       ambientOcclusion: true,
+      fog: {
+        enabled: true,
+        near: 75,
+        far: 650,
+        density: 0.001, // Subtle exponential fog density
+        color: "#87CEEB", // Sky blue color
+      },
     });
 
   // Master terrain configuration - single source of truth
@@ -144,6 +171,9 @@ export default function VoxelWorld2() {
 
         {/* Camera Tracker for Debug Panel */}
         <CameraTracker onUpdate={handleCameraUpdate} />
+
+        {/* Distance Fog */}
+        <FogComponent config={renderConfig.fog} />
 
         {/* Enhanced Lighting Setup */}
         {/* Reduced ambient for better contrast and depth */}
