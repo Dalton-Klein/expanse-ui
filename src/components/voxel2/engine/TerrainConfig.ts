@@ -37,13 +37,13 @@ export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
       continental: {
         enabled: true,
         scale: 0.002, // Very large features for landmasses
-        amplitude: 130, // Major elevation changes
+        amplitude: 165, // Major elevation changes
         octaves: 2, // Simple, broad shapes
         persistence: 0.5,
       },
       regional: {
         enabled: true,
-        scale: 0.011, // Medium features for hills and valleys
+        scale: 0.007, // Medium features for hills and valleys
         amplitude: 80, // Moderate elevation changes
         octaves: 3, // More detail than continental
         persistence: 0.6,
@@ -55,7 +55,7 @@ export const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
         octaves: 2, // High detail
         persistence: 0.4,
       },
-      baseHeight: 10, // minimum terrain height
+      baseHeight: 8, // minimum terrain height
       mapSize: 1, // default to single chunk (1x1 grid)
     },
   },
