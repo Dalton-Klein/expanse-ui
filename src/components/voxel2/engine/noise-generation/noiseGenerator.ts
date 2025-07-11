@@ -97,7 +97,7 @@ export class NoiseGenerator {
         console.log(
           `[DEBUG] Second chunk voxels at x=16, z=16:`
         );
-        for (let y = 1; y <= 3; y++) {
+        for (let y = 0; y <= 2; y++) {
           const voxel = ChunkHelpers.getVoxel(
             chunk,
             16,
@@ -253,7 +253,6 @@ export class NoiseGenerator {
   ): void {
     const CHUNK_SIZE_P = CHUNK_SIZE + 2; // 32
     const chunkMinY = chunk.position.y; // World Y coordinate where this chunk starts
-    const chunkMaxY = chunkMinY + CHUNK_SIZE - 1; // World Y coordinate where this chunk ends
 
     // Determine which edges don't have neighbors
     const isWestEdge = gridPosition.x === 0;
