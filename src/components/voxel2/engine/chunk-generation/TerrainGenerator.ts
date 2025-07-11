@@ -62,7 +62,6 @@ export class TerrainGenerator {
             config.generation.algorithm ===
             GenerationAlgorithm.NOISE
           ) {
-            if (chunkY === 1 ) {
               // Use noise generation
               chunk = NoiseGenerator.generateNoiseChunk(
                 position,
@@ -70,8 +69,6 @@ export class TerrainGenerator {
                 { x: chunkX, y: chunkY, z: chunkZ },
                 gridSize
               );
-
-            }
           } else {
             // Use debug patterns
             switch (config.generation.debugPattern) {

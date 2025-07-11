@@ -240,3 +240,66 @@ The debugging process involved:
 ✅ **SOLVED**: The binary greedy meshing algorithm now correctly handles all test patterns and produces optimal mesh quality with proper face merging.
 
 The implementation successfully combines the efficiency of TanTanDev's binary approach with robust handling of edge cases, resulting in a production-ready voxel meshing solution.
+
+## Critical Bug Fix: Phantom Face Generation at Chunk Boundaries
+
+### The Problem
+
+A critical bug was discovered where phantom faces were being rendered outside chunk boundaries when solid neighboring data was present in the padding. Specifically:
+
+- **Symptom**: A 30x30 face would appear 1 voxel below the chunk boundary, facing downward
+- **Visibility**: The phantom face could be seen when the camera was positioned below the chunk
+- **Condition**: Only occurred when there was solid neighboring data in the padding layer
+
+### Root Cause Analysis
+
+The issue was in the binary greedy meshing face culling logic. Here's what was happening:
+
+1. **Binary Encoding**: Chunks are encoded as 32x32x32 with padding (positions 0-31)
+   - Bit 0: Padding below chunk
+   - Bits 1-30: Actual chunk data  
+   - Bit 31: Padding above chunk
+
+2. **Face Culling**: The algorithm correctly used padding data for neighbor-aware face culling
+   - `thisTypeCol & ~(allSolidCol << 1)` for -Y faces
+   - This correctly prevented faces when solid neighbors existed
+
+3. **The Bug**: Face culling results included ALL 32 bits, including padding positions
+   - Face masks were stored as 30x30x30 but each integer contained 32 bits
+   - Bit 0 (padding position) could be set in face masks
+   - Greedy meshing would find bit 0 and create a quad at y=0
+   - Vertex generation used `y-1`, placing the face at y=-1 (outside chunk bounds)
+
+### The Solution
+
+Applied a bit mask `0x7FFFFFFE` to exclude padding bits (0 and 31) from face mask results:
+
+```typescript
+// CRITICAL: Mask to only include chunk positions (bits 1-30)
+// Excludes padding positions (bits 0 and 31) to prevent phantom faces
+const chunkMask = 0x7FFFFFFE; // 01111111111111111111111111111110
+faceMasks[1][0][z - 1][x - 1] = (thisTypeCol & ~(allSolidCol << 1)) & chunkMask;
+```
+
+This ensures:
+- ✅ Padding data is still used for correct neighbor-aware face culling
+- ✅ Only chunk interior positions (1-30) can generate faces
+- ✅ No phantom faces outside chunk boundaries
+- ✅ Maintains rendering efficiency and correctness
+
+### Key Insights
+
+1. **Subtle 32→30 Transition**: The transition from 32-bit padded data to 30-bit chunk data was incomplete
+2. **Bit Operations Complexity**: The face culling logic was correct, but the result storage included unwanted bits
+3. **Debug Strategy**: Binary logging was essential to understand the bit-level operations
+4. **Neighbor Data Necessity**: Padding data is crucial for efficient face culling - removing it would force rendering unnecessary faces at chunk boundaries
+
+### Debugging Process
+
+The bug was identified through:
+1. Visual observation of phantom faces below chunk boundaries
+2. Debug logging showing all -Y faces had bit 0 set (`00000001`)
+3. Detailed bit operation logging revealing padding bits in face mask results
+4. Understanding that face generation should only occur for chunk interior positions
+
+This was an extremely subtle bug that required deep understanding of the binary encoding, face culling operations, and the relationship between padding data and face generation.
