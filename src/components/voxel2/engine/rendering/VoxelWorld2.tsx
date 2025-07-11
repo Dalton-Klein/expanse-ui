@@ -144,18 +144,38 @@ export default function VoxelWorld2() {
         {/* Camera Tracker for Debug Panel */}
         <CameraTracker onUpdate={handleCameraUpdate} />
 
-        {/* Lighting */}
-        <ambientLight intensity={0.6} />
+        {/* Enhanced Lighting Setup */}
+        {/* Reduced ambient for better contrast and depth */}
+        <ambientLight intensity={0.3} color="#87CEEB" />
+        
+        {/* Main sun light - warmer tone, better positioning */}
         <directionalLight
-          position={[50, 100, 50]}
-          intensity={1.5}
+          position={[100, 150, 50]}
+          intensity={2.0}
+          color="#FFF8DC"
           castShadow
-          shadow-mapSize={[2048, 2048]}
-          shadow-camera-far={500}
-          shadow-camera-left={-100}
-          shadow-camera-right={100}
-          shadow-camera-top={100}
-          shadow-camera-bottom={-100}
+          shadow-mapSize={[4096, 4096]}
+          shadow-camera-far={800}
+          shadow-camera-left={-200}
+          shadow-camera-right={200}
+          shadow-camera-top={200}
+          shadow-camera-bottom={-200}
+          shadow-bias={-0.0001}
+        />
+        
+        {/* Fill light for softer shadows */}
+        <directionalLight
+          position={[-50, 100, -50]}
+          intensity={0.4}
+          color="#B0E0E6"
+          castShadow={false}
+        />
+        
+        {/* Hemisphere light for natural sky lighting */}
+        <hemisphereLight
+          color="#9ed4e9ff"
+          groundColor="#8B7355"
+          intensity={0.6}
         />
 
         {/* Sky */}

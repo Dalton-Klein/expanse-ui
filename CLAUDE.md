@@ -303,3 +303,76 @@ The bug was identified through:
 4. Understanding that face generation should only occur for chunk interior positions
 
 This was an extremely subtle bug that required deep understanding of the binary encoding, face culling operations, and the relationship between padding data and face generation.
+
+## Visual Enhancement Roadmap
+
+This section tracks planned visual improvements to make the terrain more visually appealing. Each enhancement is rated for Visual Impact, Performance Cost, and Implementation Complexity.
+
+### Enhancement Priority List
+
+#### 1. **Ambient Occlusion** ⭐⭐⭐⭐⭐ [ ]
+- **Visual Impact**: HIGH - Makes voxels look much more 3D and realistic
+- **Performance**: MEDIUM - Can be optimized with pre-computed vertex AO
+- **Complexity**: MEDIUM - Well-established techniques for voxel engines
+- **Status**: Not Started
+- **Notes**: Biggest visual improvement for reasonable cost
+
+#### 2. **Distance Fog** ⭐⭐⭐⭐ [ ]
+- **Visual Impact**: HIGH - Adds depth and atmosphere
+- **Performance**: LOW - Simple fragment shader effect
+- **Complexity**: LOW - Easy to implement
+- **Status**: Not Started
+- **Notes**: Quick win for dramatic visual improvement
+
+#### 3. **Texture Atlas/Block Textures** ⭐⭐⭐⭐⭐ [ ]
+- **Visual Impact**: VERY HIGH - Transforms from solid colors to realistic blocks
+- **Performance**: LOW - Actually improves performance vs multiple materials
+- **Complexity**: MEDIUM - Need to modify material system and UV mapping
+- **Status**: Not Started
+- **Notes**: Transforms entire visual aesthetic
+
+#### 4. **Improved Lighting Model** ⭐⭐⭐⭐ [✓]
+- **Visual Impact**: HIGH - Better light falloff and shadows
+- **Performance**: MEDIUM - Modern GPUs handle this well
+- **Complexity**: LOW-MEDIUM - Three.js built-in improvements
+- **Status**: **COMPLETED** 
+- **Notes**: Enhanced with multiple light sources, better shadows, and natural color temperatures
+
+#### 5. **Post-Processing Pipeline** ⭐⭐⭐⭐ [ ]
+- **Visual Impact**: MEDIUM-HIGH - Bloom, tone mapping, HDR
+- **Performance**: MEDIUM - Manageable with good pipeline
+- **Complexity**: MEDIUM - Three.js has good post-processing support
+- **Status**: Not Started
+- **Notes**: Enables multiple visual effects
+
+#### 6. **Biome-Specific Color Variations** ⭐⭐⭐ [ ]
+- **Visual Impact**: MEDIUM - More natural looking terrain
+- **Performance**: LOW - Just color interpolation
+- **Complexity**: LOW - Modify existing color system
+- **Status**: Not Started
+- **Notes**: Easy polish enhancement
+
+#### 7. **Simple Bloom/HDR** ⭐⭐⭐ [ ]
+- **Visual Impact**: MEDIUM - Makes bright areas pop
+- **Performance**: MEDIUM - Standard post-processing
+- **Complexity**: LOW - Three.js has built-in bloom
+- **Status**: Not Started
+- **Notes**: Part of post-processing pipeline
+
+#### 8. **God Rays/Volumetric Lighting** ⭐⭐⭐ [ ]
+- **Visual Impact**: MEDIUM-HIGH - Beautiful but situational
+- **Performance**: HIGH COST - Expensive screen-space effects
+- **Complexity**: HIGH - Complex implementation
+- **Status**: Not Started
+- **Notes**: Save for final polish phase
+
+### Implementation Guidelines
+
+- **Performance Budget**: Maintain 60fps on mid-range hardware
+- **Mobile Considerations**: Ensure effects can be scaled down or disabled
+- **Shader Complexity**: Keep fragment shaders optimized for older GPUs
+- **Testing Strategy**: Profile each enhancement individually before combining
+
+### Current Focus
+
+Starting with **Improved Lighting Model** as it provides a solid foundation for other lighting-based effects and has good visual impact for moderate complexity.
