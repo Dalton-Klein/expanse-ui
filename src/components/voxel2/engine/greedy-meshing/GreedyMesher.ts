@@ -183,8 +183,10 @@ export class GreedyMesher {
             thisTypeCol & ~(allSolidCol >> 1);
 
           // -Y faces: this block type with no solid voxel below
+          // Mask to only include chunk positions (bits 1-30), exclude padding (bits 0 and 31)
+          const chunkMask = 0x7FFFFFFE; // 01111111111111111111111111111110
           faceMasks[1][0][z - 1][x - 1] =
-            thisTypeCol & ~(allSolidCol << 1);
+            (thisTypeCol & ~(allSolidCol << 1)) & chunkMask;
         }
       }
 
@@ -199,8 +201,10 @@ export class GreedyMesher {
             thisTypeCol & ~(allSolidCol >> 1);
 
           // -X faces: this block type with no solid voxel to the left
+          // Mask to only include chunk positions (bits 1-30), exclude padding (bits 0 and 31)
+          const chunkMaskX = 0x7FFFFFFE; // 01111111111111111111111111111110
           faceMasks[3][1][y - 1][z - 1] =
-            thisTypeCol & ~(allSolidCol << 1);
+            (thisTypeCol & ~(allSolidCol << 1)) & chunkMaskX;
         }
       }
 
@@ -215,8 +219,10 @@ export class GreedyMesher {
             thisTypeCol & ~(allSolidCol >> 1);
 
           // -Z faces: this block type with no solid voxel behind
+          // Mask to only include chunk positions (bits 1-30), exclude padding (bits 0 and 31)
+          const chunkMaskZ = 0x7FFFFFFE; // 01111111111111111111111111111110
           faceMasks[5][2][y - 1][x - 1] =
-            thisTypeCol & ~(allSolidCol << 1);
+            (thisTypeCol & ~(allSolidCol << 1)) & chunkMaskZ;
         }
       }
 
@@ -236,7 +242,7 @@ export class GreedyMesher {
     faceMasksByBlockType: Map<VoxelType, AxisColumns[]>
   ): void {
     if (false) {
-      console.log("=== X-AXIS FACE MASKS DEBUG ===");
+      console.log("=== Y-AXIS FACE MASKS DEBUG ===");
 
       const faceNames = [
         "+Y",
@@ -253,8 +259,8 @@ export class GreedyMesher {
       ] of faceMasksByBlockType) {
         console.log(`\nBlock Type ${blockType}:`);
 
-        // Only show X-axis faces (indices 2 and 3)
-        for (let faceDir = 2; faceDir <= 3; faceDir++) {
+        // Only show X-axis faces (indices 0 and 1)
+        for (let faceDir = 1; faceDir <= 1; faceDir++) {
           const faceName = faceNames[faceDir];
           const axisIndex = Math.floor(faceDir / 2);
           const faceMask = faceMasks[faceDir][axisIndex];
@@ -282,7 +288,7 @@ export class GreedyMesher {
           }
         }
       }
-      console.log("=== END X-AXIS FACE MASKS ===");
+      console.log("=== END Y-AXIS FACE MASKS ===");
     }
   }
 

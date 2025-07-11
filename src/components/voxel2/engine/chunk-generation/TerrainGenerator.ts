@@ -55,20 +55,23 @@ export class TerrainGenerator {
             z: chunkZ * config.chunkSize,
           };
 
-          let chunk: ChunkData;
+          let chunk: ChunkData | undefined = undefined;
 
           // Generate chunks based on selected algorithm
           if (
             config.generation.algorithm ===
             GenerationAlgorithm.NOISE
           ) {
-            // Use noise generation
-            chunk = NoiseGenerator.generateNoiseChunk(
-              position,
-              config,
-              { x: chunkX, y: chunkY, z: chunkZ },
-              gridSize
-            );
+            if (chunkY === 1 ) {
+              // Use noise generation
+              chunk = NoiseGenerator.generateNoiseChunk(
+                position,
+                config,
+                { x: chunkX, y: chunkY, z: chunkZ },
+                gridSize
+              );
+
+            }
           } else {
             // Use debug patterns
             switch (config.generation.debugPattern) {
@@ -123,8 +126,9 @@ export class TerrainGenerator {
             //     : config.generation.debugPattern;
             //ChunkHelpers.validatePadding(chunk, `${label} Pattern`);
           }
-
+          if (chunk) {
           chunks.push(chunk);
+          }
         }
       }
     }
