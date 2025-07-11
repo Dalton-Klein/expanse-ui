@@ -1,0 +1,36 @@
+
+> expanse-ui@0.1.0 start
+> react-scripts start
+
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+(node:3680) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:3680) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+Starting the development server...
+
+node:internal/process/promises:288
+            triggerUncaughtException(err, true /* fromPromise */);
+            ^
+
+RpcIpcMessagePortClosedError: Cannot send the message - the message port has been closed for the process 3738.
+    at /mnt/c/Users/Dekle/Documents/aCode/expanse-ui/node_modules/fork-ts-checker-webpack-plugin/lib/rpc/rpc-ipc/RpcIpcMessagePort.js:47:47
+    at process.processTicksAndRejections (node:internal/process/task_queues:81:21) {
+  code: undefined,
+  signal: undefined
+}
+
+Node.js v18.19.1
+node:internal/process/promises:288
+            triggerUncaughtException(err, true /* fromPromise */);
+            ^
+
+RpcIpcMessagePortClosedError: Cannot send the message - the message port has been closed for the process 3737.
+    at /mnt/c/Users/Dekle/Documents/aCode/expanse-ui/node_modules/fork-ts-checker-webpack-plugin/lib/rpc/rpc-ipc/RpcIpcMessagePort.js:47:47
+    at process.processTicksAndRejections (node:internal/process/task_queues:81:21) {
+  code: undefined,
+  signal: undefined
+}
+
+Node.js v18.19.1

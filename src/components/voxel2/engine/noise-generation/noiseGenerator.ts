@@ -32,11 +32,15 @@ export class NoiseGenerator {
    *
    * @param position Chunk position in world coordinates
    * @param config Terrain configuration
+   * @param gridPosition Chunk position in the grid (for edge detection)
+   * @param gridSize Total size of the chunk grid
    * @returns ChunkData compatible with greedy meshing system
    */
   public static generateNoiseChunk(
     position: Position3D,
-    config: TerrainConfig
+    config: TerrainConfig,
+    gridPosition: { x: number; z: number } = { x: 0, z: 0 },
+    gridSize: number = 1
   ): ChunkData {
     // Ensure noise generator is initialized
     if (!this.perlinNoise) {
@@ -53,7 +57,7 @@ export class NoiseGenerator {
     );
 
     // Convert height map to voxel data
-    this.populateChunkFromHeightMap(chunk, heightMap);
+    this.populateChunkFromHeightMap(chunk, heightMap, gridPosition, gridSize);
 
     return chunk;
   }
@@ -187,27 +191,39 @@ export class NoiseGenerator {
    *
    * @param chunk Chunk to populate
    * @param heightMap 32x32 height map (contains world Y coordinates)
+   * @param gridPosition Chunk position in the grid (for edge detection)
+   * @param gridSize Total size of the chunk grid
    */
   private static populateChunkFromHeightMap(
     chunk: ChunkData,
-    heightMap: number[][]
+    heightMap: number[][],
+    gridPosition: { x: number; z: number },
+    gridSize: number
   ): void {
     const CHUNK_SIZE_P = CHUNK_SIZE + 2; // 32
     const chunkMinY = chunk.position.y; // World Y coordinate where this chunk starts
     const chunkMaxY = chunkMinY + CHUNK_SIZE - 1; // World Y coordinate where this chunk ends
 
-    for (let x = 1; x <= CHUNK_SIZE; x++) {
-      for (let z = 1; z <= CHUNK_SIZE; z++) {
+    // Determine which edges don't have neighbors
+    const isWestEdge = gridPosition.x === 0;
+    const isNorthEdge = gridPosition.z === 0;
+
+    for (let x = 0; x < CHUNK_SIZE_P; x++) {
+      for (let z = 0; z < CHUNK_SIZE_P; z++) {
+        // Skip padding areas that don't have neighbors
+        if ((isWestEdge && x === 0) || (isNorthEdge && z === 0)) {
+          continue; // Leave as air
+        }
         const terrainHeight = heightMap[z][x]; // Note: heightMap is [z][x], contains world Y coordinate
 
         // Calculate slope for this position (once per column)
         const slope = this.calculateSlope(heightMap, x, z);
         const isSteepSlope = slope >= 3; // Steep if height difference is 2+ blocks
 
-        // For each Y position in this chunk
+        // For each Y position in this chunk (including padding)
         for (
-          let localY = 1;
-          localY <= CHUNK_SIZE;
+          let localY = 0;
+          localY < CHUNK_SIZE_P;
           localY++
         ) {
           const worldY = chunkMinY + localY - 1; // Convert to world Y coordinate
@@ -236,9 +252,9 @@ export class NoiseGenerator {
           let voxelType: VoxelType;
           const surfaceDepth = terrainHeight - worldY;
 
-          // Calculate world coordinates for snow generation
-          const worldX = chunk.position.x + (x - 1);
-          const worldZ = chunk.position.z + (z - 1);
+          // Calculate world coordinates for snow generation (must match height map coordinate calculation)
+          const worldX = chunk.position.x + x - 1;
+          const worldZ = chunk.position.z + z - 1;
 
           // Calculate elevation percentage for snow generation
           const elevationPercent = worldY / WORLD_HEIGHT;

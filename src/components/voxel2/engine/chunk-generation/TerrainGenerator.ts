@@ -65,7 +65,9 @@ export class TerrainGenerator {
             // Use noise generation
             chunk = NoiseGenerator.generateNoiseChunk(
               position,
-              config
+              config,
+              { x: chunkX, z: chunkZ },
+              gridSize
             );
           } else {
             // Use debug patterns
