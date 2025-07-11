@@ -39,7 +39,11 @@ export class NoiseGenerator {
   public static generateNoiseChunk(
     position: Position3D,
     config: TerrainConfig,
-    gridPosition: { x: number; z: number } = { x: 0, z: 0 },
+    gridPosition: { x: number; y: number; z: number } = {
+      x: 0,
+      y: 0,
+      z: 0,
+    },
     gridSize: number = 1
   ): ChunkData {
     // Ensure noise generator is initialized
@@ -55,9 +59,57 @@ export class NoiseGenerator {
       position,
       config
     );
+    // Debug: Print terrain height at center position
+    if (position.x === 0 && position.z === 0) {
+      console.log(
+        `[DEBUG] Chunk Y=${position.y}: Terrain height at (16,16) = ${heightMap[16][16]}`
+      );
+    }
 
     // Convert height map to voxel data
-    this.populateChunkFromHeightMap(chunk, heightMap, gridPosition, gridSize);
+    this.populateChunkFromHeightMap(
+      chunk,
+      heightMap,
+      gridPosition,
+      gridSize
+    );
+
+    // Debug: Print specific voxel types after population
+    if (position.x === 0 && position.z === 0) {
+      if (position.y === 0) {
+        // Bottom chunk: check local y=30-32
+        console.log(
+          `[DEBUG] Bottom chunk voxels at x=16, z=16:`
+        );
+        for (let y = 29; y <= 31; y++) {
+          const voxel = ChunkHelpers.getVoxel(
+            chunk,
+            16,
+            y,
+            16
+          );
+          console.log(
+            `  Local y=${y}: ${voxel?.type || "null"}`
+          );
+        }
+      } else if (position.y === 30) {
+        // Second chunk: check local y=1-3
+        console.log(
+          `[DEBUG] Second chunk voxels at x=16, z=16:`
+        );
+        for (let y = 1; y <= 3; y++) {
+          const voxel = ChunkHelpers.getVoxel(
+            chunk,
+            16,
+            y,
+            16
+          );
+          console.log(
+            `  Local y=${y}: ${voxel?.type || "null"}`
+          );
+        }
+      }
+    }
 
     return chunk;
   }
@@ -92,7 +144,6 @@ export class NoiseGenerator {
         // Subtract 1 to account for padding (padding extends 1 block in each direction)
         const worldX = chunkPosition.x + localX - 1;
         const worldZ = chunkPosition.z + localZ - 1;
-
         // Initialize height with base height
         let totalHeight = noiseConfig.baseHeight;
 
@@ -197,7 +248,7 @@ export class NoiseGenerator {
   private static populateChunkFromHeightMap(
     chunk: ChunkData,
     heightMap: number[][],
-    gridPosition: { x: number; z: number },
+    gridPosition: { x: number; y: number; z: number },
     gridSize: number
   ): void {
     const CHUNK_SIZE_P = CHUNK_SIZE + 2; // 32
@@ -207,11 +258,15 @@ export class NoiseGenerator {
     // Determine which edges don't have neighbors
     const isWestEdge = gridPosition.x === 0;
     const isNorthEdge = gridPosition.z === 0;
+    const isBottomEdge = gridPosition.y === 0;
 
     for (let x = 0; x < CHUNK_SIZE_P; x++) {
       for (let z = 0; z < CHUNK_SIZE_P; z++) {
         // Skip padding areas that don't have neighbors
-        if ((isWestEdge && x === 0) || (isNorthEdge && z === 0)) {
+        if (
+          (isWestEdge && x === 0) ||
+          (isNorthEdge && z === 0)
+        ) {
           continue; // Leave as air
         }
         const terrainHeight = heightMap[z][x]; // Note: heightMap is [z][x], contains world Y coordinate
@@ -227,7 +282,9 @@ export class NoiseGenerator {
           localY++
         ) {
           const worldY = chunkMinY + localY - 1; // Convert to world Y coordinate
-
+          if (isBottomEdge && localY === 0) {
+            continue; // Leave as air
+          }
           // Define sea level (25% of world height)
           const seaLevel = WORLD_HEIGHT * 0.25;
 

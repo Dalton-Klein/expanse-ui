@@ -251,7 +251,7 @@ describe("NoiseGenerator", () => {
       const chunk = NoiseGenerator.generateNoiseChunk(
         { x: 0, y: 0, z: 0 },
         config,
-        { x: 0, z: 1 }, // West edge, not north edge
+        { x: 0, y: 0, z: 1 }, // West edge, not north edge
         2
       );
 
@@ -265,7 +265,7 @@ describe("NoiseGenerator", () => {
       const chunk = NoiseGenerator.generateNoiseChunk(
         { x: 0, y: 0, z: 0 },
         config,
-        { x: 0, z: 1 }, // West edge, not north edge
+        { x: 0, y: 0, z: 1 }, // West edge, not north edge
         2
       );
 
@@ -282,7 +282,7 @@ describe("NoiseGenerator", () => {
       const chunk = NoiseGenerator.generateNoiseChunk(
         { x: 0, y: 0, z: 0 },
         config,
-        { x: 0, z: 1 }, // West edge, not north edge
+        { x: 0, y: 0, z: 1 }, // West edge, not north edge
         2
       );
 
@@ -313,7 +313,7 @@ describe("NoiseGenerator", () => {
       const chunk = NoiseGenerator.generateNoiseChunk(
         { x: 0, y: 0, z: 0 },
         config,
-        { x: 1, z: 0 }, // North edge, not west edge
+        { x: 1, y: 0, z: 0 }, // North edge, not west edge
         2
       );
 
@@ -327,7 +327,7 @@ describe("NoiseGenerator", () => {
       const chunk = NoiseGenerator.generateNoiseChunk(
         { x: 0, y: 0, z: 0 },
         config,
-        { x: 1, z: 0 }, // North edge, not west edge
+        { x: 1, y: 0, z: 0 }, // North edge, not west edge
         2
       );
 
@@ -344,7 +344,7 @@ describe("NoiseGenerator", () => {
       const chunk = NoiseGenerator.generateNoiseChunk(
         { x: 0, y: 0, z: 0 },
         config,
-        { x: 1, z: 0 }, // North edge, not west edge
+        { x: 1, y: 0, z: 0 }, // North edge, not west edge
         2
       );
 
@@ -375,7 +375,7 @@ describe("NoiseGenerator", () => {
       const chunk = NoiseGenerator.generateNoiseChunk(
         { x: 0, y: 0, z: 0 },
         config,
-        { x: 0, z: 0 }, // Northwest corner
+        { x: 0, y: 0, z: 0 }, // Northwest corner
         2
       );
 
@@ -398,7 +398,7 @@ describe("NoiseGenerator", () => {
       const chunk = NoiseGenerator.generateNoiseChunk(
         { x: 0, y: 0, z: 0 },
         config,
-        { x: 0, z: 0 }, // Northwest corner
+        { x: 0, y: 0, z: 0 }, // Northwest corner
         2
       );
 
@@ -423,7 +423,7 @@ describe("NoiseGenerator", () => {
       const chunk = NoiseGenerator.generateNoiseChunk(
         { x: 30, y: 0, z: 30 },
         config,
-        { x: 1, z: 1 }, // Interior chunk
+        { x: 1, y: 1, z: 1 }, // Interior chunk
         3
       );
 
@@ -456,7 +456,7 @@ describe("NoiseGenerator", () => {
       const chunk = NoiseGenerator.generateNoiseChunk(
         { x: 30, y: 0, z: 30 },
         config,
-        { x: 1, z: 1 }, // Interior chunk
+        { x: 1, y: 1, z: 1 }, // Interior chunk
         3
       );
 
@@ -488,7 +488,7 @@ describe("NoiseGenerator", () => {
       const chunk = NoiseGenerator.generateNoiseChunk(
         { x: 0, y: 90, z: 0 }, // High Y position
         config,
-        { x: 1, z: 1 }, // Interior chunk
+        { x: 1, y: 1, z: 1 }, // Interior chunk
         2
       );
 
@@ -524,9 +524,18 @@ describe("NoiseGenerator", () => {
 
       // Test multiple west edge positions
       const westEdgePositions = [
-        { gridPos: { x: 0, z: 0 }, expected: "west edge" },
-        { gridPos: { x: 0, z: 1 }, expected: "west edge" },
-        { gridPos: { x: 0, z: 2 }, expected: "west edge" },
+        {
+          gridPos: { x: 0, y: 0, z: 0 },
+          expected: "west edge",
+        },
+        {
+          gridPos: { x: 0, y: 0, z: 1 },
+          expected: "west edge",
+        },
+        {
+          gridPos: { x: 0, y: 0, z: 2 },
+          expected: "west edge",
+        },
       ];
 
       westEdgePositions.forEach(({ gridPos, expected }) => {
@@ -550,9 +559,18 @@ describe("NoiseGenerator", () => {
 
       // Test multiple north edge positions
       const northEdgePositions = [
-        { gridPos: { x: 0, z: 0 }, expected: "north edge" },
-        { gridPos: { x: 1, z: 0 }, expected: "north edge" },
-        { gridPos: { x: 2, z: 0 }, expected: "north edge" },
+        {
+          gridPos: { x: 0, y: 0, z: 0 },
+          expected: "north edge",
+        },
+        {
+          gridPos: { x: 1, y: 0, z: 0 },
+          expected: "north edge",
+        },
+        {
+          gridPos: { x: 2, y: 0, z: 0 },
+          expected: "north edge",
+        },
       ];
 
       northEdgePositions.forEach(

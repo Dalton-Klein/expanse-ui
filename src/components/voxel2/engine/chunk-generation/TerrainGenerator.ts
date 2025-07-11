@@ -66,7 +66,7 @@ export class TerrainGenerator {
             chunk = NoiseGenerator.generateNoiseChunk(
               position,
               config,
-              { x: chunkX, z: chunkZ },
+              { x: chunkX, y: chunkY, z: chunkZ },
               gridSize
             );
           } else {
