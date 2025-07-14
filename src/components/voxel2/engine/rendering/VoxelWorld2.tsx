@@ -204,7 +204,7 @@ export default function VoxelWorld2() {
         
         {/* Hemisphere light for natural sky lighting */}
         <hemisphereLight
-          color="#9ed4e9ff"
+          color="#9ed4e9"
           groundColor="#8B7355"
           intensity={0.6}
         />
