@@ -48,6 +48,7 @@ export default function VoxelWorld2() {
       showDebugInfo: true,
       terrainPattern: DebugPattern.FLAT,
       ambientOcclusion: true,
+      useTextures: true, // Enable textures by default
       fog: {
         enabled: true,
         near: 75,

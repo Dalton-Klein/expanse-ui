@@ -667,15 +667,35 @@ export class GreedyMesher {
     const vertices: number[] = [];
     const indices: number[] = [];
     const colors: number[] = [];
+    const uvs: number[] = [];
+    const blockTypes: number[] = []; // Block type attribute for shader
 
     let vertexIndex = 0;
+    
+    // Texture repeat counting for debug patterns
+    let totalTextureRepeats = 0;
+    const quadDetails: string[] = [];
 
     for (const quad of quads) {
       // Generate vertices and AO values for this quad based on face direction
       const enableAO = renderConfig?.ambientOcclusion !== false; // Default to true if not specified
-      const { vertices: quadVertices, aoValues } = this.generateQuadVertices(quad, chunk, enableAO);
+      const { vertices: quadVertices, aoValues, uvCoords } = this.generateQuadVertices(quad, chunk, enableAO);
+      
+      // Count texture repeats for this quad (for debug patterns)
+      const quadTextureRepeats = quad.width * quad.height;
+      totalTextureRepeats += quadTextureRepeats;
+      quadDetails.push(`Face${quad.faceDirection}:${quad.width}x${quad.height}=${quadTextureRepeats}`);
+      
       // Add vertices
       vertices.push(...quadVertices);
+      
+      // Add local UV coordinates (0 to width/height for repetition)
+      uvs.push(...uvCoords);
+      
+      // Add block type for each vertex (shader needs this for atlas lookup)
+      for (let i = 0; i < 4; i++) {
+        blockTypes.push(quad.blockType);
+      }
 
       // Add indices for two triangles (quad = 2 triangles)
       indices.push(
@@ -708,11 +728,27 @@ export class GreedyMesher {
         new THREE.Float32BufferAttribute(vertices, 3);
       const colorAttribute =
         new THREE.Float32BufferAttribute(colors, 3);
+      const uvAttribute =
+        new THREE.Float32BufferAttribute(uvs, 2);
+      const blockTypeAttribute =
+        new THREE.Float32BufferAttribute(blockTypes, 1);
 
       geometry.setAttribute("position", positionAttribute);
       geometry.setAttribute("color", colorAttribute);
+      geometry.setAttribute("uv", uvAttribute);
+      geometry.setAttribute("blockType", blockTypeAttribute);
       geometry.setIndex(indices);
       geometry.computeVertexNormals();
+    }
+    
+    // Log texture repeat count for debug patterns (only for small chunks)
+    if (quads.length <= 10) { // Only log for small debug patterns
+      console.log(`[GreedyMesher] Texture Repeat Count:`, {
+        totalQuads: quads.length,
+        totalTextureRepeats: totalTextureRepeats,
+        quadBreakdown: quadDetails.join(', '),
+        expectedFor2x2x2: '6 faces × 4 repeats = 24 total'
+      });
     }
 
     return {
@@ -856,16 +892,25 @@ export class GreedyMesher {
 
   /**
    * Generate the 4 vertices for a quad based on its face direction
-   * Returns object with vertices and AO values
+   * Returns object with vertices, AO values, and UV coordinates
    */
   private static generateQuadVertices(
     quad: GreedyQuad,
     chunk: ChunkData,
     enableAO: boolean = true
-  ): { vertices: number[]; aoValues: number[] } {
+  ): { vertices: number[]; aoValues: number[]; uvCoords: number[] } {
     const { x, y, z, width, height, faceDirection } = quad;
     const vertices: number[] = [];
     const aoValues: number[] = [];
+    const uvCoords: number[] = [];
+    
+    // Generate local UV coordinates for shader-based repetition
+    // These extend beyond 0-1 range to create repetition pattern
+    // The shader will use fract() to repeat within atlas bounds
+    const u1 = 0;
+    const u2 = height;  // For 1x3 quad, this will be 3.0 (swapped)
+    const v1 = 0;
+    const v2 = width;   // For 1x3 quad, this will be 1.0 (swapped)
 
     // Define quad vertices based on face direction with proper winding order
     switch (faceDirection) {
@@ -896,6 +941,24 @@ export class GreedyMesher {
         } else {
           aoValues.push(1.0, 1.0, 1.0, 1.0);
         }
+        
+        // Add UV coordinates with texture repetition for greedy meshing
+        uvCoords.push(
+          u1, v1, // Bottom-left
+          u1, v2, // Top-left
+          u2, v2, // Top-right
+          u2, v1  // Bottom-right
+        );
+        
+        // Debug logging for local UV coordinates
+        if (width > 1 || height > 1) {
+          console.log(`[GreedyMesher] Local UV Debug for ${width}x${height} quad:`, {
+            blockType: quad.blockType,
+            face: faceDirection,
+            width, height,
+            localUVs: { u1, u2, v1, v2 }
+          });
+        }
         break;
       case 1: // -Y face (bottom)
         vertices.push(
@@ -923,6 +986,14 @@ export class GreedyMesher {
         } else {
           aoValues.push(1.0, 1.0, 1.0, 1.0);
         }
+        
+        // Add UV coordinates with texture repetition for greedy meshing
+        uvCoords.push(
+          u1, v2, // Top-left
+          u1, v1, // Bottom-left
+          u2, v1, // Bottom-right
+          u2, v2  // Top-right
+        );
         break;
       case 2: // +X face (right)
         vertices.push(
@@ -950,6 +1021,14 @@ export class GreedyMesher {
         } else {
           aoValues.push(1.0, 1.0, 1.0, 1.0);
         }
+        
+        // Add UV coordinates with texture repetition for greedy meshing
+        uvCoords.push(
+          u1, v1, // Bottom-left
+          u1, v2, // Top-left
+          u2, v2, // Top-right
+          u2, v1  // Bottom-right
+        );
         break;
       case 3: // -X face (left)
         vertices.push(
@@ -977,6 +1056,14 @@ export class GreedyMesher {
         } else {
           aoValues.push(1.0, 1.0, 1.0, 1.0);
         }
+        
+        // Add UV coordinates with texture repetition for greedy meshing
+        uvCoords.push(
+          u1, v2, // Top-left
+          u1, v1, // Bottom-left
+          u2, v1, // Bottom-right
+          u2, v2  // Top-right
+        );
         break;
       case 4: // +Z face (front)
         vertices.push(
@@ -1004,6 +1091,14 @@ export class GreedyMesher {
         } else {
           aoValues.push(1.0, 1.0, 1.0, 1.0);
         }
+        
+        // Add UV coordinates with texture repetition for greedy meshing
+        uvCoords.push(
+          u1, v1, // Bottom-left
+          u2, v1, // Bottom-right
+          u2, v2, // Top-right
+          u1, v2  // Top-left
+        );
         break;
       case 5: // -Z face (back)
         vertices.push(
@@ -1031,10 +1126,18 @@ export class GreedyMesher {
         } else {
           aoValues.push(1.0, 1.0, 1.0, 1.0);
         }
+        
+        // Add UV coordinates with texture repetition for greedy meshing
+        uvCoords.push(
+          u2, v1, // Bottom-left
+          u1, v1, // Bottom-right
+          u1, v2, // Top-right
+          u2, v2  // Top-left
+        );
         break;
     }
 
-    return { vertices, aoValues };
+    return { vertices, aoValues, uvCoords };
   }
 
   /**
@@ -1048,5 +1151,6 @@ export class GreedyMesher {
     const [r, g, b] = getRGB(blockType);
     return { r, g, b };
   }
+
 
 }

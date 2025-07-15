@@ -55,6 +55,7 @@ export interface RenderConfig {
   showDebugInfo: boolean;
   terrainPattern: DebugPattern;
   ambientOcclusion: boolean;
+  useTextures: boolean; // Toggle between textured and solid color materials
   fog: {
     enabled: boolean;
     near: number;

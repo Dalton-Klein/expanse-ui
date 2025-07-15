@@ -6,6 +6,7 @@ import {
   TerrainConfig,
 } from "../../types";
 import { GreedyMesher } from "../../engine/greedy-meshing/GreedyMesher";
+import { MaterialSystem } from "./MaterialSystem";
 
 // React component for rendering chunks using binary greedy meshing
 
@@ -28,6 +29,22 @@ export default function GreedyRenderer({
 }: GreedyRendererProps) {
   // Store previous geometries for cleanup
   const previousGeometriesRef = React.useRef<THREE.BufferGeometry[]>([]);
+  
+  // Track texture atlas loading state
+  const [textureLoaded, setTextureLoaded] = React.useState(false);
+  
+  // Load texture atlas on mount
+  React.useEffect(() => {
+    MaterialSystem.loadTextureAtlas()
+      .then(() => {
+        console.log('[GreedyRenderer] Texture atlas loaded');
+        setTextureLoaded(true);
+      })
+      .catch((error) => {
+        console.error('[GreedyRenderer] Failed to load texture atlas:', error);
+        setTextureLoaded(false);
+      });
+  }, []);
 
   // Generate meshes for all chunks
   const meshResults = React.useMemo(() => {
@@ -104,6 +121,30 @@ export default function GreedyRenderer({
     }
   }, [meshResults, onMeshGenerated, chunks.length]);
 
+  // Create material based on texture loading state and config
+  const material = React.useMemo(() => {
+    console.log('[GreedyRenderer] Material selection:', {
+      useTextures: renderingConfig.useTextures,
+      textureLoaded: textureLoaded,
+      willUseTexturedMaterial: renderingConfig.useTextures && textureLoaded
+    });
+    
+    // Use textured material only if textures are enabled and loaded
+    if (renderingConfig.useTextures && textureLoaded) {
+      console.log('[GreedyRenderer] Creating TEXTURED material');
+      return MaterialSystem.createTexturedMaterial({
+        wireframe: renderingConfig.wireframe,
+        side: THREE.FrontSide,
+      });
+    } else {
+      console.log('[GreedyRenderer] Creating COLOR-ONLY material (fallback)');
+      return MaterialSystem.createColorOnlyMaterial({
+        wireframe: renderingConfig.wireframe,
+        side: THREE.FrontSide,
+      });
+    }
+  }, [textureLoaded, renderingConfig.wireframe, renderingConfig.useTextures]);
+
   return (
     <group name="greedy-mesh-terrain">
       {meshResults.results.map(
@@ -112,15 +153,10 @@ export default function GreedyRenderer({
             key={`chunk-${chunks[index].position.x}-${chunks[index].position.y}-${chunks[index].position.z}`}
             geometry={result.geometry}
             position={[chunks[index].position.x, chunks[index].position.y, chunks[index].position.z]}
+            material={material}
             castShadow
             receiveShadow
-          >
-            <meshLambertMaterial
-              wireframe={renderingConfig.wireframe}
-              vertexColors={true}
-              side={THREE.FrontSide}
-            />
-          </mesh>
+          />
         )
       )}
     </group>

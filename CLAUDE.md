@@ -337,10 +337,10 @@ This section tracks planned visual improvements to make the terrain more visuall
 
 #### 3. **Texture Atlas/Block Textures** ⭐⭐⭐⭐⭐ [ ]
 - **Visual Impact**: VERY HIGH - Transforms from solid colors to realistic blocks
-- **Performance**: LOW - Actually improves performance vs multiple materials
+- **Performance**: LOW - Actually improves performance vs multiple materials  
 - **Complexity**: MEDIUM - Need to modify material system and UV mapping
-- **Status**: Not Started
-- **Notes**: Transforms entire visual aesthetic
+- **Status**: Not started
+- **Implementation**: Transforms entire visual aesthetic
 
 #### 4. **Improved Lighting Model** ⭐⭐⭐⭐ [✓]
 - **Visual Impact**: HIGH - Better light falloff and shadows
@@ -387,3 +387,127 @@ This section tracks planned visual improvements to make the terrain more visuall
 ### Current Focus
 
 Starting with **Improved Lighting Model** as it provides a solid foundation for other lighting-based effects and has good visual impact for moderate complexity.
+
+---
+
+# 📅 **Next Week Development Plan**
+
+## **Priority 1: Implement Texture Atlas System** 🎨
+
+---
+
+## **Priority 2: Implement Player Character** 🏃
+**Goal**: Add controllable player with physics and collision
+
+### Phase 2A: Basic Player Entity
+- [ ] **Create Player component** (simple pill/capsule geometry)
+- [ ] **Add to scene** with initial spawn position
+- [ ] **Basic rendering** with distinct color/material
+
+### Phase 2B: Player Movement
+- [ ] **WASD movement** on ground plane
+- [ ] **Mouse look** for camera rotation (first-person)
+- [ ] **Jump mechanics** with gravity simulation
+- [ ] **Movement smoothing** and acceleration/deceleration
+
+### Phase 2C: Terrain Collision
+- [ ] **Collision detection** with voxel terrain
+- [ ] **Ground detection** for proper jumping/landing
+- [ ] **Wall collision** prevention
+- [ ] **Step-up mechanics** for single voxel height differences
+
+**Expected Result**: Playable character that can run, jump, and interact with voxel terrain naturally
+
+---
+
+## **Priority 3: Debug Mode Toggle** 🎮
+**Goal**: Switch between flying camera and player modes
+
+### Tasks:
+- [ ] **Add debug mode state** to render config
+- [ ] **Debug panel toggle** for "Flight Mode" vs "Player Mode"
+- [ ] **Conditional camera controls** based on mode
+- [ ] **Player input handling** when in player mode
+- [ ] **Smooth transitions** between modes
+
+**Expected Result**: Press button to toggle between creative flying and survival player modes
+
+---
+
+## **Priority 4: API Foundation for Multiplayer** 🌐
+**Goal**: Backend infrastructure for socket-based multiplayer
+
+### Phase 4A: Basic Socket Server
+- [ ] **Create Node.js server** with Express + Socket.io
+- [ ] **Basic connection handling** and room management
+- [ ] **Player position sync** between clients
+- [ ] **Simple message broadcasting**
+
+### Phase 4B: Client Integration
+- [ ] **Socket.io client setup** in React app
+- [ ] **Connection management** and reconnection logic
+- [ ] **Player position updates** sent to server
+- [ ] **Other players rendering** in local world
+
+### Phase 4C: Basic Protocol
+- [ ] **Define message types** (join, move, disconnect, etc.)
+- [ ] **Position interpolation** for smooth other-player movement
+- [ ] **Basic latency handling** and prediction
+
+**Expected Result**: Multiple players can see each other moving in the same world
+
+---
+
+## **Priority 5: Basic Voxel Editing** ⛏️
+**Goal**: Add/remove individual voxels with mouse interaction
+
+### Phase 5A: Raycasting System
+- [ ] **Implement raycasting** from camera/player position
+- [ ] **Voxel hit detection** with face identification
+- [ ] **Visual feedback** for targeted voxel (highlight/outline)
+
+### Phase 5B: Edit Operations
+- [ ] **Left-click to destroy** voxel (set to AIR)
+- [ ] **Right-click to place** voxel (current selected type)
+- [ ] **Block type selector** in UI (stone, dirt, grass, etc.)
+- [ ] **Range limiting** (can't edit too far away)
+
+### Phase 5C: World Updates
+- [ ] **Chunk regeneration** after voxel changes
+- [ ] **Efficient updates** (only affected chunks)
+- [ ] **Multiplayer sync** of voxel changes
+- [ ] **Persistence** of world modifications
+
+**Expected Result**: Click to mine/place blocks like Minecraft, with changes synced across players
+
+---
+
+## **Implementation Order & Dependencies**
+
+```
+Week Schedule:
+Monday-Tuesday: Priority 1 (Texture Atlas Fix)
+Wednesday: Priority 2A-2B (Player Entity & Movement)  
+Thursday: Priority 2C + Priority 3 (Collision & Debug Toggle)
+Friday: Priority 4A (Basic Socket Server)
+Weekend/Next: Priority 4B-4C + Priority 5 (Client Integration & Voxel Editing)
+```
+
+## **Technical Considerations**
+
+### **Performance Targets**:
+- Maintain 60fps with player + multiplayer
+- Efficient chunk updates for voxel editing
+- Smooth interpolation for networked players
+
+### **Code Organization**:
+- Keep player logic separate from terrain rendering
+- Modular multiplayer system for easy expansion  
+- Clean separation between debug and gameplay modes
+
+### **Testing Strategy**:
+- Test each feature individually before integration
+- Profile performance impact of each addition
+- Validate multiplayer with multiple browser tabs
+
+This plan transforms the current terrain viewer into a playable multiplayer voxel game foundation! 🎮

@@ -15,7 +15,8 @@
       "Bash(npm run lint:*)",
       "Bash(npm run:*)",
       "Bash(pkill:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "WebFetch(domain:threejs.org)"
     ],
     "deny": []
   }

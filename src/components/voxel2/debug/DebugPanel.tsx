@@ -583,6 +583,22 @@ export default function DebugPanel({
             </button>
           </div>
           <div className="debug-item">
+            <span className="label">Use Textures:</span>
+            <button
+              className={`wireframe-toggle ${
+                config.useTextures ? "active" : ""
+              }`}
+              onClick={() =>
+                onConfigChange({
+                  ...config,
+                  useTextures: !config.useTextures,
+                })
+              }
+            >
+              {config.useTextures ? "ON" : "OFF"}
+            </button>
+          </div>
+          <div className="debug-item">
             <span className="label">Distance Fog:</span>
             <button
               className={`wireframe-toggle ${
